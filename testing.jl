@@ -1,6 +1,32 @@
 using ConnectedComponents
 
+# 2 circles
+@var x[1:2]
+r = routing_function(one(Expression), x[1:2])
+G = [(x[1]^2 + x[2]^2 - 1)*(x[1]^2 + x[2]^2 - 9)]
+routPoints = routing_points(r, G)
+index_dict = sort_routing_points_by_index(r, G, routPoints)
+final_points = index_dict[0]
+initial_points = index_dict[1]
 
+# gradient takes 2 saddles to distinct index 0 routing points, so there are 2 connected components
+solns1 = solve_ivp(r, G, initial_points[1], final_points)
+solns2 = solve_ivp(r, G, initial_points[2], final_points)
+
+
+# elliptic curve
+@var x[1:2]
+r = routing_function(one(Expression), x[1:2], [0.855, -1.632])
+G = [x[2]^2 - x[1]*(x[1] - 1)*(x[1] + 1)]
+routPoints = routing_points(r, G)
+index_dict = sort_routing_points_by_index(r, G, routPoints)
+final_points = index_dict[0]
+initial_points = index_dict[1]
+
+# gradient takes saddle to index 0 routing point, does not connect them
+solns = solve_ivp(r, G, initial_points[1], final_points)
+
+# elliptic curve with 2 points of distance 3 away from origin removed
 @var x[1:2]
 r = routing_function(x[1]^2 + x[2]^2 - 9, x[1:2], [0.855, -1.632])
 G = [x[2]^2 - x[1]*(x[1] - 1)*(x[1] + 1)]
@@ -9,17 +35,21 @@ index_dict = sort_routing_points_by_index(r, G, routPoints)
 final_points = index_dict[0]
 initial_points = index_dict[1]
 
+# gradient takes single saddle to one index 0, three other components have a single index 0 routing point
 solns = solve_ivp(r, G, initial_points[1], final_points)
 
-
+# twisted cubic with origin removed
 @var x[1:3]
 r = routing_function(x[1]*x[2]*x[3], x[1:3])
 G = [x[1]^3 - x[3], x[1]^2 - x[2]]
 routPoints = routing_points(r, G)
+
+#only 2 index 0 routing points, so there are 2 connected components
 index_dict = sort_routing_points_by_index(r, G, routPoints)
 final_points = index_dict[0]
 
 
+# compact degree 4 curve with coordinate axes removed. See "Smooth Connectivity ..." paper for picture
 @var x[1:2]
 r = routing_function(x[1]*x[2], [1/3,1/2])
 G = [x[1]^4 + x[2]^4 - (x[1] - x[2])^2 * (x[1]+x[2])]
@@ -27,7 +57,8 @@ routPoints = routing_points(r, G)
 index_dict = sort_routing_points_by_index(r, G, routPoints)
 
 
-#ding dong
+# ding dong from smooth connectivity paper
+# removing all singular points
 @var x[1:3]
 g = x[1]^2 + x[2]^2 - x[3]^2 + x[3]^3
 f = sum(differentiate(g, x[1:3]).^2)
@@ -51,29 +82,7 @@ solns3 = solve_ivp(r, G, initial_points[3], final_points)
 
 
 
-@var x[1:2]
-
-G = [x[1]^2 + x[2]^2 - 1]
-P = [2., 2.]
-
-project_to_variety!(P, G, x[1:2])
-
-
-@var x[1:2]
-r = routing_function(one(Expression), x[1:2])
-G = [x[2]^2 - x[1]*(x[1]-1)*(x[1]+1)]
-critical_points = routing_points(r, G; zero_tol = 1e-15)
-hessians = [hessian(r, G, p) for p in critical_points]
-indices = [idx(r, hessians[i], critical_points[i]) for i in eachindex(hessians)]
-
-
-r = routing_function(x[1]*x[2], x[1:2], [1/3, 1/2])
-G = [x[1]^4 + x[2]^4 - (x[1] - x[2])^2*(x[1]+x[2])]
-critical_points = routing_points(r, G; zero_tol = 1e-15)
-hessians = [hessian(r, G, p) for p in critical_points]
-indices = [idx(r, hessians[i], critical_points[i]) for i in eachindex(hessians)]
-
-
+# checking compute_matrices works by comparing with Smooth Connectivity paper
 # example 2.5a, same as paper
 G = [x[1]^2 - x[2]^2]
 W, V = compute_matrices(G, x[1:2], [1.0,1.0])
@@ -84,8 +93,6 @@ W, V = compute_matrices(G, x[1:2], [1.0,1.0])
 G = [x[1]^2 - x[2]^2*x[3]]
 W, V = compute_matrices(G, x[1:3], [1.0,1.0,1.0])
 H = hessian(4*x[1]^2 + 4*x[2]^2*x[3]^2 + x[2]^4, G, x[1:3], [1.,1.,1.])
-
-
 
 # these are matrices from paper
 P = hcat((1/sqrt(2) * [1 1/3; 1 -1/3; 0 4/3]), [2/3; -2/3; -1/3])
@@ -109,7 +116,7 @@ round.(HH; digits = 10) == round.(2/81 * [567 303; 303 127]; digits = 10)
 
 
 
-# from section 6 in paper, Chubs
+# from section 6 in paper, Chubs, this one doesn't seem to always work
 @var x[1:3]
 g = x[1]^4 + x[2]^4 + x[3]^4 - (x[1]^2 + x[2]^2 + x[3]^2) + 1/2
 f = sum(differentiate(g, x[1:3]).^2)
@@ -117,29 +124,17 @@ c = [0.7978234324, 0.6623073432, 0.2347907832]
 r = routing_function(f, x[1:3], c)
 G = [g]
 critical_points = routing_points(r, G; zero_tol = 1e-16)
-hessians = [hessian(r, G, p) for p in critical_points];
-indices = [idx(r, hessians[i], critical_points[i]) for i in eachindex(hessians)];
-
-counter = Dict{Int, Int}();
-
-for x in indices
-    counter[x] = get(counter, x, 0) + 1
-end
-
-counter
-
-euler = counter[0] - counter[1] + counter[2]
+index_dict = sort_routing_points_by_index(r, G, critical_points)
+final_points = index_dict[0]
+initial_points = vcat(index_dict[1], index_dict[2])
 
 
-# F = routing_system(r,G)
+euler = length(index_dict[0]) - length(index_dict[1]) + length(index_dict[2])
 
-# open("chubs_bertini_run/input", "w") do IO
-#     for eq in F.expressions
-#         println(IO, eq)
-#     end
-# end
 
-# for chubs
+
+# for chubs, tried solving in bertini instead
+include("bertiniIO.jl")
 bertini_solutions = read_real_parts("chubs_bertini_run/real_finite_solutions")
 
 bertini_solutions[1:120, 1:3]
