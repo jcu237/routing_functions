@@ -1,4 +1,3 @@
-using Revise
 using ConnectedComponents
 
 # 2 circles
@@ -8,6 +7,7 @@ G = [(x[1]^2 + x[2]^2 - 1)*(x[1]^2 + x[2]^2 - 9)]
 
 M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
 
+# you can also do this step-by-step
 routPoints = routing_points(r, G)
 index_dict = sort_routing_points_by_index(r, G, routPoints)
 final_points = index_dict[0]
@@ -23,25 +23,22 @@ solns2 = solve_ivp(r, G, initial_points[2], final_points)
 @var x[1:2]
 r = routing_function(one(Expression), x[1:2], [0.855, -1.632])
 G = [x[2]^2 - x[1]*(x[1] - 1)*(x[1] + 1)]
-routPoints = routing_points(r, G)
-index_dict = sort_routing_points_by_index(r, G, routPoints)
-final_points = index_dict[0]
-initial_points = index_dict[1]
 
-# gradient takes saddle to index 0 routing point, does not connect them
-solns = solve_ivp(r, G, initial_points[1], final_points)
+M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
+
+
+
+
+
 
 # elliptic curve with 2 points of distance 3 away from origin removed
 @var x[1:2]
 r = routing_function(x[1]^2 + x[2]^2 - 9, x[1:2], [0.855, -1.632])
 G = [x[2]^2 - x[1]*(x[1] - 1)*(x[1] + 1)]
-routPoints = routing_points(r, G)
-index_dict = sort_routing_points_by_index(r, G, routPoints)
-final_points = index_dict[0]
-initial_points = index_dict[1]
 
-# gradient takes single saddle to one index 0, three other components have a single index 0 routing point
-solns = solve_ivp(r, G, initial_points[1], final_points)
+M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
+
+
 
 # twisted cubic with origin removed
 @var x[1:3]
@@ -51,19 +48,18 @@ G = [x[1]^3 - x[3], x[1]^2 - x[2]]
 M, routPoints = find_connectivity_matrix(r, G)
 
 
-routPoints = routing_points(r, G)
 
-#only 2 index 0 routing points, so there are 2 connected components
-index_dict = sort_routing_points_by_index(r, G, routPoints)
-final_points = index_dict[0]
+
+
 
 
 # compact degree 4 curve with coordinate axes removed. See "Smooth Connectivity ..." paper for picture
 @var x[1:2]
 r = routing_function(x[1]*x[2], [1/3,1/2])
 G = [x[1]^4 + x[2]^4 - (x[1] - x[2])^2 * (x[1]+x[2])]
-routPoints = routing_points(r, G)
-index_dict = sort_routing_points_by_index(r, G, routPoints)
+M, routPoints = find_connectivity_matrix(r, G)
+
+
 
 
 # ding dong from smooth connectivity paper
@@ -73,16 +69,11 @@ g = x[1]^2 + x[2]^2 - x[3]^2 + x[3]^3
 f = sum(differentiate(g, x[1:3]).^2)
 r = routing_function(f, [0.7978234324, 0.6623073432, 0.2347907832])
 G = [g]
-routPoints = routing_points(r, G)
-index_dict = sort_routing_points_by_index(r, G, routPoints)
-final_points = index_dict[0]
-initial_points = vcat(index_dict[1], index_dict[2])
+M, routPoints = find_connectivity_matrix(r, G)
 
-# analyzing these gives 2 connected components. 
-# i.e. the two index 0 routing points lie in distinct smoothly connected components
-solns1 = solve_ivp(r, G, initial_points[1], final_points)
-solns2 = solve_ivp(r, G, initial_points[2], final_points)
-solns3 = solve_ivp(r, G, initial_points[3], final_points)
+index_dict = sort_routing_points_by_index(r, G, routPoints)
+euler_characteristic = length(index_dict[0]) - length(index_dict[1]) + length(index_dict[2])
+
 
 
 
