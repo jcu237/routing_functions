@@ -51,7 +51,10 @@ boolean_power_sum(A)
 
 function find_connectivity_matrix(
     r::routing_function,
-    G::Vector{Expression}
+    G::Vector{Expression};
+    grad_step_size::Float64 = 0.05,
+    start_step_size::Float64 = 0.1,
+    tol::Float64 = 1e-2
     )
 
     routPoints = routing_points(r, G)
@@ -62,7 +65,7 @@ function find_connectivity_matrix(
     A = Matrix{Int64}(LA.I, length(routPoints), length(routPoints))
 
     for P in initial_points
-        solns = solve_ivp(r, G, P, final_points)
+        solns = solve_ivp(r, G, P, final_points; grad_step_size = grad_step_size, start_step_size = start_step_size, tol = tol)
         P_ind = findfirst(==(P), routPoints)
         for x in solns
             d = distance_to_endpoints(x, final_points)

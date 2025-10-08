@@ -6,7 +6,7 @@ using ConnectedComponents
 r = routing_function(one(Expression), x[1:2])
 G = [(x[1]^2 + x[2]^2 - 1)*(x[1]^2 + x[2]^2 - 9)]
 
-M, routPoints = find_connectivity_matrix(r, G)
+M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
 
 routPoints = routing_points(r, G)
 index_dict = sort_routing_points_by_index(r, G, routPoints)
@@ -47,6 +47,10 @@ solns = solve_ivp(r, G, initial_points[1], final_points)
 @var x[1:3]
 r = routing_function(x[1]*x[2]*x[3], x[1:3])
 G = [x[1]^3 - x[3], x[1]^2 - x[2]]
+
+M, routPoints = find_connectivity_matrix(r, G)
+
+
 routPoints = routing_points(r, G)
 
 #only 2 index 0 routing points, so there are 2 connected components

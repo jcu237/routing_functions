@@ -57,9 +57,6 @@ function gradient_flow!(
         end
         count += 1
     end
-
-    #return point, gradient
-
 end
 
 # finds P ± ϵv for unstable LA.eigenvectors v at a critical point P
@@ -95,20 +92,22 @@ function solve_ivp(
     G::Vector{Expression},
     initial_point::Vector{Float64},
     final_points::Vector{Vector{Float64}};
-    step_size::Float64 = 0.05
+    grad_step_size::Float64 = 0.05,
+    start_step_size::Float64 = 0.1,
+    tol::Float64 = 1e-2
     )
     
     
     sgn = sign(r.eval(initial_point))
     V = LA.nullspace(HC.evaluate(HC.differentiate(G, r.vars), r.vars => initial_point))
     H = hessian(r, G, initial_point)
-    starts = find_starting_points_for_flow(initial_point, H, V, G, r)
+    starts = find_starting_points_for_flow(initial_point, H, V, G, r; step_size = start_step_size)
 
     solns = []
 
     for P in starts
         Q = copy(P)
-        gradient_flow!(r, Q, r.eval_grad(Q) * sgn, G, r.vars, step_size, final_points)
+        gradient_flow!(r, Q, r.eval_grad(Q) * sgn, G, r.vars, grad_step_size, final_points; tol = tol)
         push!(solns, Q)
     end
 
