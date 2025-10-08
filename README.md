@@ -4,7 +4,8 @@
 
 The package implements algorithms from  
 > **"Smooth Connectivity in Real Algebraic Varieties"**  
-> *Joseph Cummings, Jonathan Hauenstein, Hoon Hong, and Clifford Smyth (2024)*
+> *Joseph Cummings, Jonathan Hauenstein, Hoon Hong, and Clifford Smyth*
+> *Numerical Algorithms, 100(1), 63-84, 2025*
 
 This paper introduces the use of **routing functions** — rational functions whose gradient flows reveal the connected components of a real algebraic variety.  
 `ConnectedComponents.jl` automates this process, providing an efficient framework for computing critical points and tracking gradient paths.
