@@ -1,8 +1,9 @@
+using Revise
 using ConnectedComponents
 
 # 2 circles
 @var x[1:2]
-r = routing_function(one(Expression), x[1:2])
+r = routing_function(-1*one(Expression), x[1:2])
 G = [(x[1]^2 + x[2]^2 - 1)*(x[1]^2 + x[2]^2 - 9)]
 
 M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
@@ -11,11 +12,11 @@ M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1
 routPoints = routing_points(r, G)
 index_dict = sort_routing_points_by_index(r, G, routPoints)
 final_points = index_dict[0]
-initial_points = index_dict[1]
+initial_points = vcat([v for (k,v) in index_dict if k != 0]...)
 
 # gradient takes 2 saddles to distinct index 0 routing points, so there are 2 connected components
-solns1 = solve_ivp(r, G, initial_points[1], final_points)
-solns2 = solve_ivp(r, G, initial_points[2], final_points)
+solns1 = solve_ivp(r, G, initial_points[1], final_points; Verbose = true)
+solns2 = solve_ivp(r, G, initial_points[2], final_points; Verbose = true)
 
 
 
@@ -123,12 +124,12 @@ f = sum(differentiate(g, x[1:3]).^2)
 c = [0.7978234324, 0.6623073432, 0.2347907832]
 r = routing_function(f, x[1:3], c)
 G = [g]
-critical_points = routing_points(r, G; zero_tol = 1e-16)
-index_dict = sort_routing_points_by_index(r, G, critical_points)
-final_points = index_dict[0]
-initial_points = vcat(index_dict[1], index_dict[2])
 
+M, routPoints = find_connectivity_matrix(r, G; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
 
+index_dict = sort_routing_points_by_index(r, G, routPoints)
+
+# should give -8, HC.jl is not finding all critical points
 euler = length(index_dict[0]) - length(index_dict[1]) + length(index_dict[2])
 
 
@@ -139,6 +140,6 @@ bertini_solutions = read_real_parts("chubs_bertini_run/real_finite_solutions")
 
 bertini_solutions[1:120, 1:3]
 
-solns = [vec(bertini_solutions[i, 1:3]) for i in 1:120 if abs(evaluate(f, x[1:3] => vec(bertini_solutions[i,1:3]))) > 1e-15]
+solns = [vec(bertini_solutions[i, 1:3]) for i in 1:120 if abs(evaluate(f, x[1:3] => vec(bertini_solutions[i,1:3]))) > 1e-20]
 
 r.eval_grad.(solns)

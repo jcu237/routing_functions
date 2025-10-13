@@ -94,7 +94,8 @@ function solve_ivp(
     final_points::Vector{Vector{Float64}};
     grad_step_size::Float64 = 0.05,
     start_step_size::Float64 = 0.1,
-    tol::Float64 = 1e-2
+    tol::Float64 = 1e-2,
+    Verbose::Bool = false
     )
     
     
@@ -107,7 +108,7 @@ function solve_ivp(
 
     for P in starts
         Q = copy(P)
-        gradient_flow!(r, Q, r.eval_grad(Q) * sgn, G, r.vars, grad_step_size, final_points; tol = tol)
+        gradient_flow!(r, Q, r.eval_grad(Q) * sgn, G, r.vars, grad_step_size, final_points; tol = tol, Verbose = Verbose)
         push!(solns, Q)
     end
 
