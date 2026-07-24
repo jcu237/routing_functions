@@ -54,10 +54,15 @@ function find_connectivity_matrix(
     G::Vector{Expression};
     grad_step_size::Float64 = 0.05,
     start_step_size::Float64 = 0.1,
-    tol::Float64 = 1e-2
+    tol::Float64 = 1e-2,
+    routing_solver::Symbol = :solve,
+    verify_monodromy::Bool = false,
+    path_tracking_method::Symbol = :rk4,
+    max_steps::Int64 = 10_000,
+    solve_options...
     )
 
-    routPoints = routing_points(r, G)
+    routPoints = routing_points(r, G; solver = routing_solver, verify_monodromy = verify_monodromy, solve_options...)
     index_dict = sort_routing_points_by_index(r, G, routPoints)
     final_points = index_dict[0]
     initial_points = vcat([v for (k,v) in index_dict if k != 0]...)
@@ -65,7 +70,7 @@ function find_connectivity_matrix(
     A = Matrix{Int64}(LA.I, length(routPoints), length(routPoints))
 
     for P in initial_points
-        solns = solve_ivp(r, G, P, final_points; grad_step_size = grad_step_size, start_step_size = start_step_size, tol = tol)
+        solns = solve_ivp(r, G, P, final_points; grad_step_size = grad_step_size, start_step_size = start_step_size, tol = tol, method = path_tracking_method, max_steps = max_steps)
         P_ind = findfirst(==(P), routPoints)
         for x in solns
             d = distance_to_endpoints(x, final_points)
