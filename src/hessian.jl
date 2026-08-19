@@ -177,6 +177,22 @@ function idx(
     return i
 end
 
+# the index of every critical point, in the order they were handed in. keeping the
+# order is what lets the connectivity matrix and the indices be read off together.
+function routing_point_indices(
+    cache::RoutingCache,
+    critical_points::Vector{Vector{Float64}}
+    )::Vector{Int64}
+
+    return [idx(cache.r, hessian(cache, P), P) for P in critical_points]
+end
+
+routing_point_indices(
+    r::RoutingFunction,
+    G::Vector{Expression},
+    critical_points::Vector{Vector{Float64}},
+) = routing_point_indices(RoutingCache(r, G), critical_points)
+
 function sort_routing_points_by_index(
     cache::RoutingCache,
     critical_points::Vector{Vector{Float64}}
@@ -184,8 +200,7 @@ function sort_routing_points_by_index(
 
     sorter = Dict{Int,Vector{Vector{Float64}}}()
 
-    for P in critical_points
-        ind = idx(cache.r, hessian(cache, P), P)
+    for (P, ind) in zip(critical_points, routing_point_indices(cache, critical_points))
         push!(get!(() -> Vector{Float64}[], sorter, ind), P)
     end
 

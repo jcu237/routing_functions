@@ -14,6 +14,7 @@ include("routing_points.jl")
 include("hessian.jl")
 include("path_tracking.jl")
 include("connectivity.jl")
+include("components.jl")
 
 export RoutingFunction,
     RoutingCache,
@@ -30,6 +31,7 @@ export RoutingFunction,
     hessian,
     hessian_and_tangent,
     idx,
+    routing_point_indices,
     sort_routing_points_by_index,
     project_to_variety!,
     project_to_variety_residual!,
@@ -39,6 +41,10 @@ export RoutingFunction,
     gradient_flow!,
     find_starting_points_for_flow,
     solve_ivp,
-    find_connectivity_matrix
+    find_connectivity_matrix,
+    Component,
+    component_labels,
+    connected_components,
+    euler_characteristic
 
 end

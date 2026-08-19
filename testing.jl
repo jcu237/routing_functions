@@ -1,5 +1,6 @@
 using Revise
 using ConnectedComponents
+using LinearAlgebra
 
 # 2 circles
 @var x[1:2]
@@ -78,6 +79,11 @@ M, routPoints = find_connectivity_matrix(cache)
 index_dict = sort_routing_points_by_index(cache, routPoints)
 euler_characteristic = length(index_dict[0]) - length(index_dict[1]) + length(index_dict[2])
 
+# same thing per component: each Component carries its routing points, their
+# indices, and the alternating sum of those indices
+components = connected_components(cache, routPoints, M)
+sum(C -> C.euler_characteristic, components) == euler_characteristic
+
 
 
 
@@ -147,3 +153,21 @@ bertini_solutions[1:120, 1:3]
 solns = [vec(bertini_solutions[i, 1:3]) for i in 1:120 if abs(evaluate(f, x[1:3] => vec(bertini_solutions[i,1:3]))) > 1e-20]
 
 [evaluate_grad_r(r, P) for P in solns]
+
+
+# Kuramoto model on 3 coupled oscillators. 
+
+@var s[1:2] c[1:2] w[1:2]
+freq1 = (s[1] * c[2] - c[1] * s[2]) + (s[1] * 1 - c[1] * 0) - 3 * w[1]
+freq2 = (s[2] * c[1] - c[2] * s[1]) + (s[2] * 1 - c[2] * 0) - 3 * w[2]
+norm1 = s[1]^2 + c[1]^2 - 1
+norm2 = s[2]^2 + c[2]^2 - 1
+steady_state = [freq1, freq2, norm1, norm2]
+Jac = differentiate.(steady_state, [s; c]')
+detJac = expand(det(Jac) / 4)
+
+r = RoutingFunction(detJac, vcat(s,c,w))
+cache = RoutingCache(r, steady_state)
+M, routPoints = find_connectivity_matrix(cache; grad_step_size = 1e-1, tol = 2e-1, start_step_size = 5e-1)
+connected_components(cache, routPoints, M)
+
