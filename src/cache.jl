@@ -116,6 +116,21 @@ function Base.show(io::IO, cache::RoutingCache)
           " cut out by ", cache.k, " equation", cache.k == 1 ? "" : "s")
 end
 
+# runs `f` with logging switched off.
+#
+# the ODE solvers warn when a path runs out of iterations or goes unstable, and on a
+# badly scaled r there are thousands of such paths. the warning's advice -- raise
+# `maxiters` -- does not apply here: the flows that run out of iterations are the
+# ones that were never going to reach a critical point, and raising the cap buys no
+# extra routing points at fifty times the running time. every caller checks the
+# return value (`retcode`, `isfinite`, the residual) instead, so the message carries
+# nothing the code does not already act on.
+#
+# `Base.CoreLogging` rather than the Logging stdlib so that this needs no new
+# dependency, and a logger rather than the solvers' `verbose` keyword because that
+# keyword's accepted type changes between OrdinaryDiffEq versions.
+_quiet(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+
 # G(x) and JG(x), written into the cache buffers
 function evaluate_G!(cache::RoutingCache, point::AbstractVector{Float64})
     HC.evaluate_and_jacobian!(cache.G_val, cache.JG_val, cache.G_sys, point)

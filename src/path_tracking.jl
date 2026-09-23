@@ -5,8 +5,7 @@
 # the pseudo-inverse is regularised so that a rank-deficient Jacobian (a singular
 # point of V(G)) damps the step instead of blowing it up.
 #
-# the undamped step is not reliable away from the variety -- on 3RPR it routinely
-# overshoots and sends the residual up by three orders of magnitude -- so each step
+# the undamped step is not reliable away from the variety so each step
 # is backtracked until it actually decreases ‖G‖. that makes the iteration
 # monotone, which in turn makes "the residual stopped improving" a meaningful
 # stopping rule: `tol` is absolute and on a badly scaled system sits below
@@ -29,7 +28,14 @@ function _project_to_variety!(
     residual = Inf
 
     for _ = 1:maxiter
-        HC.evaluate_and_jacobian!(G_val, JG_val, G_sys, point)
+        # same hazard as in the flow field: a step that overflowed cannot be evaluated
+        all(isfinite, point) || return point, Inf
+        try
+            HC.evaluate_and_jacobian!(G_val, JG_val, G_sys, point)
+        catch err
+            err isa InexactError || rethrow()
+            return point, Inf
+        end
         residual = LA.norm(G_val)
         residual < tol && return point, residual
 
@@ -46,7 +52,17 @@ function _project_to_variety!(
             @inbounds for i in eachindex(point)
                 point[i] = base[i] - α * step[i]
             end
-            HC.evaluate!(G_val, G_sys, point)
+            if !all(isfinite, point)
+                α *= 0.5
+                continue
+            end
+            try
+                HC.evaluate!(G_val, G_sys, point)
+            catch err
+                err isa InexactError || rethrow()
+                α *= 0.5
+                continue
+            end
             if LA.norm(G_val) < residual
                 accepted = true
                 break
@@ -147,6 +163,21 @@ function nearest_index(
     return ind
 end
 
+# evaluates the three systems the flow field needs, reporting `false` instead of
+# throwing when the state is too far gone to evaluate. see `flow!` below.
+function _evaluate_field!(G_val, JG_val, grad_val, f_val, G_sys, grad_sys, f_sys, u)
+    all(isfinite, u) || return false
+    try
+        HC.evaluate_and_jacobian!(G_val, JG_val, G_sys, u)
+        HC.evaluate!(grad_val, grad_sys, u)
+        HC.evaluate!(f_val, f_sys, u)
+    catch err
+        err isa InexactError || rethrow()
+        return false
+    end
+    return all(isfinite, G_val) && all(isfinite, grad_val) && isfinite(@inbounds f_val[1])
+end
+
 # projected gradient field of r on X = V(G): the tangential component of
 # sign(r)∇r, plus a Newton correction that holds the path on X. this is the field
 # both the routing point search and the path tracker integrate.
@@ -180,9 +211,24 @@ function _projected_gradient_field(
     tangential = zeros(Float64, n)
 
     function flow!(du, u, dir, t)
-        HC.evaluate_and_jacobian!(G_val, JG_val, G_sys, u)
-        HC.evaluate!(grad_val, grad_sys, u)
-        HC.evaluate!(f_val, f_sys, u)
+        # the integrator probes states of its own choosing, and a path running off to
+        # infinity takes the compiled systems with it. two ways that hurts: u itself
+        # goes non-finite, or u is merely enormous and a high degree numerator
+        # overflows while being evaluated. either way the interpreter produces a
+        # complex NaN, which `HC.evaluate!` cannot write into a Float64 buffer -- it
+        # throws an InexactError, out of the solver and out of the caller.
+        #
+        # a path in that state is dead whatever we do, so hand back a zero derivative
+        # and let the terminating callback, or the solver's own instability check,
+        # end it. the callers already drop paths that end up non-finite.
+        #
+        # only an InexactError is swallowed; anything else is a real bug and is
+        # rethrown. the magnitude at which this trips depends on the degree and the
+        # coefficients of r, so there is no threshold on ‖u‖ to test against instead.
+        if !_evaluate_field!(G_val, JG_val, grad_val, f_val, G_sys, grad_sys, f_sys, u)
+            fill!(du, 0.0)
+            return nothing
+        end
 
         # both halves of the field solve against J Jᵀ + reg·I, so factor it once
         normal_factor!(M, JG_val, reg)
@@ -260,14 +306,18 @@ function gradient_flow!(
     # capping the step at tol keeps a single step from jumping clean over the ball,
     # which the root finder would then never see
     prob = SciMLBase.ODEProblem(cache.flow_unit!, copy(point), tspan, 1.0)
-    sol = SciMLBase.solve(
-        prob,
-        reltol = 1e-8,
-        abstol = 1e-8,
-        dtmax = dtmax > 0 ? dtmax : tol,
-        maxiters = maxiters,
-        callback = callback,
-    )
+    # a path that stalls is reported through the return value, not by the solver:
+    # `arrived_at_endpoint` below is false and `solve_ivp` drops it.
+    sol = _quiet() do
+        SciMLBase.solve(
+            prob,
+            reltol = 1e-8,
+            abstol = 1e-8,
+            dtmax = dtmax > 0 ? dtmax : tol,
+            maxiters = maxiters,
+            callback = callback,
+        )
+    end
 
     point .= last(sol.u)
     arrived_at_endpoint = sol.retcode == SciMLBase.ReturnCode.Terminated

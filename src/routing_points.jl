@@ -16,6 +16,17 @@ end
 
 routing_system(cache::RoutingCache)::System = cache.sys
 
+# `stop_when` is a predicate on a real routing point of ℝⁿ. a solution of the
+# routing system carries the Lagrange multipliers as well and need not be real, so
+# it is cut down to its ambient part and checked for realness before the predicate
+# ever sees it.
+function _satisfies(stop_when, z::AbstractVector{ComplexF64}, n::Int64)::Bool
+    @inbounds for i = 1:n
+        abs(imag(z[i])) < 1e-8 || return false
+    end
+    return stop_when(real.(view(z, 1:n)))::Bool
+end
+
 # gradient flow of r restricted to V(G): move along the tangential component of
 # sign(r)∇r and correct back onto the variety at every step. the limits are critical
 # points of r|V(G), i.e. honest routing points, which is what makes them usable as
@@ -24,11 +35,13 @@ function flow_to_routing_points(
     cache::RoutingCache;
     nstarts::Int64 = 100,
     box::Float64 = 3.0,
+    starts::Union{Nothing,Vector{Vector{Float64}}} = nothing,
     tspan::Tuple{Float64,Float64} = (0.0, 200.0),
     maxiters::Int64 = 10_000,
     f_tol::Float64 = 1e-8,
     proj_tol::Float64 = 1e-8,
     max_attempts::Int64 = 20,
+    stop_when::Union{Nothing,Function} = nothing,
     verbose::Bool = false
     )::Vector{Vector{ComplexF64}}
 
@@ -39,24 +52,48 @@ function flow_to_routing_points(
     # integrator jumps around, so cut it short.
     f_cb = zeros(Float64, 1)
     function on_zero_locus(u, t, integrator)
+        # the field can carry a path off to infinity, and f evaluated there is NaN,
+        # which `HC.evaluate!` cannot write into a Float64 buffer: it throws, out of
+        # the integrator and out of this whole call. a diverged path is one to cut
+        # short anyway -- the isfinite check after `solve` then discards it.
+        all(isfinite, u) || return true
         HC.evaluate!(f_cb, r.f_sys, u)
         return abs(@inbounds f_cb[1]) < f_tol
     end
     callback = SciMLBase.DiscreteCallback(on_zero_locus, SciMLBase.terminate!)
 
+    # where the flows begin. sampling [-box, box]^n uniformly finds the large
+    # components quickly and the small ones hardly ever -- a random point lands in a
+    # component in proportion to its size -- so a caller who knows where the small
+    # ones are can hand in their own starts instead. hugging the zero locus of f is
+    # the usual choice: every component of V(G) ∖ V(f) touches it. `nstarts`, `box`
+    # and `max_attempts` go unused then, and each supplied point is tried once.
+    supplied = starts !== nothing
+    if supplied
+        all(p -> length(p) == n, starts) || error(
+            "every supplied start must have length ", n,
+            ", the number of variables r is written in",
+        )
+    end
+    wanted = supplied ? length(starts) : nstarts
+    budget = supplied ? length(starts) : max_attempts * nstarts
+
     pts = Vector{ComplexF64}[]
     start_pt = zeros(Float64, n)
     started = 0
     attempts = 0
-    attempt_budget = max_attempts * nstarts
 
     # `dir` is the ODE parameter: +1 flows to the attracting critical points of
     # r|V(G), -1 to the repelling ones. neither direction alone finds both.
-    while started < nstarts && attempts < attempt_budget
+    while started < wanted && attempts < budget
         attempts += 1
 
-        @inbounds for i = 1:n
-            start_pt[i] = box * (2 * rand() - 1)
+        if supplied
+            copyto!(start_pt, starts[attempts])
+        else
+            @inbounds for i = 1:n
+                start_pt[i] = box * (2 * rand() - 1)
+            end
         end
 
         # a start that never reached V(G) is not worth integrating: the field's
@@ -69,13 +106,15 @@ function flow_to_routing_points(
 
         for dir in (1.0, -1.0)
             prob = SciMLBase.ODEProblem(cache.flow!, copy(start_pt), tspan, dir)
-            sol = SciMLBase.solve(
-                prob,
-                reltol = 1e-8,
-                abstol = 1e-8,
-                maxiters = maxiters,
-                callback = callback,
-            )
+            sol = _quiet() do
+                SciMLBase.solve(
+                    prob,
+                    reltol = 1e-8,
+                    abstol = 1e-8,
+                    maxiters = maxiters,
+                    callback = callback,
+                )
+            end
             x = last(sol.u)
             all(isfinite, x) || continue
 
@@ -87,13 +126,29 @@ function flow_to_routing_points(
             newton_result = HC.newton(cache.sys_interp, ComplexF64.(vcat(x, λ)))
             HC.is_success(newton_result) || continue
             push!(pts, HC.solution(newton_result))
+
+            # the caller is after one particular kind of routing point and this is
+            # one: stop before paying for the remaining flows, and -- through
+            # `routing_points` -- before paying for monodromy.
+            if stop_when !== nothing && _satisfies(stop_when, pts[end], n)
+                verbose && println(
+                    "flow_to_routing_points: stop_when satisfied after $attempts attempts",
+                )
+                return [pts[end]]
+            end
         end
     end
 
-    if verbose || (started < nstarts)
-        msg = "flow_to_routing_points: $started of $nstarts starts landed on V(G) " *
+    if verbose || (started < wanted)
+        msg = supplied ?
+              "flow_to_routing_points: $started of $wanted supplied starts lie on V(G)" :
+              "flow_to_routing_points: $started of $nstarts starts landed on V(G) " *
               "in $attempts attempts (box = $box)"
-        started < nstarts ? @warn(msg * "; raise `box` or `max_attempts`") : println(msg)
+        if started < wanted
+            @warn(msg * (supplied ? "" : "; raise `box` or `max_attempts`"))
+        else
+            println(msg)
+        end
     end
 
     return isempty(pts) ? pts : HC.unique_points(pts)
@@ -107,8 +162,10 @@ function routing_points(
     zero_tol::Float64 = 1e-5,
     nstarts::Int64 = 100,
     box::Float64 = 3.0,
+    starts::Union{Nothing,Vector{Vector{Float64}}} = nothing,
     proj_tol::Float64 = 1e-8,
     max_attempts::Int64 = 20,
+    stop_when::Union{Nothing,Function} = nothing,
     verbose::Bool = false
     )::Vector{Vector{Float64}}
 
@@ -124,10 +181,25 @@ function routing_points(
         cache;
         nstarts = nstarts,
         box = box,
+        starts = starts,
         proj_tol = proj_tol,
         max_attempts = max_attempts,
+        stop_when = stop_when,
         verbose = verbose,
     )
+
+    # a seed that already satisfies `stop_when` is the answer. monodromy would only
+    # turn up further routing points, which on a system whose generic fibre is out
+    # of reach is the whole cost of the call.
+    if stop_when !== nothing
+        hits = [p for p in seed_points if _satisfies(stop_when, p, n)]
+        if !isempty(hits)
+            verbose && println("routing_points: stop_when met by a flow seed; skipping monodromy")
+            # the ambient part is real by construction; the multipliers are real to
+            # the accuracy Newton reached, so `all_vars` takes real parts of those too
+            return [all_vars ? real.(p) : real.(p[1:n]) for p in hits]
+        end
+    end
 
     S0 = randn(ComplexF64, N)
     Q0 = randn(ComplexF64, m, N + 1)

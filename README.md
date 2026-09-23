@@ -8,7 +8,9 @@ The package implements algorithms from
 > *Numerical Algorithms, 100(1), 63-84, 2025*
 
 This paper introduces the use of **routing functions**: rational functions whose gradient flows reveal the connected components of a real algebraic variety.
-`ConnectedComponents.jl` automates this process, providing an efficient framework for computing critical points and tracking gradient paths.
+`ConnectedComponents.jl` automates this process, providing an efficient framework for computing critical points and tracking gradient paths. 
+
+See also the packages `HypersurfaceRegions.jl` and `ProjectedHypersurfaces.jl`. These also implement routing functions to compute the connected components in the complement of a real hypersurface. Many ideas from those packages are used here. 
 
 Several examples are included in 'testing.jl'. 
 
@@ -65,6 +67,20 @@ components = connected_components(cache, routPoints, M)
 ```
 
 The two concentric circles above give two components of χ = 0, as they should.
+
+### Stopping early
+
+`routing_points` and `flow_to_routing_points` take a `stop_when` predicate on a
+real routing point in `R^n`. The flow returns the first point satisfying it, and
+`routing_points` then skips monodromy altogether:
+
+```julia
+routing_points(cache; stop_when = P -> all(>(1e-4), view(P, 1:4)))
+```
+
+That is worth having when a single witness answers the question and the routing
+system is too large for `monodromy_solve` to complete -- see `positive_landau.jl`,
+where the routing system is 13 equations whose first block has degree 11.
 
 ### Badly scaled systems
 

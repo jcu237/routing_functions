@@ -145,7 +145,7 @@ euler = length(index_dict[0]) - length(index_dict[1]) + length(index_dict[2])
 
 
 # for chubs, tried solving in bertini instead
-include("bertiniIO.jl")
+include("examples/bertiniIO.jl")
 bertini_solutions = read_real_parts("chubs_bertini_run/real_finite_solutions")
 
 bertini_solutions[1:120, 1:3]

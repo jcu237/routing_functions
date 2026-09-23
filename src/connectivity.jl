@@ -53,6 +53,7 @@ function find_connectivity_matrix(
     tol::Float64 = 1e-2,
     nstarts::Int64 = 100,
     box::Float64 = 3.0,
+    starts::Union{Nothing,Vector{Vector{Float64}}} = nothing,
     proj_tol::Float64 = 1e-8,
     max_attempts::Int64 = 20,
     verbose::Bool = false
@@ -64,6 +65,7 @@ function find_connectivity_matrix(
         cache;
         nstarts = nstarts,
         box = box,
+        starts = starts,
         proj_tol = proj_tol,
         max_attempts = max_attempts,
         verbose = verbose,
