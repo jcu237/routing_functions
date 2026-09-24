@@ -27,12 +27,8 @@ JF = differentiate(F, vars)
 
 r = RoutingFunction(det(JF[1:4,1:4]), vars)
 
-# build the cache once: every routine below reuses its compiled systems and buffers
 cache = RoutingCache(r, F)
 
-# this system carries constants of size A[2] = 16 and c3 = 100, so the part of
-# V(F) we care about is nowhere near the default [-3,3]^6 search box and almost no
-# random start projects onto the variety. 20 gets the hit rate up to roughly 1/3.
 routPoints = routing_points(cache; box = 20.0, verbose = true)
 
 index_dict = sort_routing_points_by_index(cache, routPoints)

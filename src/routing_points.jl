@@ -240,7 +240,7 @@ function routing_points(
         )
     end
 
-    # the flow seeds are Newton-certified solutions of sys, so keep them even when
+    # the flow seeds are Newton-refined solutions of sys, so keep them even when
     # the homotopy back to p_target loses the corresponding path
     candidates = vcat(
         HC.real_solutions(res),

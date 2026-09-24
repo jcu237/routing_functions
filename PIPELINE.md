@@ -182,11 +182,11 @@ Per start:
    1e-8`, terminating on a `DiscreteCallback` that fires when `|f| < f_tol`. `r`
    changes sign across `V(f)`, so the field is discontinuous there and the integrator
    would otherwise thrash. The callback also fires on a non-finite state.
-4. **Certify the endpoint.** Recover `λ` by least squares from
+4. **refine the endpoint.** Recover `λ` by least squares from
    `g^(d+1)·JGᵀ λ = grad_num`, then run `HC.newton` on the full routing system. Only
-   Newton-certified solutions are kept.
+   Newton-refined solutions are kept.
 
-`HC.unique_points` deduplicates. `stop_when` is an early exit: if a certified point
+`HC.unique_points` deduplicates. `stop_when` is an early exit: if a refined point
 satisfies the caller's predicate, return it immediately and skip the rest — including
 monodromy.
 
@@ -204,7 +204,7 @@ pts = routing_points(cache; all_vars, zero_tol, nstarts, box, starts,
    system, so each must be moved onto the generic fibre individually.
 4. **`monodromy_solve`** on `param_sys` from all those start solutions.
 5. **Track the whole fibre back** to `p_target = 0`.
-6. Keep real solutions, plus the real flow seeds directly — they are Newton-certified
+6. Keep real solutions, plus the real flow seeds directly — they are Newton-refined
    already, so they survive even if the homotopy loses their path — then drop anything
    with `|r| ≤ zero_tol` as lying on the removed locus.
 
