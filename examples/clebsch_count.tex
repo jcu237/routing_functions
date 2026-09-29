@@ -1,0 +1,208 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
+
+\newcommand{\RP}{\mathbb{R}\mathrm{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Cinf}{C_\infty}
+\newcommand{\Hinf}{H_\infty}
+
+\title{Counting the regions of the Clebsch cubic\\ minus its 27 lines}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-3em}
+
+\section{The question}
+
+Let $X=V(f_3)\subset\mathbb{P}^3$ be the Clebsch cubic surface and let $g$ be the
+nonic with $V(g)\cap X$ equal to the $27$ lines. The routing function
+$r=g/q^5$, with $q>0$ a shifted sum of squares, has
+\[
+  |r|\longrightarrow 0 \quad\text{on the $27$ lines and as } \|x\|\to\infty ,
+\]
+so \texttt{connected\_components} returns the connected components of
+$X_{\mathrm{aff}}\smallsetminus V(g)$, where $X_{\mathrm{aff}}=X(\R)\cap\R^3$ is the
+affine part of the surface in the chosen chart.
+
+Writing $\Hinf$ for the plane at infinity and $\Cinf=X\cap\Hinf$, we have
+$X_{\mathrm{aff}}=X(\R)\smallsetminus\Cinf$, so
+\[
+  X_{\mathrm{aff}}\smallsetminus V(g)
+  \;=\; X(\R)\smallsetminus\bigl(\,\text{$27$ lines}\;\cup\;\Cinf\,\bigr).
+\]
+The count we want is therefore the number of \emph{faces} of the curve arrangement
+$\mathcal{A}=\{\text{27 lines}\}\cup\Cinf$ on the closed surface $X(\R)$. The
+arrangement is a CW decomposition, so Euler's formula gives
+\begin{equation}\label{eq:euler}
+  F \;=\; \chi\bigl(X(\R)\bigr) - V + E .
+\end{equation}
+Everything below is the computation of $V$ and $E$.
+
+\section{The Euler characteristic of \texorpdfstring{$X(\R)$}{X(R)}}
+
+All $27$ lines of the Clebsch surface are real. A smooth real cubic surface whose
+$27$ lines are all real is $\RP^2$ blown up at six real points. A real blow-up
+replaces a point by an $\RP^1$, and $\chi(\RP^1)=0$, so each blow-up changes the
+Euler characteristic by $-1$. Hence
+\begin{equation}\label{eq:chi}
+  \chi\bigl(X(\R)\bigr) \;=\; \chi(\RP^2)-6 \;=\; 1-6 \;=\; -5 .
+\end{equation}
+
+\section{The arrangement of the 27 lines}
+
+Every line on a smooth cubic surface meets exactly $10$ of the others, so the
+number of intersecting pairs is
+\[
+  \tfrac{1}{2}\cdot 27\cdot 10 \;=\; 135 .
+\]
+
+\subsection*{A general cubic surface}
+
+If no three lines are concurrent, those $135$ pairs give $135$ distinct points and
+each line carries $10$ of them. A line of $X(\R)$ is a circle, and $k$ marked
+points cut a circle into $k$ arcs, so
+\[
+  V=135,\qquad E=27\cdot 10=270,\qquad F=-5-135+270=\boxed{130},
+\]
+which is the number quoted for a general real cubic surface with all lines real.
+
+\subsection*{The Clebsch surface}
+
+The Clebsch is not general: it carries $10$ \emph{Eckardt points}, where three of
+the $27$ lines are concurrent. (It is the unique cubic surface with ten of them.)
+Each Eckardt point accounts for $\binom{3}{2}=3$ of the $135$ intersecting pairs
+but contributes only one point, so
+\begin{equation}\label{eq:V}
+  V \;=\; 135-3\cdot 10+10 \;=\; 115 .
+\end{equation}
+Let $e(\ell)$ be the number of Eckardt points on a line $\ell$. Of the ten lines
+meeting $\ell$, exactly $2e(\ell)$ of them meet it at Eckardt points, two at each
+such point; the remaining $10-2e(\ell)$ meet it at distinct simple points. So
+$\ell$ carries
+\[
+  e(\ell)+\bigl(10-2e(\ell)\bigr) \;=\; 10-e(\ell)
+\]
+marked points, hence that many arcs. Since each Eckardt point lies on three lines,
+$\sum_\ell e(\ell)=3\cdot 10=30$, and
+\begin{equation}\label{eq:E}
+  E \;=\; \sum_{\ell}\bigl(10-e(\ell)\bigr) \;=\; 270-30 \;=\; 240 .
+\end{equation}
+Substituting \eqref{eq:chi}, \eqref{eq:V} and \eqref{eq:E} into \eqref{eq:euler},
+\[
+  F \;=\; -5-115+240 \;=\; \boxed{120}
+\]
+faces in $\RP^3$. The ten Eckardt points cost exactly ten regions relative to the
+general surface.
+
+\section{The curve at infinity}
+
+The computation is affine, so $\Cinf$ must be added to the arrangement. It is a
+genuine extra curve: restricting the degree-three part of the defining equation to
+random real lines yields $1$ or $3$ real roots depending on the line, whereas three
+real lines would give three every time. So $\Hinf$ is \emph{not} a tritangent plane
+and $\Cinf$ is not a union of three of the $27$ lines.
+
+Each line $\ell$ meets $\Hinf$ in a single point, which lies on $X$ and hence on
+$\Cinf$: twenty-seven incidences, but numerically only
+\[
+  21 \text{ distinct points},\qquad\text{of which } 3 \text{ are already vertices.}
+\]
+Those three are Eckardt points lying at infinity; they carry $3\cdot 3=9$ of the
+lines between them. Hence:
+
+\paragraph{Vertices.} The new vertices are the points of $\ell\cap\Hinf$ not already
+counted in \eqref{eq:V}:
+\begin{equation}\label{eq:Vp}
+  V' \;=\; 115 + (21-3) \;=\; 133 .
+\end{equation}
+
+\paragraph{Edges.} A line gains one further marked point unless its point at
+infinity was already one of its marked points; the $9$ lines through the three
+Eckardt points at infinity gain nothing, the other $18$ gain one. The curve
+$\Cinf$ itself now carries the $21$ marked points and so contributes $21$ arcs.
+\begin{equation}\label{eq:Ep}
+  E' \;=\; \underbrace{240}_{\text{\eqref{eq:E}}} + \underbrace{18}_{\text{new marks}}
+        + \underbrace{21}_{\Cinf} \;=\; 279 .
+\end{equation}
+(If some component of $\Cinf$ carried no marked point, it would need one dummy
+vertex \emph{and} one dummy edge, leaving $V'-E'$ unchanged; the number of
+components of $\Cinf$ therefore does not affect the answer.)
+
+\paragraph{Faces.} By \eqref{eq:euler}, \eqref{eq:Vp} and \eqref{eq:Ep},
+\[
+  F' \;=\; -5 - 133 + 279 \;=\; \boxed{141}.
+\]
+
+\section{Why 141 is also the number of routing points}
+
+Fix a face $C$ of the arrangement. On $C$ the function $|r|$ is positive, vanishes
+on the whole of $\partial C$ --- the boundary consists of arcs of the $27$ lines,
+where $g=0$, and of $\Cinf$, where $|r|\to 0$ because $\deg q^5=10>9=\deg g$ ---
+and is proper. It therefore attains an interior maximum, which is a critical point
+of $r|_X$, i.e.\ a routing point.
+
+Morse theory gives $\chi(C)=\sum_p(-1)^{\operatorname{index}(p)}$, summed over the
+critical points in $C$. Every face here is an open disc, so $\chi(C)=1$ and
+generically $C$ contains exactly one critical point, of index $0$. Summing over
+faces predicts
+\[
+  \textbf{141 routing points, every one of index } 0 .
+\]
+Because all indices vanish, the connectivity matrix of
+\texttt{find\_connectivity\_matrix} is the identity: no gradient path is tracked,
+and the number of components is simply the number of critical points found.
+
+\section{Numerical confirmation}
+
+The combinatorial input was computed from the surface itself, and the routing
+points independently by the package.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Quantity & Predicted & Computed \\
+\midrule
+real lines                              & 27  & 27 \\
+intersecting pairs                      & 135 & 135 \\
+distinct intersection points $V$        & 115 & 115 \\
+Eckardt points                          & 10  & 10 \\
+lines with $8$ / $10$ marked points     & 15 / 12 & 15 / 12 \\
+arcs $E$                                & 240 & 240 \\
+\midrule
+distinct points of $\ell\cap\Hinf$      & --- & 21 \\
+of those, already vertices              & --- & 3 \\
+lines gaining a marked point            & --- & 18 \\
+\midrule
+\textbf{faces} $F'$                     & \textbf{141} & --- \\
+\textbf{routing points found}           & ---          & \textbf{141}, all of index $0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The two counts are obtained independently, so their agreement is mutual
+confirmation. Landing on exactly $141$ rather than more also confirms, after the
+fact, the assumption that every face is a disc: an annular face would have
+contributed an extra critical point of index $1$, and none was found.
+
+\section{Caveats}
+
+\begin{itemize}\itemsep2pt
+\item The incidence counts ($135$ pairs, $10$ Eckardt points, and the $21/3/18$
+  figures at infinity) are numerical, decided with a tolerance of $10^{-6}$ on
+  normalised homogeneous coordinates.
+\item $\Cinf$ is assumed smooth, i.e.\ $\Hinf$ is nowhere tangent to $X$. A
+  tangency would change both $V'$ and $E'$.
+\item The step from $141$ faces to $141$ critical points assumes each face is a
+  disc carrying a single non-degenerate maximum of $|r|$; this is confirmed a
+  posteriori by the computation.
+\item $141$ counts faces in this particular affine chart. A different chart moves
+  $\Cinf$ and changes the answer; the chart-independent number is the projective
+  one, $120$.
+\end{itemize}
+
+\end{document}
