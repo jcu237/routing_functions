@@ -1,8 +1,8 @@
 # ConnectedComponents.jl — how the pipeline computes
 
-Reference for the whole computation, from `r` and `G` to a list of `Component`s.
-Each stage names the function that does the work, the file it lives in, and what it
-actually does. Written against the current source.
+Reference for the whole computation, from `r` and `G` to a list of `Component`s: the
+mathematics (§1–§3), then every source file in pipeline order with what each function
+computes (§4), the call graph (§5), the keywords (§6), and what can go wrong (§7).
 
 The mathematics is from *Smooth Connectivity in Real Algebraic Varieties* (Cummings,
 Hauenstein, Hong, Smyth), with ideas borrowed from `HypersurfaceRegions.jl` and
@@ -17,369 +17,529 @@ Given
 - `X = V(G) ⊆ ℝⁿ`, a real variety cut out by `G = [g₁, …, g_k]`, and
 - a **routing function** `r = f / gᵈ`,
 
-the package returns the connected components of `X ∖ V(f)`. Note the `∖ V(f)`: the
-zero locus of the numerator is *removed*, which is how singularities and other
-unwanted loci get excluded — you put them inside `V(f)`.
+the package returns the connected components of `U = X ∖ V(f)`, each with its Euler
+characteristic.
 
-The whole method rests on `r|X` being a Morse function that vanishes on the boundary
-of every component and at infinity. Then each component contains at least one
+Since `r|X` is a routing function, each component contains at least one
 critical point, gradient flow connects those critical points within a component and
-never between components, and `χ = ∑(−1)^index` per component.
+never between components.
 
----
+**Standing assumption.** `X` is smooth of dimension `n − k` at every point of `U`:
+`JG` has rank `k` there. Singular points of `X` must lie in `V(f)`; multiply them into
+`f` with `singular_locus(G, vars)` (for a hypersurface `g` that is `‖∇g‖²`).
 
-## 1. `RoutingFunction` — the Morse function
+Notation, as in the code:
 
-**[`src/routing_functions.jl`](src/routing_functions.jl)**
-
-```julia
-r = RoutingFunction(f, vars, c)      # or (f, vars), (f, c), (f)
-```
-
-The constructor builds
-
-| quantity | definition | why |
+| symbol | meaning | code |
 |---|---|---|
-| `g` | `∑ᵢ (xᵢ − cᵢ)² + 1` | strictly positive on `ℝⁿ`, so `r` has no poles and `sign(r) = sign(f)` |
-| `d` | `degree(f) ÷ 2 + 1` | makes `deg gᵈ > deg f`, so `r → 0` at infinity |
-| `grad` | `∇r`, symbolically | |
-| `grad_num` | `∇f·g − d·f·∇g` | equals `g^(d+1)·∇r`, and is **polynomial** |
-
-`c` is random unless given; a generic centre is what makes `r|X` Morse (distinct
-critical values, non-degenerate Hessians).
-
-`grad_num` is the key trick: `∇r` is a rational function, but clearing the
-denominator gives a polynomial with the same zero locus, which is what
-HomotopyContinuation can solve.
-
-Four `InterpretedSystem`s are compiled once and stored: `r_sys`, `f_sys`,
-`grad_sys`, `grad_num_sys`. This is purely for speed — `HC.evaluate(expr, vars => P)`
-rebuilds an interpreter tape on every call.
-
-Accessors: `evaluate_r`, `evaluate_grad_r`, `evaluate_g` (the last evaluates the sum
-of squares directly, skipping the interpreter).
+| `x ∈ ℝⁿ` | ambient coordinates | `vars`, `n` |
+| `G = (g₁,…,g_k)` | equations of `X` | `G`, `k` |
+| `JG` | `k × n` jacobian of `G` | `JG_val`, `jacobian_G!` |
+| `f` | numerator; `V(f)` is removed | `r.f` |
+| `c`, `g = ‖x − c‖² + 1` | centre, denominator base | `r.c`, `r.g` |
+| `d = deg f ÷ 2 + 1` | denominator exponent | `r.d` |
+| `V` | orthonormal basis of `T_P X` (`nullspace(JG)`) | `V` |
+| `λ` | Lagrange multipliers, `JGᵀλ = ∇r` | `λ` |
+| `μ` | scaled multipliers `μ = g^(d+1) λ`, `JGᵀμ = grad_num` | `μ` |
 
 ---
 
-## 2. `RoutingCache` — everything derived from `(r, X)`
+## 1. Routing functions and Morse theory
 
-**[`src/cache.jl`](src/cache.jl)**
+### 1.1 Properties of `r = f / gᵈ`
 
-```julia
-cache = RoutingCache(r, G; reg = 1e-8)
+1. `g ≥ 1`, so `r` is smooth on `ℝⁿ`, `sign r = sign f`, and `r = 0` exactly on `V(f)`.
+2. `2d > deg f`, so `r → 0` as `‖x‖ → ∞`.
+3. On a component `C` of `U`, `|r| > 0` and `|r| → 0` on `∂C ⊆ V(f)` and at infinity, so
+   the superlevel sets `{x ∈ C : |r| ≥ ε}` are compact and `|r|` has a maximum on `C`.
+   **Every component contains a routing point** (a critical point of `r|X`), in fact a
+   local maximum of `|r|`.
+4. For a generic centre `c`, `r|X` is Morse: its critical points are nondegenerate.
+   That is why `c` is random unless given. A symmetric `c` (the centre of a circle,
+   say) can make it degenerate.
+
+### 1.2 Index and Euler characteristic
+
+Morse theory for `−|r|` on `C`: `C` has the homotopy type of a CW complex with one cell
+of dimension `index(P)` for each critical point `P ∈ C`, where
+
+> **index(P)** = number of eigenvalues of the hessian of `r|X` at `P` with the sign of
+> `r(P)` = number of directions in which `|r|` increases.
+
+Index 0 is a local maximum of `|r|`, index `dim X` a local minimum. Hence
+
+```
+χ(C) = Σ_{P ∈ C} (−1)^index(P)
 ```
 
-Building the cache is the expensive part: every symbolic `differentiate` and every
-`InterpretedSystem` construction happens here, once. Afterwards the numerical
-routines only touch preallocated buffers.
+which is only right if every routing point of `C` was found.
 
-Contents:
+### 1.3 The routing system
 
-- `G_sys` — `G` compiled. Its Jacobian is `JG`.
-- `∇G_sys` — the gradients `[∇g₁; …; ∇g_k]` stacked row-wise, chosen so that the
-  `i`-th `n × n` block of *its* Jacobian is exactly `∇²gᵢ`. That is how second
-  derivatives are obtained without a second symbolic pass.
-- `sys`, `sys_interp` — the routing system (§3).
-- `param_sys` — the parametrised family monodromy runs over (§5).
-- `flow!`, `flow_unit!` — the two gradient fields (§4).
-- scratch: `G_val`, `JG_val`, `HG_val`, `grad_val`, `Hr_val`, `grad_num_val`, `M`,
-  `wk`, `wn`, `wn2`, all sized from `n` and `k`.
+`P ∈ X` is critical for `r|X` iff `∇r(P) = JGᵀλ` for some `λ ∈ ℝᵏ`. By the quotient rule
 
-Two linear-algebra helpers used throughout:
+```
+∇r = (g ∇f − d f ∇g) / g^(d+1) = grad_num / g^(d+1)
+```
 
-- **`normal_factor!(M, J, reg)`** — Cholesky-factors `J Jᵀ + reg·I` in place, lower
-  triangle. The regularisation means a rank-deficient `J` (a singular point of `X`)
-  *damps* the step instead of blowing it up, and guarantees positive-definiteness so
-  the factorisation never fails. Hand-rolled because `k` is usually 1 or 2, where
-  LAPACK's dispatch overhead dwarfs the arithmetic.
-- **`normal_solve!(y, L)`** — in-place `L Lᵀ y = y`.
+and clearing denominators (`μ = g^(d+1) λ`) gives the **routing system** in the
+`N = n + k` unknowns `(x, μ)`:
 
-**`_quiet(f)`** runs `f` under a `NullLogger`. The ODE solvers warn on every path
-that exhausts `maxiters`, and there can be thousands; the advice to raise `maxiters`
-is measurably useless here, and every caller inspects `retcode`/`isfinite`/residuals
-instead.
+```
+F₁(x, μ) = grad_num(x) − JG(x)ᵀ μ  =  0        (n equations)
+F₂(x)    = G(x)                    =  0        (k equations)
+```
 
-> **Caches are stateful.** The buffers are shared, so one cache must not be used
-> from two threads at once. The flow fields are the exception: each closure owns
-> private buffers, so an integration in progress cannot be clobbered by a call to,
-> say, `hessian`.
+Its real solutions with `f ≠ 0` are exactly the routing points (`g ≥ 1` on `ℝⁿ`, so real
+`(x, λ)` and `(x, μ)` correspond one to one). It also has real solutions on `V(f)`, which
+are discarded (§3.4), and complex ones with `g = 0`. Writing it in `μ` rather than `λ`
+keeps the degree of `F₁` at `max(deg f + 1, deg G)` instead of
+`max(deg f + 1, 2d + deg G + 2)` (Clebsch: `[10, 10, 10, 3]` instead of `[15, 15, 15, 3]`).
+
+### 1.4 The gradient flow on `X`
+
+With `P_T = I − JGᵀ(JGJGᵀ)⁻¹JG` the projection onto the tangent space, the flow is
+
+```
+ẋ = s · sign(r) · P_T ∇r  −  JGᵀ(JGJGᵀ)⁻¹ G,        s = ±1
+```
+
+- Tangential part: on `X`, `d|r|/dt = s ‖P_T ∇r‖²`. With `s = +1` `|r|` increases, so a
+  path never reaches `V(f)` (where `r = 0`), stays in its component, keeps the sign of
+  `r`, and converges to a critical point — generically a local maximum of `|r|`.
+- Normal part: `d G(x)/dt = −G(x)` (because `JG P_T = 0`), so drift off `X` decays like `e⁻ᵗ`.
+- `JGJGᵀ` is replaced by `JGJGᵀ + reg·I` so that a rank-deficient `JG` damps the step.
+
+The routing-point search rescales time by `1/|r(x₀)|` (`x₀` the start), so the speed
+does not depend on the scale of `f`. The connectivity stage uses the unit-speed field
+(tangential part normalised, time = arc length), because it starts next to a critical
+point where `∇r ≈ 0`.
+
+### 1.5 The hessian on `X`
+
+For a geodesic `γ` of `X` through `P` with `γ'(0) = u`,
+`(r∘γ)''(0) = uᵀ∇²r u + ∇r·γ''(0)`, and differentiating `G(γ(t)) = 0` twice gives
+`JG γ''(0) = −(uᵀ∇²gⱼ u)ⱼ`. Only the normal part `JGᵀλ` of `∇r` sees `γ''`, so
+
+```
+H = Vᵀ ( ∇²r − Σⱼ λⱼ ∇²gⱼ ) V,        JGᵀλ = ∇r  (least squares)          (1)
+```
+
+the projected hessian of the Lagrangian `r − λᵀG`. (1) holds at every point of `X`.
+The package uses (1).
+
+*The paper's form.* `H = Vᵀ∇²r V + Σᵢ ∂ᵢr · Wᵢ`, with the `Wᵢ` solving a
+`(k·d' + d'²) × (n·d')` linear system (`d' = dim X`). The `Wᵢ` encode the second
+fundamental form, and `Σᵢ ∂ᵢr Wᵢ = −Σⱼ λⱼ Vᵀ∇²gⱼ V`, so this is the same matrix as (1).
+`compute_matrices` still builds the `Wᵢ` (the tests reproduce the paper's Example 2.5b).
+
+*At a critical point* (the only place the pipeline needs `H`) two more forms agree with (1):
+
+- **(2)** With `c₀ = r(P)` and the polynomial `h = f − c₀ gᵈ = (r − c₀) gᵈ`:
+  `∇h = gᵈ∇r` and `∇²h = gᵈ∇²r + ∇r ∇(gᵈ)ᵀ + ∇(gᵈ) ∇rᵀ` at `P`. The cross terms vanish on
+  `T_P X` (because `∇r` is normal there), so `H = Vᵀ(∇²h − Σⱼ νⱼ∇²gⱼ)V / gᵈ` with `JGᵀν = ∇h`.
+  No quotient rule: `r` is replaced by the polynomial `f − r(P) gᵈ`.
+- **(3)** For `F₁` of the routing system, `grad_num = g^(d+1)∇r` gives
+  `∂ₓF₁ = g^(d+1)(∇²r − Σⱼ λⱼ∇²gⱼ) + ∇r ∇(g^(d+1))ᵀ` at a solution (`μ = g^(d+1)λ`), and
+  `Vᵀ(·)V` kills the last term (`Vᵀ∇r = 0`), so `H = Vᵀ ∂ₓF₁(P, μ) V / g^(d+1)`: the
+  tangential block of the jacobian of the routing system, which HomotopyContinuation has
+  compiled already, at the `μ` it returns.
+
+(2) and (3) perform the same cancellations as (1) and are no more accurate; (1) needs no
+case split, so the code uses it and keeps (3) as `_hessian_from_routing_system`, a
+cross-check in the tests.
+
+The ambient derivatives come in closed form from `f, ∇f, ∇²f` (∇g = 2(x − c), ∇²g = 2I):
+
+```
+∇r  = (∇f − (d f / g) ∇g) / gᵈ
+∇²r = ∇²f / gᵈ − d (∇f ∇gᵀ + ∇g ∇fᵀ + f ∇²g) / g^(d+1) + d(d+1) f ∇g ∇gᵀ / g^(d+2)
+```
 
 ---
 
-## 3. The routing system
+## 2. Connecting routing points
 
-**`routing_system(r, G)` in [`src/routing_points.jl`](src/routing_points.jl)**
+Inside one component `C`:
 
-The Lagrange conditions for a critical point of `r|X`, cleared of denominators:
+- **A routing point of positive index flows up to maxima.** Leave `P` along an unstable
+  eigenvector `v` of `H` (eigenvalue with the sign of `r(P)`), in either sense, and follow
+  the ascending flow: it ends at a critical point with larger `|r|`, generically a local
+  maximum (index 0).
+- **Two maxima of `C` are joined through index-1 points** (mountain pass theorem; the
+  Palais–Smale condition holds because the superlevel sets of `|r|` are compact).
 
-```
-grad_num(x) − g(x)^(d+1) · JG(x)ᵀ λ  =  0        (n equations)
-G(x)                                 =  0        (k equations)
-```
+So the graph with the routing points as vertices and an edge `P — Q` whenever a flow
+leaving `P` arrives at the maximum `Q` has the components of `U` as its connected
+components, provided every routing point was found and every flow arrived. Two checks:
 
-in the `N = n + k` unknowns `(x, λ)`. Real solutions with `f(x) ≠ 0` are exactly the
-**routing points** — the critical points of `r|X` away from the removed locus.
+- an ascending flow keeps the sign of `r`, so it can only arrive at a maximum of that
+  sign (`solve_ivp` offers no others as destinations);
+- every component contains a maximum, so a graph component without an index-0 point
+  means a flow failed (`connected_components` warns).
 
-Degrees matter: for the Clebsch example this is `[15, 15, 15, 3]`, a Bézout bound of
-10125, which is why the system is never solved directly.
-
----
-
-## 4. The projected gradient field
-
-**`_projected_gradient_field(r, G_sys, n, k, reg, unit_speed)` in
-[`src/path_tracking.jl`](src/path_tracking.jl)**
-
-Returns an in-place ODE right-hand side `flow!(du, u, dir, t)` computing
-
-```
-du  =  dir · sign(f) · (I − Jᵀ(JJᵀ + reg·I)⁻¹J) ∇r     ← tangential: ascend |r| within X
-       −  Jᵀ(JJᵀ + reg·I)⁻¹ G                          ← normal: pull back onto X
-```
-
-- The **tangential** term is `∇r` projected onto `T_x X`, oriented by `sign(r)` —
-  which equals `sign(f)` since `g > 0` — so the flow always ascends `|r|`.
-- The **normal** term is a continuous Newton correction that holds the path on `X`
-  rather than letting it drift off.
-- `dir` is the ODE *parameter*, not a constant: `+1` flows to attracting critical
-  points, `−1` to repelling ones. Neither direction alone finds both.
-- `unit_speed` rescales the tangential part to norm 1, making `t` arc length. The
-  path tracker needs this because it starts next to a critical point where `∇r ≈ 0`
-  and an unscaled field would crawl; the routing-point search does not.
-
-Both halves solve against the same `JJᵀ + reg·I`, so it is factored once per call.
-
-**`_evaluate_field!`** guards the three system evaluations. A path running off to
-infinity produces `NaN` — either because `u` itself went non-finite, or because `u`
-is merely enormous and a high-degree numerator overflows mid-evaluation — and
-`HC.evaluate!` cannot write a complex `NaN` into a `Float64` buffer, so it throws an
-`InexactError` out of the solver. On failure the field returns a zero derivative and
-lets the terminating callback end the path. Only `InexactError` is swallowed.
+**Step size off `P`.** `P ± εv` is projected back onto `X`; to second order `|r|`
+increases by `½|μ|ε²` (`μ` the eigenvalue). Too large an `ε` jumps across `V(f)`
+(routing points can sit within `1e-4` of it) or through an isolated removed point (the
+nodes of the Chubs surface). `find_starting_points_for_flow` starts at `start_step_size`
+and halves `ε` until the observed increase is within a factor 2 of `½|μ|ε²` at both `ε`
+and `ε/2`, with `r` keeping its sign. Below the scale where `½|μ|ε²` is lost in the
+rounding of `|r|` it takes the smallest step that kept the sign and increased `|r|`.
 
 ---
 
-## 5. Stage 1 — finding the routing points
+## 3. Finding the routing points
 
-### 5a. `flow_to_routing_points` — real seeds by gradient flow
-
-**[`src/routing_points.jl`](src/routing_points.jl)**
-
-```julia
-seeds = flow_to_routing_points(cache; nstarts, box, starts, tspan, maxiters,
-                               f_tol, proj_tol, max_attempts, stop_when, verbose)
-```
+### 3.1 Seeds by gradient flow (`flow_to_routing_points`)
 
 Per start:
 
-1. **Choose a start.** Either a uniform draw from `[-box, box]ⁿ`, or — if `starts` is
-   supplied — the next of the caller's own points, each tried exactly once (`nstarts`,
-   `box` and `max_attempts` then go unused).
-2. **Project onto `X`** with `project_to_variety_residual!`. A start that never
-   reaches `X` is discarded rather than integrated: the field's normal term would
-   have to drag it back first, which is most of the cost and none of the answer.
-   With box sampling it resamples, so `nstarts` counts usable starts, not attempts.
-3. **Integrate `flow!` in both time directions** (`dir = ±1`), `reltol = abstol =
-   1e-8`, terminating on a `DiscreteCallback` that fires when `|f| < f_tol`. `r`
-   changes sign across `V(f)`, so the field is discontinuous there and the integrator
-   would otherwise thrash. The callback also fires on a non-finite state.
-4. **refine the endpoint.** Recover `λ` by least squares from
-   `g^(d+1)·JGᵀ λ = grad_num`, then run `HC.newton` on the full routing system. Only
-   Newton-refined solutions are kept.
+1. **Choose a start**: uniform in `[−box, box]ⁿ`, or the next of the caller's `starts`
+   (each tried once; `nstarts`, `box`, `max_attempts` then go unused).
+2. **Project onto `X`** (`project_to_variety_residual!`). A start with `‖G‖ ≥ proj_tol`
+   afterwards is discarded; with box sampling another is drawn, so `nstarts` counts
+   starts on `X`.
+3. **Integrate the flow in both directions** (`s = ±1`), time rescaled by `1/|r(x₀)|`,
+   `reltol = abstol = 1e-8`, stopped by a callback when the path comes within
+   `locus_tol·(1 + ‖x‖)` of `V(f)` (Newton distance `|f|/‖∇f‖`) or goes non-finite.
+4. **Refine the end point**: `μ` by least squares from `JGᵀμ = grad_num`, then
+   `HC.newton` on the routing system. Kept if it is a routing point (§3.4).
 
-`HC.unique_points` deduplicates. `stop_when` is an early exit: if a refined point
-satisfies the caller's predicate, return it immediately and skip the rest — including
-monodromy.
+Uniform sampling finds a component in proportion to its size, so small components are
+found rarely; `starts` placed near `V(f)` is the remedy (`examples/clebsch_cubic.jl`).
+`stop_when` returns the first routing point satisfying a predicate.
 
-### 5b. `routing_points` — monodromy expansion
+### 3.2 Monodromy (`routing_points`)
 
-```julia
-pts = routing_points(cache; all_vars, zero_tol, nstarts, box, starts,
-                     proj_tol, max_attempts, stop_when, verbose)
+Monodromy collects the solutions of the routing system by moving it around loops in the
+parameter space of a family containing it: along a loop the solutions are permuted, and
+known solutions turn into new ones. Two families (`monodromy_family`):
+
+**The centre family** (default). The routing systems of `f / (‖x − c‖² + a)ᵈ` for all
+`(c, a) ∈ ℂⁿ⁺¹`:
+
+```
+F₁(x, μ; c, a) = (‖x − c‖² + a) ∇f − 2d f (x − c) − JGᵀμ,     F₂ = G.
 ```
 
-1. Get flow seeds from 5a.
-2. Build a random parameter point `p0` for `param_sys`, choosing its constant column
-   so that a random `S0` solves the family there.
-3. **Track each seed from `p_target = 0` to `p0`.** The seeds solve the *target*
-   system, so each must be moved onto the generic fibre individually.
-4. **`monodromy_solve`** on `param_sys` from all those start solutions.
-5. **Track the whole fibre back** to `p_target = 0`.
-6. Keep real solutions, plus the real flow seeds directly — they are Newton-refined
-   already, so they survive even if the homotopy loses their path — then drop anything
-   with `|r| ≤ zero_tol` as lying on the removed locus.
+The routing system of `r` is the member at `p₀ = (r.c, 1)`, and monodromy runs there
+directly: no tracking to or from a generic member.
 
-**Why the seeding matters so much.** `param_sys` subtracts *generic affine-linear
-forms* from `sys` rather than constants, which enlarges the parameter space and brings
-the monodromy group closer to transitive — but on hard systems it is still
-intransitive, so monodromy only ever reaches the orbits its start solutions already
-lie in. A critical point in an untouched orbit is unreachable no matter how long
-monodromy runs. Real seeds in new orbits are the only lever, which is what `starts`
-exists for.
+*Transitivity.* `x ∈ X ∖ V(f)` is critical for `(c, a)` iff
+`(uᵀu + a)∇f − 2d f u = JGᵀμ` with `u = x − c`. Given `x`, every solution is
+`u = (s∇f − JGᵀμ)/(2d f)`, `a = s − uᵀu` for a unique `(s, μ) ∈ ℂ^(k+1)` (`s = g(x)`). So the
+incidence variety `{(x, μ, c, a)}` over `X ∖ V(f)` is `(X ∖ V(f)) × ℂ^(k+1)`: irreducible when
+`X` is, of dimension `n + 1`, the number of parameters. Monodromy from any one routing
+point therefore reaches every complex critical point of `r` on `X ∖ V(f)`, and nothing
+else (the solutions on `V(f)` lie on other components). When `X` is reducible, a start
+solution on each irreducible component is needed.
 
----
+*Projective multipliers.* `μ` grows like `‖x‖^(deg f + 1)`: on 3RPR it is `10⁹` times `x`,
+and HomotopyContinuation rejects such solutions as singular (jacobian condition number
+`~10²⁰`). The family is solved in `(x, μ₀, μ̂)` with `μ = μ̂/μ₀` on a random chart:
 
-## 6. Stage 2 — indices
+```
+μ₀ grad_num_{c,a}(x) − JGᵀμ̂ = 0,     G = 0,     ℓ₀μ₀ + ℓ·μ̂ = 1,
+```
 
-**[`src/hessian.jl`](src/hessian.jl)**
+which keeps the multipliers of every solution of size about 1 (`_to_chart`, `_from_chart`).
 
-The Hessian of `r` *restricted to* `X` is not the ambient Hessian; it needs the
-second fundamental form.
+1. Start solutions: the seeds of §3.1, and six constructed ones: a random complex point
+   `x₀` of `X` (Gauss–Newton from random complex points at 1, 2, …, 32 times the extent of
+   the points of `X` seen), random `(s, μ₀)` giving `(c₁, a₁)` as above, and the solution
+   `(x₀, μ₀)` at `(c₁, a₁)` tracked to `p₀`. They make monodromy possible when the flows
+   find nothing, and can reach components of a reducible `X` without seeds (two circles,
+   seeds on the inner one only: the outer one is found in 25 of 30 runs).
+2. `monodromy_solve` at `p₀`, in three phases of growing loop size (below), each ending
+   after 10 loops without a new solution.
+3. The real solutions, plus the seeds, are the candidates.
 
-- **`_compute_matrices(JG, HG, k)`** — computes `V`, an orthonormal basis of
-  `T_x X` (as `nullspace(JG)`, which is SVD-based and therefore rank-revealing), and
-  the `W` matrices of the paper. The `W`s solve one least-squares system whose rows
-  say `∑ᵢ JG[j,i]·Wᵢ = −Vᵀ ∇²gⱼ V` and `∑ᵢ V[i,j]·Wᵢ = 0`.
-- **`hessian_and_tangent(cache, point)`** — returns
+**Loop sampling.** HomotopyContinuation draws loop nodes from a standard normal
+distribution: loops of size 1 around the origin of parameter space, which never reach
+the parts of a large variety far from the origin. `_centre_sampler` draws `c` around the
+centre of the points of `X` seen so far (the starts that landed, and the seeds) at scale
+`σ = s·t`, `s` their spread and `t` log-uniform in `[1, T]`, and `a` at scale `σ²`. The phases
+use `T = 1, 10, 100` in turn, each starting from everything found so far. Large loops find
+solutions far out (the 141st Clebsch region needs them), but they rarely find new ones,
+and mixed in from the start they end the search early (one of 14 regions missed in 3 of
+40 runs on a sphere; 0 of 40 with phases). The sampler only knows the part of `X` the
+flows reached: on a variety far larger than the sampling box, raise `box` (3RPR).
+
+**The affine family** (`monodromy_family = :affine`). With `z = (x, μ)`,
+
+```
+F(z) − (Q z + q),        parameters Q ∈ ℂ^(N×N), q ∈ ℂ^N;  (Q, q) = 0 is F itself.
+```
+
+A random `z₀`, `Q₀` and `q₀ = F(z₀) − Q₀z₀` give a start pair at `p₁ = (Q₀, q₀)`; the seeds
+are tracked from `0` to `p₁`; `monodromy_solve` runs at `p₁`; the fibre is tracked back to
+`0`. The incidence variety `{(z, Q, q) : q = F(z) − Qz}` is a graph over `(z, Q)`, hence
+irreducible even when `X` is not, but its fibre is much larger: it contains every
+isolated solution of `F(z) = Qz + q` for generic `(Q, q)`, most of them unrelated to `r`.
+Its loop nodes are drawn at the size of the base point, `|p₁|/√m` per coordinate.
+
+`monodromy_options` overrides the defaults of either family (`parameter_sampler`, which
+then replaces the phases, `max_loops_no_progress`, `timeout` for all phases together, ...).
+
+The monodromy stage on the examples (solutions found, time, real routing points found):
+
+| example | before (affine, λ, unit loops) | centre family, phased loops |
+|---|---|---|
+| Chubs | 930, 5 s, 80 | 172, 1.3 s, 80 |
+| Kuramoto | 1966, timeout at 300 s, 12 | 66, 1.4 s, 12 |
+| Clebsch (example's seeds) | 1458, 203 s, 140 | 162, 12 s, **141** |
+| 27 lines, planes | 1548, 302 s, 125 | 171, 22 s, **145** |
+| 3RPR (`box = 2000`) | — | 40–55, 1–13 s, 9–10 of 10 |
+
+By parameter continuation every isolated solution of the routing system is reached from
+a complete fibre. Completeness is not certified.
+
+### 3.3 The index of each point
+
+`routing_point_indices` computes `H` by (1) and counts eigenvalues with the sign of
+`r(P)`. It warns when an eigenvalue is below `1e-10·|r(P)|/(1 + ‖P‖)²` (degenerate:
+`r` is not Morse there).
+
+### 3.4 Which solutions count (`_is_routing_point`)
+
+A candidate `x` is kept iff it is finite, real (`|Im xᵢ| < 1e-8`), off `V(f)`, and critical.
+
+- **Off `V(f)`**: its distance to `V(f)` exceeds `locus_tol·(1 + ‖x‖)`, with the
+  distance bounded below by the Taylor model of `f` (`|f|` can drop by at most
+  `‖∇f‖δ + ½‖∇²f‖δ²` within `δ`):
 
   ```
-  H = Vᵀ (∇²r) V + ∑ᵢ (∂r/∂xᵢ) Wᵢ
+  δ(x) = 2|f| / (‖∇f‖ + sqrt(‖∇f‖² + 2‖∇²f‖·|f|))
   ```
 
-  together with `V`, in one pass. The ambient `∇²r` is free: it is the Jacobian of the
-  already-compiled `grad_sys`.
-- **`idx(r, H, P)`** — the Morse index, counted as the number of eigenvalues of
-  `Symmetric(H)` whose sign matches `sign(r(P))`. Matching the sign of `r` is what
-  makes this the index of `|r|` regardless of which side of `V(f)` the point is on.
-- **`routing_point_indices`** preserves input order, so indices and the connectivity
-  matrix can be read off together. **`sort_routing_points_by_index`** buckets them
-  into a `Dict`.
+  and `|f(x)|` above the rounding floor `1e3·eps·Σₐ|cₐ||x|ᵃ` (catches points where even
+  `∇²f` vanishes, e.g. three sheets of `V(f)` through a point). Both are independent of
+  the scale of `f`; a test on `|r|` is not, and `|r|` is tiny in thin or far-away regions.
+- **Critical**: the Newton step to the nearest critical point, `‖H⁻¹Vᵀ∇r‖`, is below
+  `crit_tol·(1 + ‖x‖)` (or, where `H` is singular, the tangential part of `∇r` is below
+  `crit_tol·‖∇r‖`). A relative gradient test alone has a rounding floor of about
+  `eps·(scale/width)²` and fails in regions thinner than about `1e-5`.
 
 ---
 
-## 7. Stage 3 — connecting the points
+## 4. The source, file by file
 
-### 7a. `gradient_flow!` — one path
+Files are included in pipeline order; each uses only what the ones before it define.
+Functions starting with `_` are internal.
 
-**[`src/path_tracking.jl`](src/path_tracking.jl)**
+### `src/utils.jl`
+- `_quiet(f)` — runs `f` with logging off (the ODE solvers warn on every path that hits
+  `maxiters`; callers check `retcode`/`isfinite` instead).
+- `_ignored_keyword`, `_verbose` — warnings for the old keywords `f_tol`, `zero_tol`, `Verbose`.
+- `IMAG_TOL = 1e-8` — a coordinate is real when its imaginary part is below this.
+- `_as_expressions(G)` — accepts a vector, a single expression, or a `System`.
+- `_as_points(P)` — user points (vectors, tuples) as `Vector{Vector{Float64}}`.
 
-Integrates `flow_unit!` (arc length) from a point until it comes within `tol` of an
-index-0 routing point. Arrival is detected by a **`ContinuousCallback`** on
-`distance_to_endpoints(u) − tol`, which root-finds the crossing instead of
-overshooting it. `dtmax` is capped at `tol` so a single step cannot jump clean over
-the ball and leave the root-finder nothing to see. Returns whether it arrived
-(`retcode == Terminated`); a stalled path is reported by the return value, not by the
-solver.
+### `src/routing_functions.jl`
+- `RoutingFunction(f, vars, c)` (also `(f, vars)`, `(f, c)`, `(f)`) — stores `f`, `g`, `c`,
+  `d`, `vars`, `grad_num = g∇f − d f ∇g = g^(d+1)∇r`, and three compiled systems:
+  `f_sys` (`f`), `∇f_sys` (`∇f`; its jacobian is `∇²f`), `f_abs_sys` (`Σₐ|cₐ|xᵃ`, for the
+  rounding floor). `f` may be a constant or a variable; `vars` must contain its variables.
+- `evaluate_f`, `evaluate_g`, `evaluate_r` (also `r(P)`), `evaluate_grad_r`,
+  `evaluate_grad_hessian_r` — the closed forms of §1.5.
+- `_grad_r!` — allocation-free `∇r` from `f(x)`, `∇f(x)`, for the flow fields.
+- `distance_to_zero_locus(r, P)` — `δ(P)` of §3.4. `on_zero_locus(r, P; locus_tol)` — the
+  §3.4 test. `_newton_distance` — `|f|/‖∇f‖`, for the flow callback.
 
-### 7b. `find_starting_points_for_flow` — where to leave from
+### `src/variety.jl`
+- `normal_factor!(M, J, reg)` — Cholesky factor of `JJᵀ + reg·I` in `M`'s lower triangle,
+  pivots clamped at `reg` (rounding can make them negative when `J` is rank deficient with
+  large entries). LAPACK's version of this method is designed for larger matrices and so
+  the overhead is not worth it, thus the bespoke implementation.
+- `normal_solve!(y, L)` — in-place `L Lᵀ y = y`.
+- `_project_to_variety!` — Gauss–Newton steps `−Jᵀ(JJᵀ + reg·I)⁻¹G`, each backtracked until
+  `‖G‖` decreases; stops when `‖G‖ < tol` or it stops decreasing; returns the point and `‖G‖`.
+- `project_to_variety!(P, G, vars)` — the same without a cache.
+- `singular_locus(G, vars)` — `Σ (maximal minors of JG)²`; vanishes where `rank JG < k`.
 
-At a critical point `P` with Hessian `H` and tangent basis `V`, the **unstable**
-directions are the eigenvectors whose eigenvalue matches `sign(r(P))`. Returns
-`P ± step_size·v` for each, projected back onto `X`.
+### `src/gradient_field.jl`
+- `_projected_gradient_field(r, G_sys, n, k, reg, unit_speed)` — returns the ODE
+  right-hand side `flow!(du, u, p, t)` of §1.4. `p` is `s` times a time scale. One
+  factorisation of `JJᵀ + reg·I` per call serves both parts. The closure owns its buffers.
+- `_evaluate_field!` — evaluates `G, JG, f, ∇f, ∇r`; returns `false` instead of throwing
+  when the state overflows (a path running off to infinity makes `HC.evaluate!` throw an
+  `InexactError`); the field then returns zero and the solver ends the path.
 
-### 7c. `solve_ivp` — one positive-index point to its index-0 neighbours
+### `src/routing_system.jl`
+- `routing_system(r, G)` — the system of §1.3, in `(x, μ)`. `μ` gets fresh names
+  (`@unique_var`), so a user variable called `μ` cannot collide.
+- `_centre_family(r, G, sys_vars)` — the centre family of §3.2, with parameters
+  `(c₁, …, cₙ, a)` (fresh names).
 
-Calls `hessian_and_tangent` once (getting `H` and `V` together), then
-`find_starting_points_for_flow`, then `gradient_flow!` from each start. Paths that
-never arrive are **dropped**, not reported at wherever they stalled.
+### `src/cache.jl`
+- `RoutingCache(r, G; reg = 1e-8)` — everything precomputed from `(r, G)`: `G_sys`
+  (`G`; its jacobian is `JG`), `∇G_sys` (the gradients stacked, so the `i`-th `n×n` block
+  of its jacobian is `∇²gᵢ`), `sys`/`sys_interp` (routing system), `centre_sys` and
+  `param_sys` (the centre and affine families of §3.2), `flow!` and `flow_unit!` (the two fields),
+  and scratch buffers. Checks that `G` uses only `r`'s variables. Stateful: one per thread.
+- `evaluate_G!`, `jacobian_G!` — into the cache's buffers (overwritten by the next call).
+- `project_to_variety!(P, cache)`, `project_to_variety(P, cache)`,
+  `project_to_variety_residual!(P, cache)` — §4 `variety.jl`, with the cache's `reg`.
+- `projected_gradient_field(cache; unit_speed)` — the stored field and `f_sys`.
 
-### 7d. `find_connectivity_matrix` — the graph
+### `src/hessian.jl`
+- `_projected_hessian(JG, HG, ∇φ, ∇²φ)` — formula (1) for any function `φ`; returns `(H, V)`.
+- `hessian_and_tangent(cache, P)` — `(H, V)` for `r`. `hessian(cache, P)`, `hessian(r, G, P)`,
+  `hessian(φ, G, vars, P)` — `H` alone.
+- `_hessian_from_routing_system(cache, P)` — form (3); tests only.
+- `_criticality(cache, x)` — `(‖H⁻¹Vᵀ∇r‖, relative tangential gradient)`;
+  `critical_distance(cache, P)` exports the first. `_is_critical` — the §3.4 test.
+- `ambient_gradient_hessian` — `∇`, `∇²` in `ℝⁿ` of `r` or of any expression.
+- `compute_matrices(cache, P)`, `compute_matrices(G, vars, P)` — the paper's `Wᵢ` and `V`.
+- `idx(r, H, P)`, `morse_index(cache, P)` — the index of §1.2.
+- `routing_point_indices(cache, pts)` — indices in input order, with the degeneracy warning.
+- `sort_routing_points_by_index(cache, pts)` — `Dict(index => points)`.
 
-**[`src/connectivity.jl`](src/connectivity.jl)**
+### `src/routing_points.jl`
+- `_flow_seeds(cache; …)` — §3.1; returns solutions `(x, μ)` as complex vectors, and
+  records where the starts landed on `X`.
+- `flow_to_routing_points(cache; all_vars = false, …)` — the same as real points.
+- `_flow_and_refine` — one flow and its Newton refinement; `_grad_num` evaluates
+  `grad_num` without powers of `g`. `_near_zero_locus_callback` — stops a flow near `V(f)`.
+- `routing_points(cache; …)` — §3.2 and the filter §3.4; returns points of `ℝⁿ`
+  (`all_vars = true`: with `μ`).
+- `_monodromy_centre`, `_monodromy_affine` — the two families of §3.2. Helpers:
+  `_extent` (centre and spread of the points of `X` seen), `_centre_sampler`,
+  `_affine_sampler` (loop nodes), `_complex_point_on_variety`, `_centre_start_pair`
+  (constructed start solutions).
+- `_is_routing_point`, `_satisfies` — the §3.4 test; `stop_when` on the `x` part.
+- `_unique_by_x`, `_real_x` — duplicates and realness judged on `x` alone (`μ` can be
+  orders of magnitude larger than `x`).
+- `_monodromy_options` — passes `monodromy_options` on, with `timeout` as a Float64.
 
-```julia
-M, routPoints = find_connectivity_matrix(cache; grad_step_size, start_step_size,
-                                         tol, nstarts, box, starts, ...)
-```
+### `src/mountain_pass.jl`
+- `find_starting_points_for_flow(cache, P, H, V; step_size, max_halvings)` — the points
+  `P ± εv` of §2.
+- `gradient_flow!(cache, P, targets; tol, dtmax, tspan, maxiters, origin)` — unit-speed
+  ascending flow until within `tol` of a target (a `ContinuousCallback` on
+  `distance_to_endpoints(u) − tol`, so arrival inside a step is not missed). Returns
+  whether it arrived. A start already within `tol` counts as arrived, unless the critical
+  point it leaves (`origin`) is nearer; then the balls are shrunk.
+- `solve_ivp(cache, P, final_points; …)` — `H` and `V` at `P`, the start points, and a flow
+  from each to the index-0 points with the sign of `r(P)`. Returns where the arriving
+  paths ended; the others are dropped.
+- `distance_to_endpoints`, `nearest_index` — allocation-free distance helpers.
 
-1. `routing_points` (§5), then `sort_routing_points_by_index` (§6).
-2. `final_points = index_dict[0]`; `initial_points` = everything else.
-3. Start from the identity matrix `A`. For each positive-index point, run `solve_ivp`
-   and set `A[i,j] = A[j,i] = 1` for the index-0 point each path lands on, matched by
-   `nearest_index`.
-4. Return `boolean_power_sum(A)` — the reflexive-transitive closure `⋁ₖ Aᵏ` in Boolean
-   arithmetic — together with the routing points in matching order.
+### `src/connectivity.jl`
+- `component_labels(A)` — depth-first labelling of the graph with adjacency `A`.
+- `reachability(A)` — `labels .== labelsᵀ` (same components as the Boolean power sum
+  `⋁ₖ Aᵏ`, in `O(n²)`).
+- `find_connectivity_matrix(cache[, pts]; …)` — routing points (unless given), indices, a
+  `solve_ivp` from each point of positive index, an edge to the nearest target for each
+  arriving path; returns `(reachability(A), pts)`. Errors if no routing point has index 0.
 
-The justification is the Mountain Pass Theorem: two index-0 critical points in the
-same component are joined through an index-1 point, so flowing out of every
-positive-index point along its unstable directions produces a graph whose connected
-components are exactly the components of `X ∖ V(f)`.
-
-### 7e. `connected_components` — grouping
-
-**[`src/components.jl`](src/components.jl)**
-
-`component_labels(A)` is a depth-first traversal labelling points by component in
-order of first appearance; it reads only which entries are nonzero, so the raw
-adjacency matrix and its closure give the same answer. `connected_components` then
-groups points and indices per label and builds a `Component`, which stores the
-points, their indices, and `χ = ∑(−1)^index`.
-
-The one-call entry point is
-
-```julia
-components = connected_components(cache; kwargs...)
-```
-
-which is just `find_connectivity_matrix` followed by the grouping.
+### `src/components.jl`
+- `Component` — `points`, `indices`, `euler_characteristic`.
+- `euler_characteristic(indices | component | components)`.
+- `connected_components(cache; …)` — the whole pipeline. Also `(r, G; …)`,
+  `(cache, pts; …)` (skip the search), `(cache, pts, A)` and `(pts, indices, A)` (skip
+  the paths). Warns about components without an index-0 point.
 
 ---
 
-## 8. Call graph
+## 5. Call graph
 
 ```
-connected_components(cache)                                  components.jl
+connected_components(cache)                                   components.jl
 └── find_connectivity_matrix(cache)                           connectivity.jl
     ├── routing_points(cache)                                 routing_points.jl
-    │   ├── flow_to_routing_points(cache)
-    │   │   ├── project_to_variety_residual! → _project_to_variety!    path_tracking.jl
-    │   │   ├── SciMLBase.solve(flow!)        ← _projected_gradient_field
-    │   │   └── HC.newton(sys_interp)
-    │   ├── HC.solve(param_sys)               seeds → generic fibre
-    │   ├── monodromy_solve(param_sys)
-    │   └── HC.solve(param_sys)               fibre → target
-    ├── sort_routing_points_by_index                          hessian.jl
-    │   └── routing_point_indices → idx ∘ hessian
-    │       └── hessian_and_tangent → compute_matrices + ambient_gradient_hessian!
-    ├── solve_ivp(cache, P, final_points)                     path_tracking.jl
-    │   ├── hessian_and_tangent
-    │   ├── find_starting_points_for_flow → project_to_variety!
-    │   └── gradient_flow! → SciMLBase.solve(flow_unit!)
-    └── boolean_power_sum → boolean_matmul!                   connectivity.jl
+    │   ├── _flow_seeds(cache)
+    │   │   ├── project_to_variety_residual! → _project_to_variety!    variety.jl
+    │   │   └── _flow_and_refine
+    │   │       ├── SciMLBase.solve(flow!)    ← _projected_gradient_field   gradient_field.jl
+    │   │       └── HC.newton(sys_interp)
+    │   ├── _monodromy_centre                 (default; _monodromy_affine otherwise)
+    │   │   ├── _complex_point_on_variety, _centre_start_pair, HC.solve(centre_sys)
+    │   │   └── monodromy_solve(centre_sys; parameter_sampler = _centre_sampler)
+    │   └── _is_routing_point → on_zero_locus, _is_critical → _criticality
+    └── find_connectivity_matrix(cache, pts)
+        ├── routing_point_indices → hessian → hessian_and_tangent  hessian.jl
+        ├── solve_ivp(cache, P, targets)                      mountain_pass.jl
+        │   ├── hessian_and_tangent
+        │   ├── find_starting_points_for_flow → project_to_variety!
+        │   └── gradient_flow! → SciMLBase.solve(flow_unit!)
+        └── reachability → component_labels                   connectivity.jl
 └── connected_components(cache, pts, A) → component_labels, Component
 ```
 
 ---
 
-## 9. Knobs, and what they actually control
+## 6. Keywords
 
-| keyword | default | stage | effect |
+| keyword | default | where | effect |
 |---|---|---|---|
-| `c` (on `RoutingFunction`) | random | §1 | centre of `g`; genericity is what makes `r|X` Morse |
-| `reg` | `1e-8` | §2 | damping of `JJᵀ`; larger tolerates worse conditioning |
-| `nstarts` | `100` | §5a | number of usable box starts |
-| `box` | `3.0` | §5a | sampling box. Too small misses the variety entirely |
-| `starts` | `nothing` | §5a | your own seeds; overrides box sampling |
-| `proj_tol` | `1e-8` | §5a | how well a start must land on `X` |
-| `max_attempts` | `20` | §5a | resampling budget, as a multiple of `nstarts` |
-| `f_tol` | `1e-8` | §5a | when a flow is deemed to have hit `V(f)` |
-| `zero_tol` | `1e-5` | §5b | `|r|` below which a point counts as on the removed locus |
-| `stop_when` | `nothing` | §5 | early exit on the first matching routing point |
-| `tol` | `1e-2` | §7a | arrival radius around index-0 points |
-| `grad_step_size` | `0.05` | §7a | passed as `dtmax`; `0` means use `tol` |
-| `start_step_size` | `0.1` | §7b | how far to step off a critical point |
+| `c` (in `RoutingFunction`) | random in `[0,1]ⁿ` | §1.1 | centre of `g`; must be generic |
+| `reg` (in `RoutingCache`) | `1e-8` | §1.4 | damping of `JJᵀ` |
+| `nstarts` | `100` | §3.1 | starts that must land on `X` |
+| `box` | `3.0` | §3.1 | sampling box; too small misses a far-away `X` |
+| `max_attempts` | `20` | §3.1 | sampling budget, × `nstarts` |
+| `starts` | `nothing` | §3.1 | your own starting points |
+| `proj_tol` | `1e-8` | §3.1 | `‖G‖` a start must reach |
+| `flow_options` | `(;)` | §3.1 | `tspan = (0.0, 200.0)`, `maxiters = 10_000` of each flow |
+| `stop_when` | `nothing` | §3.1 | return the first routing point satisfying it |
+| `locus_tol` | `1e-6` | §3.4 | distance to `V(f)`, relative to `1 + ‖P‖` |
+| `crit_tol` | `1e-6` | §3.4 | Newton step to a critical point, relative to `1 + ‖P‖` |
+| `monodromy_family` | `:centre` | §3.2 | `:affine` if `X` is reducible and a component may lack seeds |
+| `monodromy_options` | `(;)` | §3.2 | to `monodromy_solve`, e.g. `(timeout = 60,)` |
+| `start_step_size` | `0.1` | §2 | first step off a critical point |
+| `max_halvings` | `30` | §2 | halvings of that step |
+| `tol` | `1e-2` | §2 | arrival radius around index-0 points |
+| `grad_step_size` | `0.05` | §2 | largest ODE step of a path (`0` means `tol`) |
+| `path_options` | `(;)` | §2 | `tspan = (0.0, 1e3)`, `maxiters = 10^6` of each path |
+| `verbose` | `false` | all | progress messages |
+
+`f_tol`, `zero_tol` (replaced by `locus_tol`) and `Verbose` (by `verbose`) are still
+accepted, with a warning.
 
 ---
 
-## 10. Failure modes worth knowing
+## 7. Failure modes
 
-- **The answer is a lower bound.** Every stage can lose things: a component is only
-  reported if some routing point in it was found, and routing points come from flow
-  seeds plus whatever monodromy reaches from them. `monodromy_solve` returning
-  `heuristic_stop` means it gave up without exhausting the fibre.
-- **Uniform seeding is area-weighted.** A random surface point lands in a component
-  in proportion to its size, so small components are found rarely and `nstarts`
-  saturates. `starts` is the fix; see [`examples/clebsch_cubic.jl`](examples/clebsch_cubic.jl), which
-  seeds from the arrangement's arcs instead.
-- **All indices zero ⇒ the connectivity stage does nothing.** `initial_points` is
-  empty, `A` stays the identity, no path is ever tracked, and the component count is
-  just the number of index-0 points found. This is correct when every component is a
-  disc, but worth recognising.
-- **`find_connectivity_matrix` assumes an index-0 point exists.** `index_dict[0]`
-  raises a `KeyError` if the search found none.
-- **Badly scaled `f` cuts both ways.** If `|r|` on `X` sits below `zero_tol`,
-  genuine routing points are discarded as lying on the removed locus; scaling `f` by
-  a positive constant fixes that and changes neither the critical points nor their
-  indices. Conversely a huge `‖∇r‖` makes the seeding flow stiff.
-- **Singular `X`.** The theory needs `X` smooth. The package's idiom is to put the
-  singular locus inside `V(f)` — e.g. `f = ‖∇g‖²` — so it is removed along with
-  everything else the numerator kills.
+- **The answer is a lower bound on what is found.** A component is only reported if a
+  routing point in it was found, and its `χ` is only right if all of them were.
+  Monodromy stops heuristically; `returncode == :heuristic_stop` does not mean the fibre
+  is complete.
+- **Uniform seeding is area-weighted.** Small components are found rarely; use `starts`.
+- **Reducible `X` with the centre family.** Monodromy only reaches the irreducible
+  components of `X` that carry a start solution (a seed, or one of the two constructed
+  starts). If the flows reach no real point of some component, its routing points can be
+  missed; `monodromy_family = :affine` does not have this limitation.
+- **A missed index-1 point** leaves two maxima of one component unjoined: overcount.
+- **A failed path** leaves a point of positive index alone: overcount, with a warning.
+  On a large variety the usual cause is the arc-length limit (`tspan = (0.0, 1e3)`): 3RPR
+  has saddles 2000 units from its maxima and needs `path_options = (tspan = (0.0, 1e5),)`.
+- **No index-0 point found** (but some routing points): `find_connectivity_matrix` errors,
+  since every component has a maximum.
+- **Singular `X` off `V(f)`**: the theory does not apply; put the singular locus into `f`.
+- **Degenerate critical points** (non-generic `c`): indices and paths unreliable, with a
+  warning.
+- **`G` not reduced, or more equations than the codimension**: `JG` is rank deficient
+  everywhere, the multipliers are undetermined, and nothing downstream is meaningful.
+
+Consistency checks: every component contains an index-0 point; `χ` is plausible for
+`dim X` (a connected curve has `χ ∈ {0, 1}`; a connected surface `χ ≤ 2`, and `χ ≤ 1` if
+it is not compact); adjacent regions across a simple zero of `f` have opposite signs of
+`r`, so a component containing both signs is a wrong merge.
+
+---
+
+## 8. A worked example: two concentric circles
+
+`G = (x² + y² − 1)(x² + y² − 9)`, `f = 1` (so `d = 1`, `r = 1/g`). On each circle `|r|`
+is largest at the point nearest `c` and smallest at the farthest: 4 routing points,
+indices `0, 1, 0, 1`. From each index-1 point `solve_ivp` leaves in both senses along the
+circle and arrives at that circle's maximum, never the other's (the circles are disjoint).
+The graph has two components, each `{max, min}` with `χ = 1 − 1 = 0`:
+
+```julia
+@var x y
+C = connected_components(RoutingFunction(1, [x, y]), [(x^2 + y^2 - 1) * (x^2 + y^2 - 9)])
+# 2-element Vector{Component}:
+#  Component: 2 routing points of index 0, 1, χ = 0
+#  Component: 2 routing points of index 0, 1, χ = 0
+```
