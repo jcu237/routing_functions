@@ -1,20 +1,32 @@
+# The Clebsch cubic surface with its 27 lines removed.
+#
+# The surface is cut out by `clebsch`; the numerator `f` is a nonic (computed in
+# twentySeven.m2) whose intersection with the surface is exactly the 27 lines, so
+# the components are the faces of the line arrangement. The count is derived below:
+# 141, each a disc. See also clebsch_count.tex.
+#
+# Runtime: about two minutes, mostly the flows from ~1000 seeds.
+
 using ConnectedComponents
 using LinearAlgebra
+using Random
+
+Random.seed!(5)
 
 @var x,y,z
 
 clebsch = 81*(x^3+y^3+z^3) - 189*(x^2*(y+z) + y^2*(x+z) + z^2*(x+y)) + 54*x*y*z + 126*(x*y+y*z+x*z) - 9*(x^2+y^2+z^2) - 9*(x+y+z) + 1
 
-g = 191231280*x^2*y^6*z+127720800*x*y^7*z-63510480*y^8*z+1035938160*x^2*y^5*z^2+628106400*x*y^6*z^2-153090000*y^7*z^2+2094026256*x^2*y^4*z^3+1240746336*x*y^5*z^3+365246496*y^6*z^3+2094026256*x^2*y^3*z^4+1425294144*x*y^4*z^4+1472043456*y^5*z^4+1035938160*x^2*y^2*z^5+1240746336*x*y^3*z^5+1472043456*y^4*z^5+191231280*x^2*y*z^6+628106400*x*y^2*z^6+365246496*y^3*z^6+127720800*x*y*z^7-153090000*y^2*z^7-63510480*y*z^8-276145200*x^2*y^5*z-269671680*x*y^6*z+91387440*y^7*z-1072353168*x^2*y^4*z^2-1146617856*x*y^5*z^2-3114288*y^6*z^2-1578244176*x^2*y^3*z^3-2131805952*x*y^4*z^3-949682880*y^5*z^3-1072353168*x^2*y^2*z^4-2131805952*x*y^3*z^4-1728838080*y^4*z^4-276145200*x^2*y*z^5-1146617856*x*y^2*z^5-949682880*y^3*z^5-269671680*x*y*z^6-3114288*y^2*z^6+91387440*y*z^7+113043600*x^2*y^4*z+195286464*x*y^5*z-29432160*y^6*z+328878144*x^2*y^3*z^2+737201736*x*y^4*z^2+149931000*y^5*z^2+328878144*x^2*y^2*z^3+1077252048*x*y^3*z^3+619663608*y^4*z^3+113043600*x^2*y*z^4+737201736*x*y^2*z^4+619663608*y^3*z^4+195286464*x*y*z^5+149931000*y^2*z^5-29432160*y*z^6-15895440*x^2*y^3*z-58278528*x*y^4*z-5212512*y^5*z-30585600*x^2*y^2*z^2-181630512*x*y^3*z^2-80366904*y^4*z^2-15895440*x^2*y*z^3-181630512*x*y^2*z^3-154076256*y^3*z^3-58278528*x*y*z^4-80366904*y^2*z^4-5212512*y*z^5+604125*x^2*y^2*z+7006122*x*y^3*z+3825549*y^4*z+604125*x^2*y*z^2+14260860*x*y^2*z^2+15283647*y^3*z^2+7006122*x*y*z^3+15283647*y^2*z^3+3825549*y*z^4+5985*x^2*y*z-305028*x*y^2*z-547461*y^3*z-305028*x*y*z^2-1145970*y^2*z^2-547461*y*z^3+1458*x*y*z+25419*y^2*z+25419*y*z^2-179*y*z
+f = 191231280*x^2*y^6*z+127720800*x*y^7*z-63510480*y^8*z+1035938160*x^2*y^5*z^2+628106400*x*y^6*z^2-153090000*y^7*z^2+2094026256*x^2*y^4*z^3+1240746336*x*y^5*z^3+365246496*y^6*z^3+2094026256*x^2*y^3*z^4+1425294144*x*y^4*z^4+1472043456*y^5*z^4+1035938160*x^2*y^2*z^5+1240746336*x*y^3*z^5+1472043456*y^4*z^5+191231280*x^2*y*z^6+628106400*x*y^2*z^6+365246496*y^3*z^6+127720800*x*y*z^7-153090000*y^2*z^7-63510480*y*z^8-276145200*x^2*y^5*z-269671680*x*y^6*z+91387440*y^7*z-1072353168*x^2*y^4*z^2-1146617856*x*y^5*z^2-3114288*y^6*z^2-1578244176*x^2*y^3*z^3-2131805952*x*y^4*z^3-949682880*y^5*z^3-1072353168*x^2*y^2*z^4-2131805952*x*y^3*z^4-1728838080*y^4*z^4-276145200*x^2*y*z^5-1146617856*x*y^2*z^5-949682880*y^3*z^5-269671680*x*y*z^6-3114288*y^2*z^6+91387440*y*z^7+113043600*x^2*y^4*z+195286464*x*y^5*z-29432160*y^6*z+328878144*x^2*y^3*z^2+737201736*x*y^4*z^2+149931000*y^5*z^2+328878144*x^2*y^2*z^3+1077252048*x*y^3*z^3+619663608*y^4*z^3+113043600*x^2*y*z^4+737201736*x*y^2*z^4+619663608*y^3*z^4+195286464*x*y*z^5+149931000*y^2*z^5-29432160*y*z^6-15895440*x^2*y^3*z-58278528*x*y^4*z-5212512*y^5*z-30585600*x^2*y^2*z^2-181630512*x*y^3*z^2-80366904*y^4*z^2-15895440*x^2*y*z^3-181630512*x*y^2*z^3-154076256*y^3*z^3-58278528*x*y*z^4-80366904*y^2*z^4-5212512*y*z^5+604125*x^2*y^2*z+7006122*x*y^3*z+3825549*y^4*z+604125*x^2*y*z^2+14260860*x*y^2*z^2+15283647*y^3*z^2+7006122*x*y*z^3+15283647*y^2*z^3+3825549*y*z^4+5985*x^2*y*z-305028*x*y^2*z-547461*y^3*z-305028*x*y*z^2-1145970*y^2*z^2-547461*y*z^3+1458*x*y*z+25419*y^2*z+25419*y*z^2-179*y*z
 
-r = RoutingFunction(g, [x,y,z])
+r = RoutingFunction(f, [x,y,z])
 
 cache = RoutingCache(r, [clebsch])
 
 # ---------------------------------------------------------------------------
 # how many components should there be?
 #
-# V(g) ∩ V(clebsch) is the 27 lines, so this is the arrangement of the 27 lines on
+# V(f) ∩ V(clebsch) is the 27 lines, so this is the arrangement of the 27 lines on
 # the real cubic surface. count its faces with Euler's formula, χ = V - E + F.
 #
 # X(ℝ) is ℝP² blown up at 6 real points, so χ(X(ℝ)) = 1 - 6 = -5.
@@ -163,8 +175,8 @@ seeds = off_line_starts(spans, cache)
 append!(seeds, [6*(2*rand(3) .- 1) for _ in 1:400])   # plus the usual uniform ones
 println(length(seeds), " seeds")
 
-# takes a few minutes: one ODE integration per seed per time direction, then
-# monodromy on a routing system of degrees [15, 15, 15, 3]
+# about two minutes: one ODE integration per seed per time direction, then
+# monodromy (a few seconds)
 C = connected_components(cache; starts = seeds, grad_step_size = 1e-1, tol = 2e-1,
                          start_step_size = 5e-1, verbose = true)
 println(length(C), " components (141 expected)")

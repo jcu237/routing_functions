@@ -87,7 +87,7 @@ is_positive(P; tol = 1e-4) = all(>(tol), view(P, 1:4))
 
 Random.seed!(1)
 hit = routing_points(cache; stop_when = is_positive, nstarts = 200,
-                     box = 3.0, verbose = true)
+                     box = 10.0, verbose = true)
 if isempty(hit)
     println("no positive routing point found; raise nstarts")
 else
@@ -110,9 +110,7 @@ end
 # every region of Y_ℝ \ {x1x2x3x4 = 0} has at least one such maximum, because
 # |r| → 0 both on the boundary of the region and at infinity. So the sign vectors
 # carried by routing points are exactly the sign vectors realised on Y_ℝ.
-#
-# What is *not* guaranteed is that a random start lands in every region; that is
-# the same lower-bound caveat as the 27 lines example, and is why nstarts is high.
+
 Random.seed!(2)
 seeds = flow_to_routing_points(cache; nstarts = 4000, box = 3.0)
 real_pts = [real.(z[1:7]) for z in seeds if maximum(abs ∘ imag, z[1:7]) < 1e-8]

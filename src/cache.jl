@@ -1,43 +1,51 @@
-# everything that can be precomputed from the pair (r, V(G)) and then reused:
-# the symbolic derivatives of G compiled into interpreted systems, the routing
-# system and the parametrised family monodromy runs over, the two projected
-# gradient fields, and the scratch buffers all of those write into.
-#
-# building a cache is the expensive part -- every symbolic `differentiate` and
-# every `InterpretedSystem` construction happens once, here -- after which the
-# numerical routines only touch preallocated arrays.
-#
-# NOTE: the buffers make a cache stateful. one cache must not be used from two
-# threads at once; build one per thread instead.
+# everything precomputed from (r, G): compiled systems, the routing system and its
+# monodromy family, the gradient fields, scratch buffers. all symbolic work happens
+# here. the buffers make a cache stateful: build one per thread.
+"""
+    RoutingCache(r, G; reg = 1e-8)
+
+Everything the pipeline precomputes from a routing function `r` and the equations
+`G` of the variety `X = V(G)`: the compiled systems for `G` and its derivatives, the
+routing system whose solutions are the routing points, the two families monodromy
+can run over, the two gradient fields, and scratch buffers. Build it once and pass it to
+every routine; the `(r, G, ...)` convenience methods build a fresh one on each call.
+
+`G` may be a vector of expressions, a single expression, or a `System`; it must use
+only the variables of `r`, and must cut out `X` with a jacobian of full rank
+`length(G)` at the points of `X` off the removed locus (reduced equations, as many
+as the codimension). `reg` damps the normal equations `J Jᵀ` where the jacobian is
+nearly rank deficient.
+
+A cache holds mutable buffers: do not share one between threads.
+"""
 struct RoutingCache{F,Fu}
     r::RoutingFunction
     G::Vector{Expression}
     vars::Vector{Variable}
     n::Int64                        # ambient dimension
     k::Int64                        # number of defining equations of V(G)
-    reg::Float64                    # pseudo-inverse regularisation of the flow fields
+    reg::Float64                    # regularisation of J Jᵀ in the flow fields and projections
 
     G_sys::HC.InterpretedSystem     # G; its jacobian is JG
     ∇G_sys::HC.InterpretedSystem    # [∇g₁; …; ∇gₖ]; its jacobian stacks the hessians of the gᵢ
 
-    sys::System                     # routing system in (x, λ)
+    sys::System                     # routing system in (x, μ)
     sys_interp::HC.InterpretedSystem
-    sys_vars::Vector{Variable}      # vcat(vars, λ)
+    sys_vars::Vector{Variable}      # vcat(vars, μ)
+    centre_sys::System              # sys with the centre and constant of g as parameters,
+                                    # in (x, μ₀, μ̂) on the chart below
+    chart::Vector{ComplexF64}       # the random chart ℓ₀μ₀ + ℓ·μ̂ = 1 of centre_sys
     param_sys::System               # sys minus generic affine-linear forms
     m::Int64                        # number of equations of sys
-    N::Int64                        # n + k, the (x, λ) count
+    N::Int64                        # n + k, the (x, μ) count
 
     flow!::F                        # projected gradient field of r on V(G)
     flow_unit!::Fu                  # same field, rescaled so that time is arc length
 
-    # scratch, sized once. the flow fields keep their own private copies so that
-    # an integration in progress cannot be clobbered by a call to, say, `hessian`.
+    # scratch, sized once (the flow fields keep their own)
     G_val::Vector{Float64}          # k
     JG_val::Matrix{Float64}         # k × n
     HG_val::Matrix{Float64}         # (k·n) × n; rows (i-1)n+1:in are the hessian of gᵢ
-    grad_val::Vector{Float64}       # n
-    Hr_val::Matrix{Float64}         # n × n
-    grad_num_val::Vector{Float64}   # n
     M::Matrix{Float64}              # k × k
     wk::Vector{Float64}             # k
     wn::Vector{Float64}             # n
@@ -46,24 +54,25 @@ end
 
 function RoutingCache(
     r::RoutingFunction,
-    G::Vector{Expression};
-    reg::Float64 = 1e-8,
+    G;
+    reg::Real = 1e-8,
     )
 
+    reg > 0 || throw(ArgumentError("reg must be positive, got $reg"))
+    reg = Float64(reg)
+    G = _as_expressions(G)
+    isempty(G) && throw(ArgumentError("G is empty: give at least one equation"))
     vars = r.vars
     n = length(vars)
     k = length(G)
 
-    # G has to live in r's variables. HC's own complaint here is
-    # "Not all variables or parameters of the system are given", which names the
-    # variables but not the mismatch that caused it -- and the usual cause is a
-    # stale r left over from another problem in the same session.
+    # G has to live in r's variables (HC's own error for this is cryptic)
     stray = setdiff(variables(G), vars)
-    isempty(stray) || error(
-        "G involves variables that r does not: ", join(stray, ", "),
-        ". r is a routing function in ", join(vars, ", "),
-        " -- rebuild it over the variables of G.",
-    )
+    isempty(stray) || throw(ArgumentError(
+        "G involves variables that r does not: $(join(stray, ", ")). r is a routing " *
+        "function in $(join(vars, ", ")) -- rebuild it over all the variables, e.g. " *
+        "RoutingFunction(f, [$(join(union(vars, stray), ", "))], c)",
+    ))
 
     G_sys = HC.InterpretedSystem(System(G; variables = vars))
     # stacked row-wise so that the jacobian's i-th n × n block is exactly ∇²gᵢ
@@ -76,10 +85,13 @@ function RoutingCache(
     m = length(expressions(sys))
     N = length(sys_vars)
 
-    # subtracting generic affine-linear forms rather than constants enlarges the
-    # parameter space enough to make the monodromy group much closer to transitive.
-    # the target parameter 0 recovers sys itself.
-    @var q[1:m, 1:(N + 1)]
+    # the two families monodromy can run over (PIPELINE.md §3.2). the centre family
+    # is the default; the affine family sys(z) - (Q z + q), z = (x, μ), with the
+    # entries of Q and q as parameters and parameter 0 the routing system itself, is
+    # much larger but transitive even when X is reducible.
+    chart = randn(ComplexF64, k + 1)
+    centre_sys = _centre_family(r, G, chart)
+    @unique_var q[1:m, 1:(N + 1)]   # unique names: a user variable q must not collide
     shifts = [sum(q[i, j] * sys_vars[j] for j = 1:N) + q[i, N+1] for i = 1:m]
     param_sys = System(
         [expressions(sys)[i] - shifts[i] for i = 1:m];
@@ -93,14 +105,11 @@ function RoutingCache(
     return RoutingCache(
         r, G, vars, n, k, reg,
         G_sys, ∇G_sys,
-        sys, HC.InterpretedSystem(sys), sys_vars, param_sys, m, N,
+        sys, HC.InterpretedSystem(sys), sys_vars, centre_sys, chart, param_sys, m, N,
         flow!, flow_unit!,
         zeros(Float64, k),          # G_val
         zeros(Float64, k, n),       # JG_val
         zeros(Float64, k * n, n),   # HG_val
-        zeros(Float64, n),          # grad_val
-        zeros(Float64, n, n),       # Hr_val
-        zeros(Float64, n),          # grad_num_val
         zeros(Float64, k, k),       # M
         zeros(Float64, k),          # wk
         zeros(Float64, n),          # wn
@@ -108,85 +117,79 @@ function RoutingCache(
     )
 end
 
-RoutingCache(r::RoutingFunction, g::Expression; kwargs...) =
-    RoutingCache(r, [g]; kwargs...)
 
 function Base.show(io::IO, cache::RoutingCache)
     print(io, "RoutingCache: ", cache.r, " on V(G) ⊂ ℝ^", cache.n,
           " cut out by ", cache.k, " equation", cache.k == 1 ? "" : "s")
 end
 
-# runs `f` with logging switched off.
-#
-# the ODE solvers warn when a path runs out of iterations or goes unstable, and on a
-# badly scaled r there are thousands of such paths. the warning's advice -- raise
-# `maxiters` -- does not apply here: the flows that run out of iterations are the
-# ones that were never going to reach a critical point, and raising the cap buys no
-# extra routing points at fifty times the running time. every caller checks the
-# return value (`retcode`, `isfinite`, the residual) instead, so the message carries
-# nothing the code does not already act on.
-#
-# `Base.CoreLogging` rather than the Logging stdlib so that this needs no new
-# dependency, and a logger rather than the solvers' `verbose` keyword because that
-# keyword's accepted type changes between OrdinaryDiffEq versions.
-_quiet(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+routing_system(cache::RoutingCache)::System = cache.sys
 
-# G(x) and JG(x), written into the cache buffers
+"""
+    evaluate_G!(cache, P) -> (G(P), JG(P))
+    jacobian_G!(cache, P) -> JG(P)
+
+`G` and its `k × n` jacobian at `P`. They are written into, and returned as, the
+cache's own buffers, which the next call overwrites: `copy` them to keep them.
+"""
 function evaluate_G!(cache::RoutingCache, point::AbstractVector{Float64})
     HC.evaluate_and_jacobian!(cache.G_val, cache.JG_val, cache.G_sys, point)
     return cache.G_val, cache.JG_val
 end
 
-# JG(x) alone
 function jacobian_G!(cache::RoutingCache, point::AbstractVector{Float64})
     HC.jacobian!(cache.JG_val, cache.G_sys, point)
     return cache.JG_val
 end
 
-# M ← the Cholesky factor of J Jᵀ + reg·I, kept in M's lower triangle. the
-# regularisation keeps a rank-deficient jacobian (a singular point of V(G)) from
-# blowing the step up instead of merely damping it, and makes the matrix SPD so
-# that Cholesky always succeeds.
-#
-# k is the codimension, so this is typically 1 × 1 or 2 × 2 and LAPACK's dispatch
-# and error-checking overhead swamps the arithmetic; hence the hand-rolled version.
-function normal_factor!(M::AbstractMatrix{Float64}, J::AbstractMatrix{Float64}, reg::Float64)
-    LA.mul!(M, J, transpose(J))
-    k = size(M, 1)
-    @inbounds for j = 1:k
-        s = M[j, j] + reg
-        for p = 1:j-1
-            s -= M[j, p]^2
-        end
-        Ljj = sqrt(s)
-        M[j, j] = Ljj
-        for i = j+1:k
-            s = M[i, j]
-            for p = 1:j-1
-                s -= M[i, p] * M[j, p]
-            end
-            M[i, j] = s / Ljj
-        end
-    end
-    return M
-end
+"""
+    project_to_variety!(P, cache)          # overwrites P
+    project_to_variety(P, cache)           # returns a new point
+    project_to_variety_residual!(P, cache) -> (P, ‖G(P)‖)
 
-# solves L Lᵀ y = y in place, L being the factor left by `normal_factor!`
-function normal_solve!(y::AbstractVector{Float64}, L::AbstractMatrix{Float64})
-    k = length(y)
-    @inbounds for i = 1:k
-        s = y[i]
-        for p = 1:i-1
-            s -= L[i, p] * y[p]
-        end
-        y[i] = s / L[i, i]
-    end
-    @inbounds for i = k:-1:1
-        s = y[i]
-        for p = i+1:k
-            s -= L[p, i] * y[p]
-        end
-        y[i] = s / L[i, i]
-    end
-    return y
-end
+Moves `P` onto `V(G)` by damped Newton steps along the normal directions, backtracking
+so that `‖G‖` decreases at every step. The residual version also reports the `‖G‖`
+reached, so a point that never got there can be told apart.
+"""
+project_to_variety!(
+    point::AbstractVector{Float64},
+    cache::RoutingCache;
+    maxiter::Int64 = 50,
+    tol::Float64 = 1e-15,
+    reg::Float64 = cache.reg,
+    maxbacktrack::Int64 = 20,
+) = first(_project_to_variety!(point, cache.G_sys, cache.G_val, cache.JG_val,
+                               cache.M, cache.wk, cache.wn, cache.wn2,
+                               maxiter, tol, reg, maxbacktrack))
+
+project_to_variety(point::AbstractVector{<:Real}, cache::RoutingCache; kwargs...) =
+    project_to_variety!(Vector{Float64}(point), cache; kwargs...)
+
+project_to_variety_residual!(
+    point::AbstractVector{Float64},
+    cache::RoutingCache;
+    maxiter::Int64 = 50,
+    tol::Float64 = 1e-15,
+    reg::Float64 = cache.reg,
+    maxbacktrack::Int64 = 20,
+) = _project_to_variety!(point, cache.G_sys, cache.G_val, cache.JG_val, cache.M,
+                         cache.wk, cache.wn, cache.wn2, maxiter, tol, reg, maxbacktrack)
+
+"""
+    projected_gradient_field(cache; unit_speed = false) -> (field!, f_sys)
+
+The in-place ODE right-hand side `field!(du, u, p, t)` of the projected gradient flow
+of `r` on `V(G)` (see PIPELINE.md): `p` is the direction, `+1` to
+ascend `|r|`, `-1` to descend, and its size rescales time. With `unit_speed` the
+tangential part is normalised, so that time is arc length. Also returns the compiled
+numerator `f`, for callbacks on the removed locus.
+"""
+projected_gradient_field(cache::RoutingCache; unit_speed::Bool = false) =
+    (unit_speed ? cache.flow_unit! : cache.flow!), cache.r.f_sys
+
+projected_gradient_field(
+    r::RoutingFunction,
+    G;
+    reg::Real = 1e-8,
+    unit_speed::Bool = false,
+) = projected_gradient_field(RoutingCache(r, G; reg = reg); unit_speed = unit_speed)

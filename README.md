@@ -1,104 +1,181 @@
 # ConnectedComponents.jl
 
-**ConnectedComponents.jl** is a Julia package for studying the **connectivity of real algebraic varieties** using *routing functions*.  
+**ConnectedComponents.jl** computes the connected components of a real algebraic
+variety with a hypersurface removed,
 
-The package implements algorithms from  
-> **"Smooth Connectivity in Real Algebraic Varieties"**  
+```
+V(G) ∖ V(f)  =  { x ∈ ℝⁿ : g₁(x) = … = g_k(x) = 0,  f(x) ≠ 0 },
+```
+
+together with the Euler characteristic of each component, using *routing functions*.
+
+It implements the algorithm of
+> **Smooth Connectivity in Real Algebraic Varieties**
 > *Joseph Cummings, Jonathan Hauenstein, Hoon Hong, and Clifford Smyth*
-> *Numerical Algorithms, 100(1), 63-84, 2025*
+> *Numerical Algorithms, 100(1), 63–84, 2025*
 
-This paper introduces the use of **routing functions**: rational functions whose gradient flows reveal the connected components of a real algebraic variety.
-`ConnectedComponents.jl` automates this process, providing an efficient framework for computing critical points and tracking gradient paths. 
+See also `HypersurfaceRegions.jl` and `ProjectedHypersurfaces.jl`, which use routing
+functions for the complement of a hypersurface; many ideas from those packages are used
+here. For how the computation works, the mathematics behind it, and a function-by-function
+reference, see [PIPELINE.md](PIPELINE.md).
 
-See also the packages `HypersurfaceRegions.jl` and `ProjectedHypersurfaces.jl`. These also implement routing functions to compute the connected components in the complement of a real hypersurface. Many ideas from those packages are used here. 
+## Installation
 
-Several examples are included in 'testing.jl'. 
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/dave-k-johnson/routing_functions.git")
+```
 
-## Usage
+The package re-exports [HomotopyContinuation.jl](https://www.juliahomotopycontinuation.org),
+so `@var`, `differentiate`, `System`, … are available after `using ConnectedComponents`.
+The first call in a session compiles a lot of code and takes a minute or so; later calls
+are fast.
+
+## Quick start
+
+Two concentric circles:
 
 ```julia
 using ConnectedComponents
 
-@var x[1:2]
-r = RoutingFunction(x[1]*x[2], [1/3, 1/2])              # r = f / g^d
-G = [x[1]^4 + x[2]^4 - (x[1] - x[2])^2 * (x[1] + x[2])] # the variety V(G)
-
-M, routPoints = find_connectivity_matrix(r, G)
+@var x y
+G = [(x^2 + y^2 - 1) * (x^2 + y^2 - 9)]     # the variety V(G)
+r = RoutingFunction(1, [x, y])              # f = 1: remove nothing
+C = connected_components(r, G)
 ```
 
-Every routine also accepts a `RoutingCache`, which precomputes the symbolic
-derivatives, compiles them into `HomotopyContinuation.InterpretedSystem`s, builds
-the routing system and the parametrised family monodromy runs over, and allocates
-the scratch buffers the numerical kernels write into:
+```
+2-element Vector{Component}:
+ Component: 2 routing points of index 0, 1, χ = 0
+ Component: 2 routing points of index 0, 1, χ = 0
+```
+
+Two components, each a circle (Euler characteristic 0).
+
+## What goes in
+
+**The variety.** `G` is a vector of polynomials (or a single polynomial, or a
+HomotopyContinuation `System`). It must cut out `V(G)` with a jacobian of full rank:
+reduced equations (no repeated factors), as many as the codimension.
+
+**The removed hypersurface.** `RoutingFunction(f, vars)` builds the routing function
+`r = f / gᵈ` with `g = ‖x − c‖² + 1`. The zero set of `f` is removed:
+
+| you want | `f` |
+|---|---|
+| the components of `V(G)` itself | `1` |
+| to cut along hypersurfaces `h₁ = 0, h₂ = 0, …` | `h₁ * h₂ * ⋯` |
+| to separate by the signs of the coordinates | `x₁ * x₂ * ⋯ * xₙ` |
+| to remove the singular points of `V(G)` (required, see below) | multiply by `singular_locus(G, vars)` |
+
+Always pass `vars`, the ambient variables in the order your points are written in:
+`f` may not involve all of them (a constant `f` involves none).
+
+**Singular points must be removed.** The method needs `V(G)` to be smooth outside
+`V(f)`. If `V(G)` has singular points, put them into `V(f)`:
+
+```julia
+@var x y z
+g = x^2 + y^2 - z^2 + z^3                       # a cone point at the origin
+r = RoutingFunction(singular_locus([g], [x, y, z]), [x, y, z])   # = ‖∇g‖²
+connected_components(r, [g])                    # the bell (χ = 1) and the funnel (χ = 0)
+```
+
+**The centre `c`.** `RoutingFunction(f, vars, c)` fixes the centre of `g`; otherwise it is
+random. It must be generic: a centre of symmetry of `V(G)` (the centre of a circle, say)
+makes `r` degenerate and the answer meaningless. The package warns when it detects this.
+
+## What comes out
+
+A vector of `Component`s, one per connected component found:
+
+```julia
+for comp in C
+    comp.points                 # routing points on this component (vectors in ℝⁿ)
+    comp.indices                # the Morse index of each one
+    comp.euler_characteristic   # ∑ (-1)^index
+end
+euler_characteristic(C)         # of all of V(G) ∖ V(f)
+```
+
+The **routing points** are the critical points of `r` on `V(G) ∖ V(f)`. Every component
+contains at least one, a local maximum of `|r|` (index 0). The **index** of a routing
+point is the number of directions in which `|r|` increases.
+
+## Step by step
+
+`connected_components(r, G)` runs four stages. To run them yourself, build a
+`RoutingCache` once and pass it to each (the `(r, G)` forms build a new cache on
+every call, which repeats all the symbolic work):
 
 ```julia
 cache = RoutingCache(r, G)
-routPoints  = routing_points(cache)
-index_dict  = sort_routing_points_by_index(cache, routPoints)
-solns       = solve_ivp(cache, index_dict[1][1], index_dict[0])
+pts   = routing_points(cache)                 # 1. critical points of r on V(G) ∖ V(f)
+idxs  = routing_point_indices(cache, pts)     # 2. their Morse indices
+A, pts = find_connectivity_matrix(cache, pts) # 3. join them by gradient flow
+C     = connected_components(cache, pts, A)   # 4. group into components
 ```
 
-Passing `r` and `G` separately builds a throwaway cache on every call, so do that
-only for one-off work. A cache carries mutable buffers and must not be shared
-across threads -- build one per thread.
+## Options
 
-### Components
+The most useful keywords (all accepted by `connected_components`; the full table is in
+[PIPELINE.md §6](PIPELINE.md#6-keywords)):
 
-`connected_components` turns the connectivity matrix into a list of `Component`s,
-one per connected component of `V(G)`. Each stores the routing points lying on it,
-the index of each of those points, and the Euler characteristic
-`χ = ∑ (-1)^index` they add up to:
+| keyword | default | when to change it |
+|---|---|---|
+| `box` | `3.0` | `V(G)` lies far from the origin: starting points are drawn from `[-box, box]ⁿ` |
+| `nstarts` | `100` | more starting points find more small components |
+| `starts` | — | your own starting points, e.g. points near `V(f)` to find small components |
+| `monodromy_options` | `(;)` | `(timeout = 60,)` caps the slowest stage (see below) |
+| `monodromy_family` | `:centre` | `:affine` if `V(G)` is reducible and the flows may miss one of its components |
+| `start_step_size`, `tol` | `0.1`, `1e-2` | scale of the paths between routing points; raise both for large varieties |
+| `locus_tol` | `1e-6` | points closer than this (relative to their size) to `V(f)` count as on it |
+| `verbose` | `false` | progress messages |
 
-```julia
-components = connected_components(cache)          # the whole pipeline
+## Reliability and speed
 
-for C in components
-    C.points                 # the routing points on this component
-    C.indices                # index of each one, in the same order
-    C.euler_characteristic   # ∑ (-1)^index
-end
-```
+- **The result is only as complete as the search for routing points.** Routing points
+  are found by gradient flows from random starting points, then by monodromy on a
+  polynomial system (HomotopyContinuation's `monodromy_solve`), which stops heuristically.
+  A component is reported only if a routing point on it was found, and its Euler
+  characteristic is right only if all of them were. Small components are the easiest to
+  miss; raise `nstarts` or supply `starts`.
+- **Monodromy can be slow** on large systems (many variables, or high-degree `f`). Cap it
+  with `monodromy_options = (timeout = 120,)`, or skip it: `flow_to_routing_points(cache)`
+  returns the routing points the flows alone find, and
+  `connected_components(cache, pts)` takes them from there.
+- **Reducible varieties.** By default monodromy moves the centre of the routing
+  function, which only reaches the irreducible components of `V(G)` that already carry
+  a routing point (or a constructed start). If the flows may miss a whole component of
+  `V(G)`, use `monodromy_family = :affine`: slower, but it reaches every component.
+- **Checks:** every component must contain an index-0 routing point (the package warns
+  otherwise); a connected curve has χ = 0 or 1.
 
-Given a connectivity matrix you already have, pass it in instead of recomputing:
+## Examples
 
-```julia
-M, routPoints = find_connectivity_matrix(cache)
-components = connected_components(cache, routPoints, M)
-```
+| file | what it shows | time |
+|---|---|---|
+| [examples/01_curves.jl](examples/01_curves.jl) | circles, an elliptic curve, the twisted cubic; the step-by-step API | seconds |
+| [examples/02_singular_surfaces.jl](examples/02_singular_surfaces.jl) | removing singular points with `singular_locus` | a minute |
+| [examples/kuramoto.jl](examples/kuramoto.jl) | a torus in ℝ⁶; what monodromy adds to the flows | a minute |
+| [examples/3RPR.jl](examples/3RPR.jl) | a parallel manipulator; a variety thousands of units across (`box`, long paths) | a few minutes |
+| [examples/clebsch_cubic.jl](examples/clebsch_cubic.jl) | the Clebsch cubic minus its 27 lines (141 regions); custom `starts` | two minutes |
+| [examples/27lines.jl](examples/27lines.jl) | the same surface in another chart, two choices of `f` | five minutes |
+| [examples/positive_landau.jl](examples/positive_landau.jl) | which components of a Landau variety have a positive point; `stop_when` | minutes |
 
-The two concentric circles above give two components of χ = 0, as they should.
+## Troubleshooting
 
-### Stopping early
+| message | meaning |
+|---|---|
+| `only m of n starts landed on V(G)` | `V(G)` is far from the origin (raise `box`), or `G` is not reduced / has too many equations, or `V(G)` has no real points |
+| `no routing points were found` | as above, or `V(G) ∖ V(f)` is empty |
+| `component(s) contain no index 0 routing point` | a path between routing points failed; try a smaller `start_step_size` or `tol` |
+| `degenerate critical points` | `r` is not Morse: use a random centre `c` |
+| `monodromy stopped at its timeout` | some routing points may be missing |
+| `ArgumentError: G involves variables that r does not` | build `r` over all the variables: `RoutingFunction(f, vars)` |
 
-`routing_points` and `flow_to_routing_points` take a `stop_when` predicate on a
-real routing point in `R^n`. The flow returns the first point satisfying it, and
-`routing_points` then skips monodromy altogether:
-
-```julia
-routing_points(cache; stop_when = P -> all(>(1e-4), view(P, 1:4)))
-```
-
-That is worth having when a single witness answers the question and the routing
-system is too large for `monodromy_solve` to complete -- see `positive_landau.jl`,
-where the routing system is 13 equations whose first block has degree 11.
-
-### Badly scaled systems
-
-The routing points are seeded by flowing from random points of `[-box, box]^n`
-projected onto `V(G)`. If your equations carry large constants, the default
-`box = 3.0` misses the variety entirely and almost nothing projects onto it.
-`flow_to_routing_points` discards starts that fail to land (they cost a full ODE
-integration and contribute nothing) and warns when it cannot fill `nstarts`:
-
-```
-┌ Warning: flow_to_routing_points: 6 of 10 starts landed on V(G) in 200 attempts
-│ (box = 3.0); raise `box` or `max_attempts`
-```
-
-`box`, `nstarts`, `proj_tol` and `max_attempts` pass through `routing_points` and
-`find_connectivity_matrix`. For the 3RPR example (constants of size 16 and 100)
-`box = 20.0` takes the hit rate from ~0 to roughly 1 in 5, which is the difference
-between the flow stage not finishing and taking about a second.
+**Name clashes.** If you also load a package that exports `connected_components` (e.g.
+Graphs.jl) or `solve` (e.g. OrdinaryDiffEq.jl), qualify the call:
+`ConnectedComponents.connected_components(...)`, `HomotopyContinuation.solve(...)`.
 
 Comments and suggestions are welcome!
-

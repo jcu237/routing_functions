@@ -1,5 +1,16 @@
 
-#Cubic surface with the 27 lines removed.
+# A cubic surface with its 27 lines removed, in a chart where all 27 lines are
+# affine, with two choices of numerator: a product of nine tritangent planes, and
+# Clebsch's nonic. Each region of the surface minus the lines is a component.
+#
+# Runtime: two to three minutes per part.
+
+using ConnectedComponents
+using LinearAlgebra
+using Random
+
+Random.seed!(6)
+
 function TwentySevenLines()
     @var x,y,z
     @var a[1:4,1:4,1:4]
@@ -64,7 +75,7 @@ function cubic_parameters(cub)
     return [get(coeff, q, 0.0) for q in parameters(F)]
 end
 
-# plain `solve` is ambiguous once OrdinaryDiffEq is loaded, hence the qualification
+# qualified, in case a package exporting another `solve` (OrdinaryDiffEq) is loaded too
 res = HomotopyContinuation.solve(F; target_parameters = cubic_parameters(cubic))
 lines = real_solutions(res)     # 27 of them, all real
 length(lines) == 27
@@ -122,11 +133,8 @@ planes = [first(plane_of(lines[collect(T)])) for T in cover(triples)]
 f = expand(prod(P[1]*x + P[2]*y + P[3]*z - P[4] for P in planes))
 degree(f) == 9
 
-# deg f = 9 forces d = 5, and g^5 is of order 10^7 out where the surface is, so
-# |r| on V(G) runs around 10^-6 -- under the 1e-5 at which routing_points decides
-# a point lies on the zero locus of r and discards it. scaling f up fixes that and
-# changes nothing else: a positive multiple of f has the same critical points with
-# the same indices.
+# (scaling f changes neither the routing points nor their indices; the factor is
+# left over from an older version of the package, which judged "on V(f)" by |r|)
 f = 1e6 * f
 
 # and now the components of the cubic surface with its 27 lines removed
@@ -138,18 +146,13 @@ M, routPoints = find_connectivity_matrix(cache; nstarts = 200, box = 5.0,
                                          start_step_size = 5e-1, verbose = true)
 components = connected_components(cache, routPoints, M)
 
-# every routing point that turns up has index 0 and every component is a single
-# point with χ = 1, which is the right shape for the answer: with the lines gone
-# r goes to 0 along the boundary of every region and at infinity, so each region
-# carries a maximum of |r| and is a disc. the reversed flow runs into the zero
-# locus instead of into a critical point, which is why no index 2 points appear.
+# every region carries a maximum of |r|, since r → 0 on the lines and at infinity.
+# in the runs here every component found is a single index 0 routing point (χ = 1).
 #
-# the count is a lower bound, though. the routing system here is three equations
-# of degree 15, monodromy stops well short of the full fibre (`heuristic_stop`,
-# the same failure as Chubs above), so the answer is carried by the flow seeds,
-# and a region is only seen if a random start in [-box, box]^3 happens to land in
-# it. raising nstarts finds more, but slowly: 200 starts gives 60 components in
-# about four minutes, 1000 starts gives 69 in about eleven.
+# the count is a lower bound: a region is only seen if some routing point in it is
+# found, and monodromy stops heuristically. a run with the settings above finds 142
+# components in about two minutes, other runs up to 145. small regions are the ones
+# missed -- see clebsch_cubic.jl for seeding along the lines, which finds them.
 #
 # for comparison, in the projective picture the 27 lines meet in 115 points (10 of
 # them Eckardt points, where three lines meet at once) and are cut into 240 arcs,
@@ -217,8 +220,7 @@ count(T -> concurrent(lines9[collect(T)]), triples9) == 10
 prod9 = expand(prod(P[1]*x + P[2]*y + P[3]*z - P[4]
                     for P in [first(plane_of(lines9[collect(T)])) for T in cover(triples9)]))
 
-# |r| = |F9|/g^5 has a median around 2e-3 on the surface, so scale it up past the
-# 1e-5 that routing_points reads as "on the zero locus", exactly as above
+# (the factor 1e3 is as unnecessary as the 1e6 above)
 r = RoutingFunction(1e3*nonic9, [x,y,z], [0.7978234324, 0.6623073432, 0.2347907832])
 cache = RoutingCache(r, [cubic9])
 
@@ -237,9 +239,6 @@ M, routPoints = find_connectivity_matrix(cache; nstarts = 200, box = 5.0,
                                          start_step_size = 5e-1, verbose = true)
 components = connected_components(cache, routPoints, M)
 
-# 86 components, again all of them a single index 0 routing point with χ = 1. the
-# same run with the product of nine planes finds 60, so the nonic is the better
-# numerator of the two: same degree, same zero locus on the surface, but its
-# coefficients come out of power sums rather than out of nine planes one of which
-# sits far from the origin, and the routing points are correspondingly easier to
-# find. still a lower bound on the 120-odd regions, for the reasons above.
+# 125 components in about three minutes, again each a single index 0 routing point
+# with χ = 1; separately verified maxima show there are at least 128 in this chart.
+# a lower bound, for the reasons above.

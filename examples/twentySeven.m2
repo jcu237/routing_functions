@@ -21,7 +21,6 @@ G = gens I27
 G_(0,0) == clebsch
 g = G_(0,1)
 
-f1 == clebsch
 degree g == {9}
 
-"clebsch_cubic.jl" << toExternalString g << endl << close 
+"clebsch_nonic.txt" << toExternalString g << endl << close 
