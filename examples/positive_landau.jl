@@ -1,6 +1,6 @@
 # Positive Landau discriminants.
 #
-# F is the second Symanzik polynomial of a two-loop graph with four propagators:
+# F is the second Symanzik polynomial of a two-loop graph with four propagators (the para):
 # cubic and homogeneous in the Schwinger parameters x = (x1,...,x4), linear in the
 # kinematic parameters p = (s,m,M). The incidence variety
 #
@@ -8,7 +8,7 @@
 #
 # is the object whose projection to p-space is the Landau discriminant. The
 # question here is which of its irreducible components carry a point whose x is
-# real and strictly positive -- the physical sheet.
+# real and strictly positive.
 
 using ConnectedComponents
 using LinearAlgebra
@@ -26,65 +26,26 @@ F = m*x2*x3^2 + m*x2^2*x3 + m*x3*x1^2 + m*x3^2*x1 + m*x4*x1^2 + m*x4*x2^2 +
 
 dF = differentiate(F, X)
 
-# ---------------------------------------------------------------------------
-# setting the system up so that the routing machinery can see it
-# ---------------------------------------------------------------------------
-#
-# three things have to be dealt with before V is a variety this package can work
-# on. all three are consequences of F being homogeneous in x and linear in p.
-#
-# (1) F = 0 is redundant. F is homogeneous of degree 3 in x, so Euler gives
-#     3F = ∑ xᵢ ∂F/∂xᵢ and the equation F = 0 follows from the four partials.
-#     Carrying it anyway makes the jacobian of G rank deficient at *every* point
-#     of V(G), which leaves the Lagrange multipliers of the routing system
-#     undetermined -- the routing system then has a positive-dimensional fibre
-#     over every routing point and nothing downstream means anything.
-@assert expand(3*F - sum(X .* dF)) == 0
-
-# (2) V contains {p = 0} × (ℂ*)^4. F is linear in p, so F(x,0) ≡ 0 and the whole
-#     x-Hessian vanishes there: the jacobian of (∂F/∂x1,...,∂F/∂x4) at p = 0 is
-#     [0 | J(x)], of rank ≤ 3 < 4. That 4-dimensional component is therefore a
-#     singular locus of the system, with the same undetermined-multiplier problem.
-#     It is also the uninteresting component -- it contains positive x for trivial
-#     reasons -- so it should be cut away rather than worked around.
-#
-# (3) V is a cone in x and a cone in p. Critical points of r would come in
-#     2-parameter families, so the routing system would again be positive
-#     dimensional.
-#
-# One affine chart in each of x and p fixes (2) and (3) at once. δ is taken with
-# positive entries so that every x in the positive orthant scales into δ·x = 1,
-# which is the whole point; ℓ is generic, and ℓ·p = 1 is what removes {p = 0}.
+# since (ℂ*)^4 × {p = 0} is a component of V, and V is a cone in x and in p, we fix
+# one affine chart in each. ℓ is generic, and ℓ·p = 1 removes p = 0, which is
+# trivially positive and on which the jacobian of dF is rank deficient. δ > 0, so
+# every positive x rescales onto δ·x = 1 and no positive point is lost.
 δ = [0.31, 0.57, 0.83, 1.19]
 ℓ = [0.37, -0.62, 0.91]
-G = [dF; sum(δ .* X) - 1; sum(ℓ .* p) - 1]
+G = System([dF; sum(δ .* X) - 1; sum(ℓ .* p) - 1], Z)
 
 # 6 equations in 7 unknowns. Y = V(G) is one surface and six curves -- the seven
 # irreducible components of V that have p ≠ 0, sliced. Slicing does not break them
 # up: each component is a cone in both x and p, so it maps onto its slice by
 # rescaling, and the image of an irreducible variety is irreducible.
 
-# removing the coordinate hyperplanes is exactly what a routing function does:
-# on each connected component of Y_ℝ \ {x1x2x3x4 = 0} the sign vector of x is
-# constant, so a component of the real variety is positive or it is not, and one
-# routing point per region settles it.
+
 r = RoutingFunction(x1*x2*x3*x4, Z)
 cache = RoutingCache(r, G)
 
-# ---------------------------------------------------------------------------
-# 1. a single positive point, as fast as possible
-# ---------------------------------------------------------------------------
-#
-# `stop_when` is a predicate on a real routing point in ℝⁿ. The flow returns the
-# first point satisfying it, and `routing_points` then skips monodromy entirely.
-# That matters here: the routing system is 13 equations whose first block has
-# degree 11, so its generic fibre is far out of reach of `monodromy_solve`.
-#
-# the threshold is not cosmetic. Newton lands on plenty of points with a
-# coordinate at 1e-6, which sit on {x1x2x3x4 = 0} rather than in a positive
-# region; asking for a definite margin keeps those out.
-is_positive(P; tol = 1e-4) = all(>(tol), view(P, 1:4))
 
+is_positive(P; tol = 1e-4) = all(>(tol), view(P, 1:4))
+F
 Random.seed!(1)
 hit = routing_points(cache; stop_when = is_positive, nstarts = 200,
                      box = 10.0, verbose = true)
@@ -95,121 +56,45 @@ else
     println("positive routing point")
     println("   x = ", round.(q[1:4], sigdigits = 6))
     println("   p = ", round.(q[5:7], sigdigits = 6))
-    println("   |G(q)| = ", norm(Float64.(evaluate(G, Z => q))))
+    println("   |G(q)| = ", norm(Float64.(evaluate(G, q))))
 end
 
-# ---------------------------------------------------------------------------
-# 2. all of them: the sign vectors that occur on Y_ℝ
-# ---------------------------------------------------------------------------
-#
-# Dropping `stop_when` and taking every routing point the flow reaches gives the
-# census. The argument that this is complete, and not just a sample, is the one
-# the routing function is built on: the flow follows sign(r)∇r, so |r| increases
-# along it and the path can never cross {x1x2x3x4 = 0}, where r = 0. Every path
-# therefore ends at a local maximum of |r| inside the region it started in, and
-# every region of Y_ℝ \ {x1x2x3x4 = 0} has at least one such maximum, because
-# |r| → 0 both on the boundary of the region and at infinity. So the sign vectors
-# carried by routing points are exactly the sign vectors realised on Y_ℝ.
 
-Random.seed!(2)
-seeds = flow_to_routing_points(cache; nstarts = 4000, box = 3.0)
-real_pts = [real.(z[1:7]) for z in seeds if maximum(abs ∘ imag, z[1:7]) < 1e-8]
+#Using the above we quickly get a positive routing point. Maybe we instead want to find all positive routing points.
+#We can do this by dropping the stop_when predicate.
 
-census = Dict{NTuple{4,Int},Vector{Vector{Float64}}}()
-for q in real_pts
-    minimum(abs, view(q, 1:4)) > 1e-4 || continue
-    push!(get!(() -> Vector{Float64}[], census, ntuple(i -> q[i] > 0 ? 1 : -1, 4)), q)
-end
-println("\n", length(real_pts), " real routing points, ", length(census), " sign vectors:")
-for (sv, qs) in sort(collect(census); by = q -> -length(last(q)))
-    println("   ", sv, "   ", length(qs), " points", sv == (1,1,1,1) ? "   <-- positive" : "")
-end
+rp = routing_points(cache; nstarts = 1000, box = 100.0, verbose = true)
 
-positive = get(census, (1,1,1,1), Vector{Float64}[])
+#with result of that computation in hand, we can filter the positive routing points from the result.
+positive_rp = filter(p -> is_positive(p), rp)
 
-# ---------------------------------------------------------------------------
-# 3. which irreducible components the positive points lie on
-# ---------------------------------------------------------------------------
-#
-# A routing point says a positive region exists; the witness sets say which
-# component it belongs to. Membership: slice the component with a random affine
-# subspace of complementary dimension *through the point*. The slice meets the
-# component in deg(W) points, and the point is one of them exactly when it lies
-# on the component.
-N = numerical_irreducible_decomposition(System(G; variables = Z))
-comps = [(d, i, W) for d in sort(collect(keys(N.witness_sets)); rev = true)
-                   for (i, W) in enumerate(N.witness_sets[d])]
-println("\nsliced V has ", length(comps), " components: ",
-        [(d, degree(W)) for (d, _, W) in comps])
 
-# distance from q to the component: slice through q and take the nearest point of
-# the slice. On the component that distance is the tracking error; off it, it is
-# the distance to the nearest other branch, which is orders of magnitude larger.
-function distance_to_component(q, W, d; tries = 5)
-    best = Inf
-    for _ = 1:tries
-        A = randn(d, length(q))
-        Wq = try
-            witness_set(W, LinearSubspace(A, A * q); show_progress = false)
-        catch
-            continue
-        end
-        for sol in solutions(Wq)
-            maximum(abs ∘ imag, sol) < 1e-6 || continue
-            best = min(best, maximum(abs, real.(sol) .- q))
-        end
+
+#Lets see if these routing points belong to the same connected component.
+
+components = connected_components(cache, positive_rp; grad_step_size = 1.0, tol = 2.0, start_step_size = 1.1,
+                         path_options = (tspan = (0.0, 1e5),))
+
+#We see that each of the positive routing points is put in a different connected component, but this is not right here.
+#The line and the cubic found below cross at a point with x > 0, where V(G) is singular, and f = x1*x2*x3*x4 does not remove it.
+#So instead we take a numerical irreducible decomposition to see which irreducible components the positive routing points lie on.
+H = System(vcat(F,dF), Z)
+irreducible_decomposition = nid(H)
+witnessSets = witness_sets(irreducible_decomposition)
+
+# witnessSets maps each dimension d to a vector of WitnessSets, one per irreducible
+# component of that dimension, so there are two levels to loop over. membership
+# takes a vector of points and sets up its homotopy once per witness set, so all of
+# positive_rp is tested against a component in a single call.
+for (d, Ws) in witnessSets, (i, W) in enumerate(Ws)
+    in_W = membership(positive_rp, W; show_progress = false)
+    for j in findall(in_W)
+        println("positive routing point $j lies on component $i of dimension $d")
     end
-    return best
 end
 
-function which_component(q, comps; tol = 1e-5)
-    ds = [distance_to_component(q, W, d) for (d, _, W) in comps]
-    j = argmin(ds)
-    return ds[j] < tol ? j : nothing
-end
+#The positive routing points lie on 2 of the 7 components of V(G): the cubic x1 = x2, x3 = x4 and the line s = 0, M = 9m, x3 = x4 = x1 + x2.
+#The third positive component of V is p = 0, which the chart ℓ·p = 1 removes.
+#Over ℚ, V also has 7 components, since p = 0 is added and the two complex conjugate lines of V(G) count as one. So 3 of these 7 meet the positive orthant.
+#positive_landau.m2 checks this exactly.
 
-labels = [(d, i, degree(W)) for (d, i, W) in comps]
-assign = [which_component(q, comps) for q in positive]
-hits = sort(unique(filter(!isnothing, assign)))
-println("\n", length(hits), " of the ", length(comps),
-        " components of the sliced V carry a point with x > 0:")
-for j in hits
-    d, i, deg = labels[j]
-    w = positive[findfirst(==(j), assign)]
-    println("   component #$j:  dim $d, degree $deg")
-    println("        x = ", round.(w[1:4], sigdigits = 6), "   p = ", round.(w[5:7], sigdigits = 6))
-end
-println("\nunassigned positive routing points: ", count(isnothing, assign), " of ", length(positive))
-
-# ---------------------------------------------------------------------------
-# the answer, and how it lines up with the count of seven
-# ---------------------------------------------------------------------------
-#
-# Over ℂ, and in the torus, V has eight irreducible components: {p = 0} × (ℂ*)^4
-# of dimension 4, and the seven with p ≠ 0 that the charts above leave -- one more
-# of dimension 4 (degree 3 in the slice) and six of dimension 3 (degrees 4, 3, 1,
-# 1, 1, 1). Two of the four lines are a complex conjugate pair and have no real
-# points at all, so over ℚ they are a single prime; that merge turns eight into
-# the seven of the email.
-#
-# Three of those seven contain a point with x real and strictly positive:
-#
-#   * {p = 0}, for the trivial reason that any positive x will do -- it is the
-#     component the ℓ·p = 1 chart deliberately removes,
-#   * the degree 3 curve, e.g. x = (0.5637, 0.5637, 0.2495, 0.2495),
-#                               p = (0.6193, 0.1628, 0.9580),
-#   * one of the degree 1 lines, on which s vanishes identically, e.g.
-#     x = (0.2411, 0.1692, 0.4103, 0.4103), p = (0, 0.1321, 1.1889).
-#
-# Both nontrivial witnesses have x1 = x2 or x3 = x4: F is invariant under x1 ↔ x2
-# and under x3 ↔ x4 separately, and the positive points sit on the fixed locus.
-# That symmetry is visible in the m-coefficient, which factors as
-#
-#     (x1 + x2 + x3 + x4) · ((x1 + x2)(x3 + x4) + x3 x4),
-#
-# the first Symanzik polynomial times the sum of the Schwinger parameters.
-#
-# The other four are not positive, and each for a different reason: the dimension
-# 4 component and the degree 4 curve have real points in seven and three sign
-# classes respectively but never in (+,+,+,+); one degree 1 line is real but its
-# positive interval is empty; the conjugate pair is not real at all.
