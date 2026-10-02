@@ -16,14 +16,13 @@ It implements the algorithm of
 
 See also `HypersurfaceRegions.jl` and `ProjectedHypersurfaces.jl`, which use routing
 functions for the complement of a hypersurface; many ideas from those packages are used
-here. For how the computation works, the mathematics behind it, and a function-by-function
-reference, see [PIPELINE.md](PIPELINE.md).
+here. Claude was used to optimize the performance of this package. 
 
 ## Installation
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/dave-k-johnson/routing_functions.git")
+Pkg.add(url = "(https://github.com/jcu237/routing_functions.git)")
 ```
 
 The package re-exports [HomotopyContinuation.jl](https://www.juliahomotopycontinuation.org),
