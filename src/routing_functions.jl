@@ -24,8 +24,9 @@ connected components of `V(G) \\ V(f)`. Typical choices:
 * `1` (or any nonzero constant) removes nothing;
 * a product `h₁ h₂ ⋯` removes `V(h₁) ∪ V(h₂) ∪ ⋯`, e.g. `x*y` removes the axes, and a
   coordinate product sorts points by the signs of the coordinates;
-* the singular points of `V(G)` **must** lie in `V(f)`: multiply `f` by
-  [`singular_locus`](@ref)`(G, vars)` (for a hypersurface `g` that is `‖∇g‖²`).
+* the singular points of `V(G)` **must** lie in `V(f)`: multiply `f` by a polynomial
+  that vanishes on `V(G)` only at those points. [`jacobian_rank_locus`](@ref)`(G, vars)`
+  is a fallback, which can remove more than the singular points.
 
 `vars` are the ambient variables, in the order points are written in; pass them
 whenever `f` does not involve all of them (a constant `f` involves none). `c` is the

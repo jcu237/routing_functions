@@ -142,6 +142,34 @@ function jacobian_G!(cache::RoutingCache, point::AbstractVector{Float64})
     return cache.JG_val
 end
 
+# whether JG drops rank at the point P of V(G). σ_min(JG) grows with the distance from
+# the points where the rank drops, so at such a point it is far smaller than it is a
+# short step away, while at a point of full rank the step barely changes it. comparing
+# the two needs no scale for JG, so rows of any size are fine.
+#
+# on a piece of V(G) where the rank drops the projection stalls a little way off it,
+# where reg damps the step, so `step` must be well above that distance. the step is
+# along P - c, which is generic because c is; a random direction would use up random
+# numbers and so change seeded runs.
+function _rank_drops_at(
+    cache::RoutingCache,
+    P::AbstractVector{Float64};
+    step::Float64 = 1e-3,
+    ratio::Float64 = 0.1
+    )
+
+    σ = LA.svdvals(jacobian_G!(cache, P))
+    length(σ) < cache.k && return true
+    # G redundant on all of ℝⁿ: the rank is low on both sides of the step
+    σ[end] <= cache.k * eps(Float64) * σ[1] && return true
+
+    u = P .- cache.r.c
+    dist = LA.norm(u)
+    dist == 0 && return false
+    Q = P .+ (step * (1 + LA.norm(P)) / dist) .* u
+    return σ[end] < ratio * LA.svdvals(jacobian_G!(cache, Q))[end]
+end
+
 """
     project_to_variety!(P, cache)          # overwrites P
     project_to_variety(P, cache)           # returns a new point

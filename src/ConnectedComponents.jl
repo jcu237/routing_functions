@@ -38,7 +38,7 @@ export evaluate_r, evaluate_f, evaluate_g, evaluate_grad_r, evaluate_grad_hessia
 export distance_to_zero_locus, on_zero_locus, critical_distance
 
 # the variety X = V(G)
-export singular_locus, evaluate_G!, jacobian_G!
+export jacobian_rank_locus, evaluate_G!, jacobian_G!
 export project_to_variety!, project_to_variety, project_to_variety_residual!
 
 # lower-level pieces: hessians on X, gradient fields and single paths

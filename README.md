@@ -65,20 +65,32 @@ reduced equations (no repeated factors), as many as the codimension.
 | the components of `V(G)` itself | `1` |
 | to cut along hypersurfaces `h₁ = 0, h₂ = 0, …` | `h₁ * h₂ * ⋯` |
 | to separate by the signs of the coordinates | `x₁ * x₂ * ⋯ * xₙ` |
-| to remove the singular points of `V(G)` (required, see below) | multiply by `singular_locus(G, vars)` |
+| to remove the singular points of `V(G)` (required, see below) | multiply by a polynomial that vanishes on `V(G)` only at those points |
 
 Always pass `vars`, the ambient variables in the order your points are written in:
 `f` may not involve all of them (a constant `f` involves none).
 
 **Singular points must be removed.** The method needs `V(G)` to be smooth outside
-`V(f)`. If `V(G)` has singular points, put them into `V(f)`:
+`V(f)`. If `V(G)` has singular points, put them into `V(f)`. Finding the polynomial is
+up to you: on `V(G)` it should vanish at the singular points and nowhere else.
 
 ```julia
 @var x y z
 g = x^2 + y^2 - z^2 + z^3                       # a cone point at the origin
-r = RoutingFunction(singular_locus([g], [x, y, z]), [x, y, z])   # = ‖∇g‖²
+r = RoutingFunction(z, [x, y, z])               # on V(g), z = 0 only at the origin
 connected_components(r, [g])                    # the bell (χ = 1) and the funnel (χ = 0)
 ```
+
+`jacobian_rank_locus(G, vars)` is a fallback (`‖∇g‖²` for a single equation). It always
+contains the singular points, but it is large, and it can contain more: it vanishes
+wherever the jacobian of `G` drops rank, which depends on how `G` is written. For example
+it vanishes on all of `(x^2 + y^2 - 1)^2 = 0`, a smooth circle. See its docstring for the
+exact criterion.
+
+**`G` must have a full-rank jacobian.** Where the rank drops on a whole piece of `V(G)`
+that you want to keep, no choice of `f` helps: rewrite `G` with no repeated factors and as
+many equations as the codimension. The flows warn when they start on such a piece, even
+if `V(f)` removes it on purpose.
 
 **The centre `c`.** `RoutingFunction(f, vars, c)` fixes the centre of `g`; otherwise it is
 random. It must be generic: a centre of symmetry of `V(G)` (the centre of a circle, say)
@@ -155,7 +167,7 @@ The most useful keywords (all accepted by `connected_components`; the full table
 | file | what it shows | time |
 |---|---|---|
 | [examples/01_curves.jl](examples/01_curves.jl) | circles, an elliptic curve, the twisted cubic; the step-by-step API | seconds |
-| [examples/02_singular_surfaces.jl](examples/02_singular_surfaces.jl) | removing singular points with `singular_locus` | a minute |
+| [examples/02_singular_surfaces.jl](examples/02_singular_surfaces.jl) | removing singular points with `jacobian_rank_locus` | a minute |
 | [examples/kuramoto.jl](examples/kuramoto.jl) | a torus in ℝ⁶; what monodromy adds to the flows | a minute |
 | [examples/3RPR.jl](examples/3RPR.jl) | a parallel manipulator; a variety thousands of units across (`box`, long paths) | a few minutes |
 | [examples/clebsch_cubic.jl](examples/clebsch_cubic.jl) | the Clebsch cubic minus its 27 lines (141 regions); custom `starts` | two minutes |

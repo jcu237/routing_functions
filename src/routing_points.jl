@@ -149,6 +149,28 @@ function flow_to_routing_points(cache::RoutingCache; all_vars::Bool = false, kwa
     return [all_vars ? real.(z) : real.(z[1:n]) for z in _flow_seeds(cache; kwargs...)]
 end
 
+# reports the starts on V(G) where JG dropped rank. this depends only on G, not on f:
+# an f that vanishes on such a piece hides it, and one that does not cannot rescue it.
+# isolated real points attract the projection strongly, so a legitimate singular point
+# can collect many starts. how many distinct points there are tells that apart from a
+# whole piece; the projection stalls a little way off them, hence the coarse tolerance.
+function _warn_rank_drops(points::Vector{Vector{Float64}}, started::Integer, k::Integer)
+    isempty(points) && return nothing
+    distinct = Vector{Float64}[]
+    for P in points
+        any(Q -> LA.norm(P - Q) < 1e-3 * (1 + LA.norm(P)), distinct) || push!(distinct, P)
+    end
+    @warn("flow_to_routing_points: the jacobian of G has rank below $k at " *
+          "$(length(points)) of the $started starts on V(G), around $(length(distinct)) " *
+          "distinct point(s). A few distinct points may just be singular points of V(G), " *
+          "which are fine if V(f) contains them. Many mean the rank drops along a whole " *
+          "piece of V(G): G has a repeated factor, more equations than the codimension " *
+          "there, or real points of too low a dimension. That is fine if V(f) is meant to " *
+          "remove the piece. Otherwise no f can keep it, so rewrite G; see " *
+          "`jacobian_rank_locus`.")
+    return nothing
+end
+
 # the flow stage proper. returns the solutions (x, μ) of the routing system as
 # complex vectors, the form monodromy takes its start solutions in. the starts that
 # landed on V(G) are pushed to `landed`, if given.
@@ -195,6 +217,7 @@ function _flow_seeds(
     start_pt = zeros(Float64, n)
     started = 0
     attempts = 0
+    rank_drops = Vector{Float64}[]      # the starts where JG has rank below k
 
     while started < wanted && attempts < budget
         attempts += 1
@@ -211,6 +234,7 @@ function _flow_seeds(
         (isfinite(residual) && residual < proj_tol && all(isfinite, start_pt)) || continue
         started += 1
         landed === nothing || push!(landed, copy(start_pt))
+        _rank_drops_at(cache, start_pt) && push!(rank_drops, copy(start_pt))
 
         # up to the attracting critical points of |r|, down to the repelling ones
         for dir in (1.0, -1.0)
@@ -229,6 +253,8 @@ function _flow_seeds(
             end
         end
     end
+
+    _warn_rank_drops(rank_drops, started, cache.k)
 
     if started < wanted
         @warn(supplied ?

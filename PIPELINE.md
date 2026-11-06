@@ -25,8 +25,10 @@ critical point, gradient flow connects those critical points within a component 
 never between components.
 
 **Standing assumption.** `X` is smooth of dimension `n − k` at every point of `U`:
-`JG` has rank `k` there. Singular points of `X` must lie in `V(f)`; multiply them into
-`f` with `singular_locus(G, vars)` (for a hypersurface `g` that is `‖∇g‖²`).
+`JG` has rank `k` there. Singular points of `X` must lie in `V(f)`, and finding an `f`
+that puts them there is up to the caller. `jacobian_rank_locus(G, vars)` (for a
+hypersurface `g` that is `‖∇g‖²`) is a fallback: its zeros on `X` contain the singular
+points but can contain nonsingular ones too, since they depend on how `G` is written.
 
 Notation, as in the code:
 
@@ -355,7 +357,8 @@ Functions starting with `_` are internal.
 - `_project_to_variety!` — Gauss–Newton steps `−Jᵀ(JJᵀ + reg·I)⁻¹G`, each backtracked until
   `‖G‖` decreases; stops when `‖G‖ < tol` or it stops decreasing; returns the point and `‖G‖`.
 - `project_to_variety!(P, G, vars)` — the same without a cache.
-- `singular_locus(G, vars)` — `Σ (maximal minors of JG)²`; vanishes where `rank JG < k`.
+- `jacobian_rank_locus(G, vars)` — `Σ (maximal minors of JG)²`; vanishes where `rank JG < k`,
+  which contains the singular points of `X` and can contain nonsingular ones.
 
 ### `src/gradient_field.jl`
 - `_projected_gradient_field(r, G_sys, n, k, reg, unit_speed)` — returns the ODE
@@ -378,6 +381,8 @@ Functions starting with `_` are internal.
   `param_sys` (the centre and affine families of §3.2), `flow!` and `flow_unit!` (the two fields),
   and scratch buffers. Checks that `G` uses only `r`'s variables. Stateful: one per thread.
 - `evaluate_G!`, `jacobian_G!` — into the cache's buffers (overwritten by the next call).
+- `_rank_drops_at(cache, P)` — whether `JG` drops rank at `P ∈ X`: `σ_min(JG)` at `P` is
+  below a tenth of its value a short step away. The ratio needs no scale for `JG`.
 - `project_to_variety!(P, cache)`, `project_to_variety(P, cache)`,
   `project_to_variety_residual!(P, cache)` — §4 `variety.jl`, with the cache's `reg`.
 - `projected_gradient_field(cache; unit_speed)` — the stored field and `f_sys`.

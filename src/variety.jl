@@ -141,24 +141,45 @@ function project_to_variety!(
 end
 
 """
-    singular_locus(G, vars)
+    jacobian_rank_locus(G, vars)
 
 A polynomial that vanishes exactly on the points of `ℝⁿ` where the jacobian of `G`
-has rank below `length(G)` -- in particular on the singular points of `V(G)`: the sum
-of the squares of the maximal minors of the jacobian. For a single equation `g` it is
-`‖∇g‖²`.
+has rank below `length(G)`: the sum of the squares of the maximal minors of the
+jacobian, which is `det(J Jᵀ)`. For a single equation `g` it is `‖∇g‖²`.
 
-The theory needs `V(G)` to be smooth off the removed locus, so when `V(G)` has
-singular points they must be removed with it:
+This describes the equations `G`, not the set `X = V(G)`. Only its zeros on `X` matter.
+They include every singular point of `X`, but they can include nonsingular points too:
+a nonsingular point `p` of `X` is among them exactly when `X` does not have codimension
+`length(G)` at `p`, or `G` does not generate the ideal of `X` near `p`.
+
+| `G` | what goes wrong | nonsingular points that vanish |
+|---|---|---|
+| `(x² + y² - 1)²` | repeated factor | the whole circle |
+| `x³ - y³` | the real points are the line `x = y`, whose ideal `G` does not generate | the origin |
+| `[x*z, y*z]` | more equations than the codimension of the plane `z = 0` | the plane, off the line |
+| `x² + y²` in `ℝ³` | real points of too low a dimension | the whole `z`-axis |
+
+For a single equation it is enough that `g` has no repeated factor and that each of
+its irreducible factors changes sign on `ℝⁿ`.
+
+Removing the singular points of `X` is the caller's job: multiply `f` by a polynomial
+whose zeros on `X` are those points and nothing else. It usually has far lower degree
+than this one, which has degree `2k(deg G - 1)` and is dense. On the cone
+`x² + y² = z²`, `z` will do. Vanishing on the singular points is not enough, because
+`x` also cuts the cone along two lines. When nothing better is to hand, this polynomial
+is the fallback:
 
 ```julia
-r = RoutingFunction(f * singular_locus(G, vars), vars)
+r = RoutingFunction(f * jacobian_rank_locus(G, vars), vars)
 ```
 
-(Its degree is `k · (deg G - 1) · 2`, which makes the routing system larger; when the
-singular points are known, a smaller polynomial vanishing on them will do.)
+Where the rank drops on a whole piece of `X` that should be kept, no choice of `f`
+helps, because the method needs `JG` to have full rank: `G` must be rewritten.
+`flow_to_routing_points` warns when its starts land on such a piece, whether or not
+`V(f)` contains it. It cannot see a rank drop on a thinner set, such as the origin of
+`x³ - y³`, which random starts on `X` do not reach.
 """
-function singular_locus(G, vars::Vector{Variable})::Expression
+function jacobian_rank_locus(G, vars::Vector{Variable})::Expression
     G = _as_expressions(G)
     k = length(G)
     J = HC.differentiate(G, vars)                 # k × n

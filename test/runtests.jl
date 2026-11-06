@@ -197,18 +197,55 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         end
     end
 
-    @testset "singular_locus" begin
+    @testset "jacobian_rank_locus" begin
         @var x[1:3]
         g = x[1]^2 + x[2]^2 - x[3]^2
-        s = singular_locus([g], x[1:3])
+        s = jacobian_rank_locus([g], x[1:3])
         P = [0.3, -0.7, 1.1]
         @test evaluate(s, x[1:3] => P) ≈ sum(abs2, evaluate(differentiate(g, x[1:3]), x[1:3] => P))
         # two equations: the jacobian drops rank where the sphere is tangent to the plane
         G = [x[1]^2 + x[2]^2 + x[3]^2 - 1, x[3] - 1]
-        s2 = singular_locus(G, x[1:3])
+        s2 = jacobian_rank_locus(G, x[1:3])
         @test abs(evaluate(s2, x[1:3] => [0.0, 0.0, 1.0])) < 1e-12
         @test evaluate(s2, x[1:3] => [0.6, 0.0, 0.8]) > 0.1
-        @test_throws ArgumentError singular_locus([x[1], x[2], x[3], x[1] + x[2]], x[1:3])
+        @test_throws ArgumentError jacobian_rank_locus([x[1], x[2], x[3], x[1] + x[2]], x[1:3])
+    end
+
+    @testset "rank drops of G on V(G)" begin
+        @var x y z
+        Random.seed!(11)
+        drops(G, vars, P) = CC._rank_drops_at(RoutingCache(RoutingFunction(1, vars), G), P)
+
+        # full rank, at any row scale, and however close to tangent the equations are
+        @test !drops([x^2 + y^2 - 1], [x, y], [0.6, 0.8])
+        @test !drops([1e-8 * (x^2 + y^2 + z^2 - 1), z - 0.6], [x, y, z], [0.8, 0.0, 0.6])
+        h = 1 - 1e-3
+        @test !drops([x^2 + y^2 + z^2 - 1, z - h], [x, y, z], [sqrt(1 - h^2), 0.0, h])
+
+        # a repeated factor, tested a little way off the circle, where the projection stalls
+        @test drops([(x^2 + y^2 - 1)^2], [x, y], (1 + 1e-6) .* [0.6, 0.8])
+        # more equations than the codimension: the plane, but not the line
+        @test drops([x * z, y * z], [x, y, z], [1.0, 2.0, 0.0])
+        @test !drops([x * z, y * z], [x, y, z], [0.0, 0.0, 1.0])
+        t = 0.7
+        @test drops([x * z - y^2, y - x^2, z - x * y], [x, y, z], [t, t^2, t^3])
+        # real points of too low a dimension
+        @test drops([x^2 + y^2], [x, y, z], [1e-6, 0.0, 0.5])
+        # redundant on all of ℝⁿ
+        @test drops([x, 2x], [x, y], [0.0, 1.0])
+        # more equations than variables
+        @test drops([x, y, x + y], [x, y], [0.0, 0.0])
+
+        # the flows report it, even when f vanishes on the piece and so would hide it
+        G = [x * z, y * z]
+        r = RoutingFunction(jacobian_rank_locus(G, [x, y, z]), [x, y, z])
+        @test_logs (:warn, r"rank below 2") match_mode = :any flow_to_routing_points(r, G; nstarts = 20)
+        # and an isolated real point is reported as one point, not as a piece
+        Random.seed!(11)
+        g = x^2 + y^2 - x^3
+        r = RoutingFunction(x^2 + y^2, [x, y])
+        @test_logs (:warn, r"around 1 distinct point") match_mode = :any flow_to_routing_points(
+            r, [g]; starts = [[1e-3, 2e-3], [-2e-3, 1e-3], [1e-3, -1e-3]])
     end
 
     @testset "examples with known answers" begin
