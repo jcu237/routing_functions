@@ -89,8 +89,8 @@ exact criterion.
 
 **`G` must have a full-rank jacobian.** Where the rank drops on a whole piece of `V(G)`
 that you want to keep, no choice of `f` helps: rewrite `G` with no repeated factors and as
-many equations as the codimension. The flows warn when they start on such a piece, even
-if `V(f)` removes it on purpose.
+many equations as the codimension. The flows warn when they start at a point of `V(G)`
+where the rank drops and `f` does not vanish.
 
 **The centre `c`.** `RoutingFunction(f, vars, c)` fixes the centre of `g`; otherwise it is
 random. It must be generic: a centre of symmetry of `V(G)` (the centre of a circle, say)

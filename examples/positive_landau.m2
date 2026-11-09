@@ -1,70 +1,49 @@
--- Exact check of examples/positive_landau.jl: which irreducible components of
---
---     V = {(x,p) in (C*)^4 x C^3 : F = dF/dx1 = ... = dF/dx4 = 0}
---
--- contain a point whose x is real and strictly positive.
---
--- Saturating by x1*x2*x3*x4 removes the coordinate hyperplanes, so the minimal primes
--- of J are the irreducible components of V over QQ. Each one gets a certificate:
---
---   * positive: an exact point on it with x > 0;
---   * not positive: a nonzero polynomial in x alone, with positive coefficients, that
---     lies in the prime. It is > 0 on the open orthant, so no point of the component
---     has x > 0.
+-- Exact computations for examples/positive_landau.jl: the parachute incidence variety Y,
+-- in the charts α_4 = 1 and m = 1, with variables (α_1, α_2, α_3, y, s, M). The equations
+-- are the Landau equations from positive_landau.jl, computed with Landau.jl.
 --
 -- run with: M2 --script examples/positive_landau.m2
 
-R = QQ[x1,x2,x3,x4,s,m,M];
+R = QQ[α_1..α_3, y, s, M];
 
-F = m*x2*x3^2 + m*x2^2*x3 + m*x3*x1^2 + m*x3^2*x1 + m*x4*x1^2 + m*x4*x2^2 +
-    m*x4*x3^2 + m*x4^2*x1 + m*x4^2*x2 + m*x4^2*x3 - M*x4*x2*x3 - M*x4*x3*x1 +
-    2*m*x2*x3*x1 + 2*m*x4*x2*x1 + 3*m*x4*x2*x3 + 3*m*x4*x3*x1 -
-    s*x2*x3*x1 - s*x4*x2*x1;
+U = (α_1 + α_2)*(α_3 + 1) + α_3;   -- first Symanzik polynomial at α_4 = 1
+G = {
+    M*α_3 - 2*α_1*α_3 - 2*α_1 + α_2*α_3*s - 2*α_2*α_3 + α_2*s - 2*α_2 - α_3^2 - 3*α_3 - 1,
+    M*α_3 + α_1*α_3*s - 2*α_1*α_3 + α_1*s - 2*α_1 - 2*α_2*α_3 - 2*α_2 - α_3^2 - 3*α_3 - 1,
+    M*α_1 + M*α_2 - α_1^2 + α_1*α_2*s - 2*α_1*α_2 - 2*α_1*α_3 - 3*α_1 - α_2^2 - 2*α_2*α_3 - 3*α_2 - 2*α_3 - 1,
+    M*α_1*α_3 + M*α_2*α_3 - α_1^2 + α_1*α_2*s - 2*α_1*α_2 - 3*α_1*α_3 - 2*α_1 - α_2^2 - 3*α_2*α_3 - 2*α_2 - α_3^2 - 2*α_3,
+    y*α_1*α_2*α_3*U - 1};
+Y = ideal G;
 
-I = ideal(F, diff(x1,F), diff(x2,F), diff(x3,F), diff(x4,F));
-J = saturate(I, x1*x2*x3*x4);
-P = minimalPrimes J;
-assert(#P == 7);
-assert(J == intersect P);  -- J is radical and P is its prime decomposition
 
--- exact points with x > 0. The first is on {p = 0}. The other two come from the
--- positive routing points of the .jl file, whose coordinates show the relations
--- exactly: one has s = 0, M = 9m and x3 = x4 = x1 + x2; the other two have
--- x1 = x2, x3 = x4 and (s, m, M) = m (4 - t^2, 1, 5 + 2t), where t = x3/x1.
--- Each is chosen to lie on only one component (checked below), so the three
--- positive components are certified by three different points.
-witnesses = {
-    {1,2,3,4, 0,0,0},
-    {1,2,3,3, 0,1,9},
-    {1,1,1,1, 3,1,7}
-};
-scan(witnesses, q -> assert(all(q_{0..3}, c -> c > 0)));
 
-isOn = (q, Q) -> (phi := map(QQ, R, q); all(flatten entries gens Q, g -> phi g == 0));
-allPositive = h -> h != 0 and all(flatten entries last coefficients h, c -> lift(c, QQ) > 0);
+-- 1. Where the 6 x 5 jacobian of G drops rank on Y. V(G) needs to be smooth of dimension 1 off V(f),
+-- so the routing numerator f has to vanish on all of this locus.
+rankDrop = minimalPrimes(Y + minors(5, jacobian matrix{G}));
+print "where the jacobian of G drops rank on Y:";
+scan(rankDrop, Q -> print("    dim " | toString dim Q | ": " | toString flatten entries mingens Q));
 
-scan(witnesses, q -> assert(#positions(P, Q -> isOn(q, Q)) == 1));
+-- This prints three pieces:
+--   * the surface M = 1, α_3 = -1. It is a whole component of Y, and it has dimension 2
+--     although G is 5 equations in 6 unknowns, so the jacobian has rank <= 4 on all of it;
+--   * α = (1/2, 1/2, 1), s = 0, M = 9, where the line M = 9 crosses the quadric component
+--     (the curve over M^2 - 10M + 9 + 4s = 0, see part 2). This point is positive;
+--   * α = (-1/2, -1/2, 1), s = 0, M = 1, where the line M = 1 crosses the quadric component.
+--
+-- The routing numerator of positive_landau.jl vanishes on all three: M - 1 on the surface
+-- and the second crossing, and (α_1 - α_2)^2 + (M - 9)^2 on the first.
+f = α_1*α_2*α_3*M*(M - 1)*((α_1 - α_2)^2 + (M - 9)^2);
+print("f vanishes on all of it: " | toString all(rankDrop, Q -> f % Q == 0));
 
-npositive = 0;
-scan(#P, i -> (
-    Q := P#i;
-    ws := select(witnesses, q -> isOn(q, Q));
-    cert := select(flatten entries gens eliminate({s,m,M}, Q), h -> allPositive h or allPositive(-h));
-    -- exactly one of the two certificates, never both and never neither
-    assert(#ws > 0 xor #cert > 0);
-    print("component " | toString i | ": dim " | toString dim Q | ", degree " | toString degree Q);
-    print("    " | toString flatten entries mingens Q);
-    if #ws > 0 then (
-        npositive = npositive + 1;
-        print("    POSITIVE: contains (x; s,m,M) = " | toString ws#0))
-    else
-        print("    not positive: contains " | toString cert#0 | ", which is > 0 for x > 0");
-));
-print(toString npositive | " of " | toString(#P) | " components meet the positive orthant");
-assert(npositive == 3);
 
--- the line (M = 9m) and the cubic cross inside the positive orthant, at t = x3/x1 = 2.
--- So V is singular at a point with x > 0, which f = x1*x2*x3*x4 does not remove.
-crossing = {1,1,2,2, 0,1,9};
-assert(#positions(P, Q -> isOn(crossing, Q)) == 2);
-print("the line and the cubic meet at (x; s,m,M) = " | toString crossing);
+-- 2. The irreducible components of Y, i.e. what nid finds in positive_landau.jl.
+print "";
+print "irreducible components of Y:";
+scan(minimalPrimes Y, Q -> print("    dim " | toString dim Q | ": " | toString flatten entries mingens Q));
+
+-- This prints four components:
+--   * the surface M = 1, α_3 = -1, which has no positive points;
+--   * the line M = 1, s = 0, α_3 = 1, α_1 + α_2 = -1, which has no positive points;
+--   * the line M = 9, s = 0, α_3 = 1, α_1 + α_2 = 1, which is positive for 0 < α_1 < 1;
+--   * the quadric component α_1 = α_2 = 2/(M - 5), α_3 = 1, M^2 - 10M + 9 + 4s = 0, which
+--     is positive for M > 5.

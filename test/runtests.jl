@@ -236,16 +236,25 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         # more equations than variables
         @test drops([x, y, x + y], [x, y], [0.0, 0.0])
 
-        # the flows report it, even when f vanishes on the piece and so would hide it
+        # the flows report it where f does not vanish, and stay quiet where V(f) removes it
+        rank_warnings(thunk) =
+            count(l -> occursin("rank below", string(l.message)),
+                  first(Test.collect_test_logs(thunk; min_level = Base.CoreLogging.Warn)))
         G = [x * z, y * z]
-        r = RoutingFunction(jacobian_rank_locus(G, [x, y, z]), [x, y, z])
+        r = RoutingFunction(x - 3, [x, y, z])
         @test_logs (:warn, r"rank below 2") match_mode = :any flow_to_routing_points(r, G; nstarts = 20)
-        # and an isolated real point is reported as one point, not as a piece
+        r = RoutingFunction(jacobian_rank_locus(G, [x, y, z]), [x, y, z])
+        @test rank_warnings(() -> flow_to_routing_points(r, G; nstarts = 20)) == 0
+        # an isolated real point is reported as one point, not as a piece
         Random.seed!(11)
         g = x^2 + y^2 - x^3
-        r = RoutingFunction(x^2 + y^2, [x, y])
+        starts = [[1e-3, 2e-3], [-2e-3, 1e-3], [1e-3, -1e-3]]
+        r = RoutingFunction(x - 1, [x, y])
         @test_logs (:warn, r"around 1 distinct point") match_mode = :any flow_to_routing_points(
-            r, [g]; starts = [[1e-3, 2e-3], [-2e-3, 1e-3], [1e-3, -1e-3]])
+            r, [g]; starts = starts)
+        # and counts as in V(f) although the projection stalls a little way off it
+        r = RoutingFunction(x^2 + y^2, [x, y])
+        @test rank_warnings(() -> flow_to_routing_points(r, [g]; starts = starts)) == 0
     end
 
     @testset "examples with known answers" begin
