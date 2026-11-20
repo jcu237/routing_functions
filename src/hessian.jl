@@ -1,21 +1,14 @@
 # second-order information about r on X = V(G): the hessian of r restricted to X,
-# and from it the morse index of a routing point. derivations in PIPELINE.md.
+# and from it the morse index of a routing point. derivation in PIPELINE.md §1.5.
 #
 # with V an orthonormal basis of T_P X and λ the least-squares multipliers
 # (JGᵀλ ≈ ∇r, exact at a critical point), the hessian of r|X is
 #
-#     H = Vᵀ (∇²r - ∑ⱼ λⱼ ∇²gⱼ) V                                          (1)
+#     H = Vᵀ (∇²r - ∑ⱼ λⱼ ∇²gⱼ) V
 #
-# at every point of X (the -∑ⱼ λⱼ ∇²gⱼ term is the second fundamental form). it
-# equals the paper's Vᵀ∇²r V + ∑ᵢ ∂ᵢr·Wᵢ without building the W matrices. at a
-# critical point two more forms agree with it:
-#
-#   (2) H = Vᵀ(∇²h - ∑ⱼ νⱼ∇²gⱼ)V / gᵈ   with h = f - r(P)·gᵈ, JGᵀν = ∇h;
-#   (3) H = Vᵀ ∂ₓF₁(P, μ) V / gᵈ⁺¹      with F₁ = grad_num - JGᵀμ the first
-#       block of the routing system, i.e. the tangential block of its jacobian.
-#
-# the package uses (1) (no case split, and (2), (3) are no more accurate); (3) is
-# `_hessian_from_routing_system`, used by the tests as a cross-check.
+# at every point of X: the second derivative of r along the geodesics of X. the
+# -∑ⱼ λⱼ ∇²gⱼ term accounts for the curvature of X, which makes r curve along X even
+# in directions where it is flat in ℝⁿ.
 #
 # the morse index of a routing point P is the number of eigenvalues of H with the
 # sign of r(P): the number of directions in which |r| increases.
@@ -32,7 +25,7 @@ function _projected_hessian(
 
     k, n = size(JG)
     V = LA.nullspace(JG)                 # orthonormal basis of T_P X; SVD, so rank revealing
-    λ = transpose(JG) \ ∇φ               # least squares, n × k
+    λ = transpose(JG) \ ∇φ               # least squares; JGᵀ is n × k, λ has length k
     L = copy(∇²φ)
     @inbounds for j = 1:k
         L .-= λ[j] .* view(HG, (j-1)*n+1:j*n, :)
@@ -55,21 +48,6 @@ function hessian_and_tangent(cache::RoutingCache, point::AbstractVector{<:Real})
     HC.jacobian!(cache.HG_val, cache.∇G_sys, x)
     ∇r, ∇²r = evaluate_grad_hessian_r(cache.r, x)
     return _projected_hessian(JG, cache.HG_val, ∇r, ∇²r)
-end
-
-# form (3) of the header, from the jacobian of the routing system at (P, μ). only
-# valid at a routing point; used to cross-check (1).
-function _hessian_from_routing_system(cache::RoutingCache, point::AbstractVector{<:Real})
-    r = cache.r
-    n = cache.n
-    x = Vector{Float64}(point)
-    JG = copy(jacobian_G!(cache, x))
-    μ = transpose(JG) \ _grad_num(r, x)
-    J = zeros(ComplexF64, cache.m, cache.N)
-    HC.jacobian!(J, cache.sys_interp, ComplexF64.(vcat(x, μ)))
-    V = LA.nullspace(JG)
-    H = transpose(V) * real.(J[1:n, 1:n]) * V ./ _g(r, x)^(r.d + 1)
-    return (H + transpose(H)) ./ 2, V
 end
 
 """
@@ -115,8 +93,8 @@ end
 # how close x is to a critical point of r|X, measured two ways from one evaluation:
 #
 #   distance: the length of the Newton step to the nearest critical point,
-#             ‖H⁻¹ Vᵀ∇r‖ with H from (1) -- an honest length, independent of the
-#             scaling of f and of how thin x's region is. Inf if H is singular.
+#             ‖H⁻¹ Vᵀ∇r‖ with H the hessian above -- an honest length, independent
+#             of the scaling of f and of how thin x's region is. Inf if H is singular.
 #   residual: ‖tangential part of ∇r‖ relative to ‖∇r‖ (see _critical_residual).
 #             it fails in thin regions: at an exact critical point the rounding of
 #             x alone leaves a residual of about eps·(scale/width)², which passes
@@ -159,19 +137,12 @@ function _is_critical(cache::RoutingCache, x::Vector{Float64}; crit_tol::Float64
 end
 
 """
-    ambient_gradient_hessian(r, P)
     ambient_gradient_hessian(φ::Expression, vars, P)
 
-The gradient and hessian in the ambient space `ℝⁿ` (not restricted to `V(G)`) of the
-routing function, or of any expression `φ`, at `P`.
+The gradient and hessian of the expression `φ` in the ambient space `ℝⁿ` (not
+restricted to `V(G)`) at `P`. For the routing function itself, use
+[`evaluate_grad_hessian_r`](@ref).
 """
-ambient_gradient_hessian(r::RoutingFunction, point::AbstractVector{<:Real}) =
-    evaluate_grad_hessian_r(r, point)
-
-ambient_gradient_hessian(cache::RoutingCache, point::AbstractVector{<:Real}) =
-    evaluate_grad_hessian_r(cache.r, point)
-
-# gradient and hessian of any expression in ℝⁿ
 function ambient_gradient_hessian(
     g::Expression,
     vars::Vector{Variable},
@@ -200,89 +171,6 @@ function _G_derivatives(G::Vector{Expression}, vars::Vector{Variable}, point::Ab
     HC.jacobian!(HG, ∇G_sys, x)
     return JG, HG
 end
-
-# the W matrices of "Smooth Connectivity in Real Algebraic Varieties". not used by
-# the pipeline (see (1) above); kept to check the paper's worked examples.
-#
-# `JG` is k × n, `HG` stacks the n × n hessians of the gᵢ row-block by row-block,
-# and both are read, never written, so callers may hand in cache buffers.
-function _compute_matrices(
-    JG::AbstractMatrix{Float64},
-    HG::AbstractMatrix{Float64},
-    k::Int64
-    )
-
-    # columns form an orthonormal basis of T_x(V(G))
-    V = LA.nullspace(JG)
-    n, d = size(V)
-
-    # well-constrained linear system for the stacked W's: the first k·d rows say
-    # ∑ᵢ JG[j,i]·Wᵢ = -Vᵀ ∇²gⱼ V, the last d² rows say ∑ᵢ V[i,j]·Wᵢ = 0.
-    A = zeros(Float64, k * d + d * d, n * d)
-    @inbounds for j = 1:k, i = 1:n
-        Jji = JG[j, i]
-        for t = 1:d
-            A[(j-1)*d+t, (i-1)*d+t] = Jji
-        end
-    end
-    @inbounds for j = 1:d, i = 1:n
-        Vij = V[i, j]
-        for t = 1:d
-            A[k*d+(j-1)*d+t, (i-1)*d+t] = Vij
-        end
-    end
-
-    B = zeros(Float64, k * d + d * d, d)
-    VtHV = zeros(Float64, d, d)
-    tmp = zeros(Float64, n, d)
-    @inbounds for j = 1:k
-        Hj = view(HG, (j-1)*n+1:j*n, :)
-        LA.mul!(tmp, Hj, V)
-        LA.mul!(VtHV, transpose(V), tmp)
-        B[(j-1)*d+1:j*d, :] .= .-VtHV
-    end
-
-    W = A \ B
-
-    return [W[(i-1)*d+1:i*d, :] for i = 1:n], V
-end
-
-"""
-    compute_matrices(cache, P) -> (W, V)
-    compute_matrices(G, vars, P) -> (W, V)
-
-The matrices `W₁, …, Wₙ` of "Smooth Connectivity in Real Algebraic Varieties" at `P`,
-with the orthonormal tangent basis `V` they are written in: the hessian of `φ` on
-`V(G)` is `Vᵀ∇²φ V + ∑ᵢ ∂ᵢφ Wᵢ`. The package computes hessians without them (see
-[`hessian_and_tangent`](@ref)); they are kept to check the paper's worked examples.
-"""
-function compute_matrices(cache::RoutingCache, point::AbstractVector{<:Real})
-    x = Vector{Float64}(point)
-    jacobian_G!(cache, x)
-    HC.jacobian!(cache.HG_val, cache.∇G_sys, x)
-    return _compute_matrices(cache.JG_val, cache.HG_val, cache.k)
-end
-
-function compute_matrices(
-    G,
-    vars::Vector{Variable},
-    point::AbstractVector{<:Real}
-    )
-
-    G = _as_expressions(G)
-    JG, HG = _G_derivatives(G, vars, point)
-    return _compute_matrices(JG, HG, length(G))
-end
-
-# gradient of the routing function at a point of X = V(G), in the tangent basis
-function gradient(cache::RoutingCache, point::AbstractVector{<:Real})
-    ∇r = reshape(evaluate_grad_r(cache.r, point), 1, :)
-    V = LA.nullspace(jacobian_G!(cache, Vector{Float64}(point)))
-    return ∇r * V
-end
-
-gradient(r::RoutingFunction, G, point::AbstractVector{<:Real}) =
-    gradient(RoutingCache(r, G), point)
 
 """
     morse_index(cache, P)

@@ -1,0 +1,41 @@
+-- tdebox: 6 Landau equations in 8 unknowns (and y)
+
+irreducible components of Y:
+    saturated by α_1*α_2*α_5+α_1*α_3*α_5+α_2*α_3*α_5+α_2*α_4*α_5+α_3*α_4*α_5+α_1*α_2+α_1*α_3+α_2*α_3+α_2*α_4+α_3*α_4+α_2*α_5+α_3*α_5
+    saturated by α_1
+    saturated by α_2
+    saturated by α_3
+    saturated by α_4
+    saturated by α_5
+    1. dim 3, degree 3: {M-1, t-4, α_5-1, α_2+α_3, α_1*α_4*s-α_1^2+α_3^2-2*α_1*α_4-α_4^2-2*α_1-2*α_4-1}
+       the jacobian has rank below 6 on all of it
+       no positive points: it contains α_2+α_3
+    2. dim 3, degree 3: {M-1, t-4, α_5+1, α_2-α_3, α_1*α_4*s-α_1^2-2*α_1*α_3-α_3^2-2*α_1*α_4-2*α_3*α_4-α_4^2+1}
+       the jacobian has rank below 6 on all of it
+       no positive points: it contains α_5+1
+    3. dim 2, degree 1: {M-9, t, s, α_5-1, α_2-α_3, α_1-α_3+α_4-1}
+    4. dim 2, degree 1: {M-1, t, s, α_5-1, α_2-α_3, α_1+α_3+α_4+1}
+       no positive points: it contains α_1+α_3+α_4+1
+    5. dim 2, degree 3: {t, α_5-1, α_2-α_3, α_1-α_4, M^2+4*s-10*M+9, α_4*M-2*α_3-5*α_4-2, 2*α_4*s+α_3*M-5*α_3-8*α_4+M-5}
+    6. dim 2, degree 2: {s, α_5-1, α_3-1, α_2-1, 2*α_1+2*α_4-M+5, M^2+t-10*M+9}
+    7. dim 2, degree 3: {α_5-1, α_3-1, α_2-1, α_1-α_4, 4*α_4*M-20*α_4+t-16, s*t-4*M^2-16*s-4*t+40*M-36, α_4*s-4*α_4+M-5}
+
+where the jacobian of the Landau equations drops rank on Y:
+    1. dim 3: {M-1, t-4, α_5-1, α_2+α_3, α_1*α_4*s-α_1^2+α_3^2-2*α_1*α_4-α_4^2-2*α_1-2*α_4-1}
+       no positive points. f gets the factor α_2+α_3
+    2. dim 3: {M-1, t-4, α_5+1, α_2-α_3, α_1*α_4*s-α_1^2-2*α_1*α_3-α_3^2-2*α_1*α_4-2*α_3*α_4-α_4^2+1}
+       no positive points. f gets the factor α_5+1
+    3. dim 1: {M-9, t, s, α_5-1, α_3-1, α_2-1, α_1+α_4-2}
+       f gets the factor α_1+α_4-2
+    4. dim 1: {M-9, t, s, α_5-1, α_3-2*α_4+1, α_2-2*α_4+1, α_1-α_4}
+       f gets the factor α_3-2*α_4+1
+    5. dim 1: {M-1, t, s, α_5-1, α_3-1, α_2-1, α_1+α_4+2}
+       no positive points. f gets the factor α_1+α_4+2
+    6. dim 1: {M-1, t, s, α_5-1, α_3+2*α_4+1, α_2+2*α_4+1, α_1-α_4}
+       no positive points. f gets the factor α_3+2*α_4+1
+    7. dim 1: {t, α_5-1, α_3-1, α_2-1, α_1-α_4, M^2+4*s-10*M+9, α_4*M-5*α_4-4, α_4*s-4*α_4+M-5}
+       f gets the factor α_4*M-5*α_4-4
+    8. dim 1: {s, α_5-1, 4*α_4-M+5, α_3-1, α_2-1, 4*α_1-M+5, M^2+t-10*M+9}
+       f gets the factor 4*α_4-M+5
+
+wrote /home/djohn225/Documents/Research/projects/routing_functions/examples/positive_landau/results/tdebox.txt

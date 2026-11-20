@@ -1,0 +1,11 @@
+-- B2: 2 Landau equations in 2 unknowns (and y)
+
+irreducible components of Y:
+    saturated by α_1+1
+    saturated by α_1
+    1. dim 0, degree 1: {s-4, α_1-1}
+
+where the jacobian of the Landau equations drops rank on Y:
+    nowhere
+
+wrote /home/djohn225/Documents/Research/projects/routing_functions/examples/positive_landau/results/B2.txt

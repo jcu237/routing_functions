@@ -1,0 +1,25 @@
+Computing mixed cells... 2    Time: 0:00:00[K
+   mixed_volume: 6[K[A
+[K[AComputing mixed cells... 3    Time: 0:00:00[K
+   mixed_volume: 7[K
+stratum 1 (Y): 4 points, 1 positive, 17 s
+
+LandauSystem B3 (sunrise (banana with 3 edges)): 4 equations in (α₁, α₂, y, s), expected dimension 0
+
+stratum 1 (Y), dimension 0
+finitely many points, so the system is solved directly
+1 of 4 real points are positive
+   1:  α = [1.0, 1.0, 1.0],  s = 9.0   on component 1
+
+the irreducible components of Y:
+   1. dim 0, degree 1: positive points found (1)
+      {-9 + s, -1 + α₂, -1 + α₁}
+   2. dim 0, degree 1: no positive points (a generator has one sign on them)
+      {-1 + s, -1 + α₂, 1 + α₁}
+   3. dim 0, degree 1: no positive points (a generator has one sign on them)
+      {-1 + s, 1 + α₂, -1 + α₁}
+   4. dim 0, degree 1: no positive points (a generator has one sign on them)
+      {-1 + s, 1 + α₂, 1 + α₁}
+
+"No positive routing point" means no positive point off the singular pieces listed above,
+provided every routing point was found. The search for them stops heuristically.

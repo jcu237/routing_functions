@@ -1,0 +1,13 @@
+LandauSystem B2 (bubble (banana with 2 edges)): 3 equations in (α₁, y, s), expected dimension 0
+
+stratum 1 (Y), dimension 0
+finitely many points, so the system is solved directly
+1 of 1 real points are positive
+   1:  α = [1.0, 1.0],  s = 4.0   on component 1
+
+the irreducible components of Y:
+   1. dim 0, degree 1: positive points found (1)
+      {-4 + s, -1 + α₁}
+
+"No positive routing point" means no positive point off the singular pieces listed above,
+provided every routing point was found. The search for them stops heuristically.

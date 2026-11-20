@@ -66,7 +66,7 @@ function RoutingCache(
     n = length(vars)
     k = length(G)
 
-    # G has to live in r's variables (HC's own error for this is cryptic)
+    # G has to live in r's variables
     stray = setdiff(variables(G), vars)
     isempty(stray) || throw(ArgumentError(
         "G involves variables that r does not: $(join(stray, ", ")). r is a routing " *
@@ -142,15 +142,14 @@ function jacobian_G!(cache::RoutingCache, point::AbstractVector{Float64})
     return cache.JG_val
 end
 
-# whether JG drops rank at the point P of V(G). σ_min(JG) grows with the distance from
-# the points where the rank drops, so at such a point it is far smaller than it is a
-# short step away, while at a point of full rank the step barely changes it. comparing
-# the two needs no scale for JG, so rows of any size are fine.
+# whether JG drops rank at the point P of V(G). rather than threshold σ_min(JG), which
+# depends on the scale of G, compare σ_min at P and at a nearby point Q: σ_min grows
+# with distance from the rank-drop locus, so σ_min(P) ≪ σ_min(Q) if P is on it, and
+# σ_min(P) ≈ σ_min(Q) otherwise.
 #
-# on a piece of V(G) where the rank drops the projection stalls a little way off it,
-# where reg damps the step, so `step` must be well above that distance. the step is
-# along P - c, which is generic because c is; a random direction would use up random
-# numbers and so change seeded runs.
+# projection stops slightly short of the locus (reg damps it), so `step` must be well
+# above that gap. stepping along P - c (generic, since c is) rather than a random
+# direction keeps seeded runs reproducible.
 function _rank_drops_at(
     cache::RoutingCache,
     P::AbstractVector{Float64};

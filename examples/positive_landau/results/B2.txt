@@ -1,0 +1,15 @@
+# The singular locus of the Landau incidence variety Y of the diagram B2,
+# written by singular_locus.m2 and read by positive.jl. The fields are separated by " | ":
+#   ring | the variables, without y
+#   stratum | number | what it is | dimension      followed by its equations, components and pieces
+#   equation | polynomial                          the y equation is not listed
+#   component | number in Y | dimension | degree | regular or degenerate | positive points: none or unknown | generators
+#   piece | number | dimension | positive points: none, some: coordinates, or unknown | cut or squares | factor of f | generators
+#   unresolved | number in Y                       a degenerate component no equations were found for
+diagram | B2
+ring | α_1 s
+stratum | 1 | Y | 0
+equation | -2*α_1+s-2
+equation | α_1*s-2*α_1-2
+component | 1 | 0 | 1 | regular | unknown | s-4 ; α_1-1
+done

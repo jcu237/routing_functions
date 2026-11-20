@@ -76,30 +76,22 @@ function find_connectivity_matrix(
     isempty(routPoints) && return falses(0, 0), routPoints
 
     indices = routing_point_indices(cache, routPoints)
-    any(==(0), indices) || error(
-        "find_connectivity_matrix: none of the ", length(routPoints), " routing points has ",
-        "index 0. every component of V(G) \\ V(f) carries a maximum of |r|, so the search ",
-        "missed some; try more starts (`nstarts`, `box`, `starts`).",
-    )
     sgn = [sign(evaluate_r(cache.r, P)) for P in routPoints]
     index0 = findall(==(0), indices)
 
     A = Matrix{Int64}(LA.I, length(routPoints), length(routPoints))
+    npaths = nlost = 0
 
     for i in eachindex(routPoints)
         indices[i] == 0 && continue
-        P = routPoints[i]
         # a path from P stays in P's region, where r has P's sign
         targets = [j for j in index0 if sgn[j] == sgn[i]]
-        if isempty(targets)
-            @warn("find_connectivity_matrix: a routing point of index $(indices[i]) has no " *
-                  "index 0 routing point of its sign to flow to; the search missed at least " *
-                  "one maximum of |r|", routing_point = P)
-            continue
-        end
-        solns = solve_ivp(cache, P, routPoints[targets]; grad_step_size = grad_step_size,
-                          start_step_size = start_step_size, max_halvings = max_halvings,
-                          tol = tol, path_options...)
+        solns = isempty(targets) ? Vector{Float64}[] :
+            solve_ivp(cache, routPoints[i], routPoints[targets]; grad_step_size = grad_step_size,
+                      start_step_size = start_step_size, max_halvings = max_halvings,
+                      tol = tol, path_options...)
+        npaths += 2 * indices[i]
+        nlost += 2 * indices[i] - length(solns)
         verbose && println("find_connectivity_matrix: $(length(solns)) of $(2 * indices[i]) ",
                            "paths from an index $(indices[i]) point arrived")
         for x in solns
@@ -108,6 +100,15 @@ function find_connectivity_matrix(
             A[j, i] = 1
         end
     end
+
+    # every path ends at a maximum of |r|, so one that reaches none means a maximum was
+    # missed or the flow stopped early
+    nlost > 0 && @warn(
+        "find_connectivity_matrix: $nlost of $npaths paths reached no index 0 routing point, " *
+        "so some components may be reported as split. either the search missed a maximum " *
+        "of |r| (try more starts: `nstarts`, `box`, `starts`) or the flow stopped early " *
+        "(raise `tspan` in `path_options`).",
+    )
 
     return reachability(A), routPoints
 end

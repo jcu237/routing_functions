@@ -1,5 +1,3 @@
-# the end result: the routing points grouped by connected component of V(G) ∖ V(f).
-
 """
     Component
 

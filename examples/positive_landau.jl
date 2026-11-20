@@ -43,7 +43,7 @@ G = System([
 # M - 1 vanishes on the surface and the second crossing. (α1 - α2)^2 + (M - 9)^2
 # vanishes on the real points of V(G) only at the first crossing, and as a sum of
 # squares it does not change any signs.
-f =M * (M - 1) * ((α1 - α2)^2 + (M - 9)^2)
+f = α1*α2*α3*M * (M - 1) * ((α1 - α2)^2 + (M - 9)^2)
 r = RoutingFunction(f, vars)
 cache = RoutingCache(r, G)
 

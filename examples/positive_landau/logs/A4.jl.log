@@ -1,0 +1,54 @@
+┌ Warning: flow_to_routing_points: the jacobian of G has rank below 5 at 6 of the 400 starts on V(G), around 6 distinct point(s), off V(f). Make f vanish there or rewrite G; see `jacobian_rank_locus`.
+└ @ ConnectedComponents ~/Documents/Research/projects/routing_functions/src/routing_points.jl:165
+stratum 1 (Y): 84 points, 28 positive, 26 s
+
+LandauSystem A4 (one-loop box): 5 equations in (α₁, α₂, α₃, y, s, t, M), expected dimension 2
+
+stratum 1 (Y), dimension 2
+f = M*(-2 + α₁ + α₃)*(1 + α₂ - 2*α₃)*α₁*α₃*α₂*(2 - M + 2*α₃)*(-2 - 2*α₃ + M*α₃)
+28 of 84 routing points are positive
+   1:  α = [0.384245, 1.0, 2.01814, 1.0],  s = -4.8581099999999995e-32,  t = -1.77146,  M = 4.40239   on component 3
+   2:  α = [2.95388, 5.76094, 2.95388, 1.0],  s = -1.23878,  t = -4.0939e-17,  M = 4.28884   on component 2
+   3:  α = [0.732564, 1.0, 0.732564, 1.0],  s = 1.23215,  t = 2.51463,  M = 3.01381   on component 4
+   4:  α = [3.58462, 1.0, 3.58462, 1.0],  s = 3.53215,  t = -2.01166,  M = 2.83854   on component 4
+   5:  α = [3.89668, 3.42674, 3.89668, 1.0],  s = 2.70944,  t = -1.98493e-30,  M = 3.13603   on component 2
+   6:  α = [1.32018, 1.0, 0.284066, 1.0],  s = -3.5526699999999997e-32,  t = 1.42641,  M = 3.60424   on component 3
+   7:  α = [3.53925, 1.0, 3.53925, 1.0],  s = 3.83705,  t = 1.95888,  M = 2.28836   on component 4
+   8:  α = [3.54925, 4.94722, 2.39797, 1.0],  s = 4.2466799999999997e-32,  t = 2.59775e-33,  M = 4.0   on component 1
+   9:  α = [0.642294, 1.0, 0.642294, 1.0],  s = -0.958218,  t = 1.95453,  M = 3.59232   on component 4
+   10:  α = [2.99815, 2.32918, 0.331028, 1.0],  s = 3.13527e-33,  t = -6.33621e-33,  M = 4.0   on component 1
+   11:  α = [1.19607, 4.22475, 4.02868, 1.0],  s = -9.47982e-33,  t = -7.97197e-17,  M = 4.0   on component 1
+   12:  α = [0.863879, 1.0, 0.863879, 1.0],  s = -2.1168,  t = -0.564896,  M = 4.64209   on component 4
+   13:  α = [1.24555, 1.0, 1.24555, 1.0],  s = -0.497879,  t = -2.97795,  M = 4.80116   on component 4
+   14:  α = [1.22993, 2.32432, 1.22993, 1.0],  s = -3.30544,  t = 2.92783e-17,  M = 4.70286   on component 2
+   15:  α = [1.69256, 1.0, 0.878351, 1.0],  s = -1.9509499999999998e-31,  t = -2.60957,  M = 4.57091   on component 3
+   16:  α = [0.902758, 1.29211, 0.902758, 1.0],  s = -2.44658,  t = 8.902950000000001e-18,  M = 4.53901   on component 2
+   17:  α = [1.95888, 1.0, 0.274566, 1.0],  s = -6.23304e-31,  t = -0.988299,  M = 4.23345   on component 3
+   18:  α = [0.254919, 1.0, 1.57157, 1.0],  s = 2.2584999999999997e-31,  t = 0.663943,  M = 3.82649   on component 3
+   19:  α = [1.45618, 1.0, 1.1927, 1.0],  s = 8.536499999999999e-31,  t = -3.01656,  M = 4.64888   on component 3
+   20:  α = [3.21229, 0.503824, 3.21229, 1.0],  s = 3.78084,  t = -4.16101e-17,  M = 2.46815   on component 2
+   21:  α = [0.930249, 0.37185, 0.930249, 1.0],  s = 1.82522,  t = -1.65239e-17,  M = 3.47471   on component 2
+   22:  α = [0.482933, 1.0, 0.766892, 1.0],  s = -2.21502e-31,  t = 2.43794,  M = 3.24982   on component 3
+   23:  α = [0.31113, 1.0, 1.15287, 1.0],  s = -1.3757799999999999e-31,  t = 1.8567,  M = 3.464   on component 3
+   24:  α = [0.71902, 0.618747, 0.71902, 1.0],  s = -1.06846,  t = -1.61719e-33,  M = 4.25132   on component 2
+   25:  α = [0.661688, 0.485613, 0.823926, 1.0],  s = -2.45811e-31,  t = -9.22272e-31,  M = 4.0   on component 1
+   26:  α = [0.78868, 0.437452, 0.78868, 1.0],  s = 0.678116,  t = 3.3798e-17,  M = 3.8226   on component 2
+   27:  α = [1.43297, 0.733585, 0.300612, 1.0],  s = 5.55783e-33,  t = 3.15461e-31,  M = 4.0   on component 1
+   28:  α = [0.275632, 0.8347, 1.55907, 1.0],  s = -4.26228e-32,  t = -8.61629e-30,  M = 4.0   on component 1
+singular piece 1 (dimension 1) could have positive points: {-4 + M, t, s, -1 + α₂, -2 + α₁ + α₃}
+singular piece 2 (dimension 1) could have positive points: {-4 + M, t, s, 1 + α₂ - 2*α₃, α₁ - α₃}
+singular piece 3 (dimension 1) could have positive points: {t, -1 + α₂, α₁ - α₃, -4*M + s + M^2, -2 - 2*α₃ + M*α₃, -4 + 2*M - 4*α₃ + s*α₃}
+singular piece 4 (dimension 1) could have positive points: {s, 2 - M + 2*α₃, -1 + α₂, 2 - M + 2*α₁, -4*M + t + M^2}
+
+the irreducible components of Y:
+   1. dim 2, degree 1: positive points found (6)
+      {-4 + M, t, s, -1 + α₁ - α₂ + α₃}
+   2. dim 2, degree 3: positive points found (8)
+      {t, α₁ - α₃, -4*M + s + M^2, -1 - α₂ - 2*α₃ + M*α₃, -2 + M - 2*α₂ - 4*α₃ + M*α₂ + s*α₃}
+   3. dim 2, degree 2: positive points found (8)
+      {s, -1 + α₂, 2 - M + α₁ + α₃, -4*M + t + M^2}
+   4. dim 2, degree 3: positive points found (6)
+      {-1 + α₂, α₁ - α₃, -4 + t - 4*α₃ + 2*M*α₃, 16*M - 4*s - 4*t + s*t - 4*M^2, -4 + 2*M - 4*α₃ + s*α₃}
+
+"No positive routing point" means no positive point off the singular pieces listed above,
+provided every routing point was found. The search for them stops heuristically.

@@ -1,0 +1,102 @@
+Precompiling packages...
+    415.8 ms  ✓ Preferences
+    315.5 ms  ✓ PrecompileTools
+    430.3 ms  ✓ JLLWrappers
+    475.0 ms  ✓ TruncatedStacktraces
+    506.1 ms  ✓ SciMLLogging
+    561.8 ms  ✓ Libiconv_jll
+    567.4 ms  ✓ Rmath_jll
+    587.7 ms  ✓ OpenSpecFun_jll
+    607.5 ms  ✓ OpenBLAS32_jll
+    606.7 ms  ✓ MPC_jll
+   1109.4 ms  ✓ PreallocationTools
+   1173.3 ms  ✓ RecipesBase
+    584.6 ms  ✓ XML2_jll
+    560.9 ms  ✓ SymEngine_jll
+    623.1 ms  ✓ Rmath
+    590.6 ms  ✓ FLINT_jll
+   1501.9 ms  ✓ SciMLStructures
+    397.4 ms  ✓ LightXML
+   1709.0 ms  ✓ FunctionWrappersWrappers
+    740.3 ms  ✓ Polynomials → PolynomialsRecipesBaseExt
+   2191.7 ms  ✓ StringManipulation
+   2494.6 ms  ✓ FindFirstFunctions
+   1811.7 ms  ✓ SpecialFunctions
+   2640.1 ms  ✓ StatsFuns
+    479.4 ms  ✓ StatsFuns → StatsFunsInverseFunctionsExt
+   4608.1 ms  ✓ RecursiveArrayTools
+    505.7 ms  ✓ RecursiveArrayTools → RecursiveArrayToolsStatisticsExt
+    530.3 ms  ✓ RecursiveArrayTools → RecursiveArrayToolsTablesExt
+    536.7 ms  ✓ RecursiveArrayTools → RecursiveArrayToolsStructArraysExt
+    671.7 ms  ✓ RecursiveArrayTools → RecursiveArrayToolsSparseArraysExt
+   6569.1 ms  ✓ StaticArrays
+    827.8 ms  ✓ Adapt → AdaptStaticArraysExt
+    979.7 ms  ✓ DifferentiationInterface → DifferentiationInterfaceStaticArraysExt
+   1003.5 ms  ✓ FillArrays → FillArraysStaticArraysExt
+   1005.5 ms  ✓ StaticArrays → StaticArraysStatisticsExt
+   1051.6 ms  ✓ ConstructionBase → ConstructionBaseStaticArraysExt
+   1073.6 ms  ✓ FiniteDiff → FiniteDiffStaticArraysExt
+   1105.7 ms  ✓ Accessors → StaticArraysExt
+   1696.7 ms  ✓ ProjectiveVectors
+   2567.7 ms  ✓ StructArrays → StructArraysStaticArraysExt
+   9234.6 ms  ✓ Static
+    415.9 ms  ✓ BitTwiddlingConvenienceFunctions
+   3285.1 ms  ✓ MixedSubdivisions
+    843.5 ms  ✓ CPUSummary
+   4464.5 ms  ✓ Distributions
+    796.3 ms  ✓ HostCPUFeatures
+    605.6 ms  ✓ PolyesterWeave
+   1650.7 ms  ✓ StaticArrayInterface
+   1223.0 ms  ✓ Distributions → DistributionsTestExt
+    502.2 ms  ✓ StaticArrayInterface → StaticArrayInterfaceOffsetArraysExt
+    513.9 ms  ✓ CloseOpenIntervals
+    574.8 ms  ✓ LayoutPointers
+    602.9 ms  ✓ StaticArrayInterface → StaticArrayInterfaceStaticArraysExt
+   1917.8 ms  ✓ SimpleRandom
+  11428.2 ms  ✓ Arblib
+   2499.5 ms  ✓ SimpleGraphs
+   8448.6 ms  ✓ SciMLBase
+    777.1 ms  ✓ SciMLBase → SciMLBaseDifferentiationInterfaceExt
+    886.6 ms  ✓ SciMLBase → SciMLBaseStaticArraysExt
+   1074.5 ms  ✓ SciMLBase → SciMLBaseDistributionsExt
+   5911.4 ms  ✓ VectorizationBase
+  15510.2 ms  ✓ PrettyTables
+    546.8 ms  ✓ SymbolicIndexingInterface → SymbolicIndexingInterfacePrettyTablesExt
+   1097.5 ms  ✓ SLEEFPirates
+  10042.8 ms  ✓ LoopVectorization
+    599.8 ms  ✓ LoopVectorization → SpecialFunctionsExt
+    772.5 ms  ✓ SciMLOperators → SciMLOperatorsLoopVectorizationExt
+   7014.7 ms  ✓ HomotopyContinuation
+ 216161.0 ms  ✓ ConnectedComponents
+  69 dependencies successfully precompiled in 253 seconds. 147 already precompiled.
+stratum 1 (Y): 36 points, 4 positive, 49 s
+
+LandauSystem tdetri (twice doubled-edge triangle): 6 equations in (α₁, α₂, α₃, α₄, y, s, M), expected dimension 1
+
+stratum 1 (Y), dimension 1
+f = M*α₁*α₃*α₂*α₄*(1 + 2*α₄)*(-1 + 2*α₄)
+4 of 36 routing points are positive
+   1:  α = [0.41428, 0.41428, 0.58572, 0.58572, 1.0],  s = -3.1554399999999997e-29,  M = 9.0   on component 1
+   2:  α = [13.8972, 13.8972, 13.8972, 13.8972, 1.0],  s = 15.9793,  M = 5.14391   on component 7
+   3:  α = [0.488019, 0.488019, 0.488019, 0.488019, 1.0],  s = -0.795249,  M = 9.0982   on component 7
+   4:  α = [0.57956, 0.57956, 0.42044, 0.42044, 1.0],  s = 1.58677e-30,  M = 9.0   on component 1
+singular piece 1 (dimension 0) is the positive point α = [0.5, 0.5, 0.5, 0.5, 1.0],  s = 0.0,  M = 9.0   on component 1, 7
+
+the irreducible components of Y:
+   1. dim 1, degree 1: positive points found (3)
+      {-9 + M, s, α₃ - α₄, -1 + α₂ + α₄, -1 + α₁ + α₄}
+   2. dim 1, degree 1: no positive points (a generator has one sign on them)
+      {-1 + M, s, α₃ - α₄, 1 + α₂ + α₄, 1 + α₁ + α₄}
+   3. dim 1, degree 1: no positive points (a generator has one sign on them)
+      {-1 + M, -4 + s, α₃ - α₄, -1 + α₂ - α₄, 1 + α₁ + α₄}
+   4. dim 1, degree 1: no positive points (a generator has one sign on them)
+      {-1 + M, -4 + s, α₃ - α₄, 1 + α₂ + α₄, -1 + α₁ - α₄}
+   5. dim 1, degree 1: no positive points (a generator has one sign on them)
+      {-1 + M, -4 + s, α₃ + α₄, 1 + α₂ - α₄, 1 + α₁ - α₄}
+   6. dim 1, degree 1: no positive points (a generator has one sign on them)
+      {-1 + M, -4 + s, α₃ + α₄, 1 + α₂ + α₄, 1 + α₁ + α₄}
+   7. dim 1, degree 3: positive points found (3)
+      {α₃ - α₄, α₂ - α₄, α₁ - α₄, 9 - 10*M + s + M^2, -2 - 5*α₄ + M*α₄, -10 + 2*M - 16*α₄ + s*α₄}
+
+"No positive routing point" means no positive point off the singular pieces listed above,
+provided every routing point was found. The search for them stops heuristically.

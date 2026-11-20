@@ -1,0 +1,18 @@
+-- pltrb: 6 Landau equations in 7 unknowns (and y)
+
+irreducible components of Y:
+    saturated by α_1*α_2+α_1*α_3+α_1*α_4+α_2*α_5+α_3*α_5+α_4*α_5+α_1+α_2+α_3+α_4+α_5
+    saturated by α_1
+    saturated by α_2
+    saturated by α_3
+    saturated by α_4
+    saturated by α_5
+    1. dim 1, degree 1: {M-3, s-3, α_5+1, α_3-α_4-1, α_2-α_4, α_1+1}
+       no positive points: it contains α_5+1
+    2. dim 1, degree 1: {M-1, s-3, α_5+1, α_3+α_4+1, α_2-α_4, α_1+1}
+       no positive points: it contains α_5+1
+
+where the jacobian of the Landau equations drops rank on Y:
+    nowhere
+
+wrote /home/djohn225/Documents/Research/projects/routing_functions/examples/positive_landau/results/pltrb.txt

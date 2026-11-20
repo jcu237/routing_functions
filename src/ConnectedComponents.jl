@@ -42,7 +42,7 @@ export jacobian_rank_locus, evaluate_G!, jacobian_G!
 export project_to_variety!, project_to_variety, project_to_variety_residual!
 
 # lower-level pieces: hessians on X, gradient fields and single paths
-export hessian, hessian_and_tangent, ambient_gradient_hessian, compute_matrices, idx
+export hessian, hessian_and_tangent, ambient_gradient_hessian, idx
 export projected_gradient_field, gradient_flow!, find_starting_points_for_flow
 export distance_to_endpoints, nearest_index
 

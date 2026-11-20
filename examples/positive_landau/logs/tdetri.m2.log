@@ -1,0 +1,28 @@
+-- tdetri: 5 Landau equations in 6 unknowns (and y)
+
+irreducible components of Y:
+    saturated by α_1*α_2*α_3+α_1*α_2*α_4+α_1*α_3*α_4+α_2*α_3*α_4+α_1*α_3+α_2*α_3+α_1*α_4+α_2*α_4
+    saturated by α_1
+    saturated by α_2
+    saturated by α_3
+    saturated by α_4
+    1. dim 1, degree 1: {M-9, s, α_3-α_4, α_2+α_4-1, α_1+α_4-1}
+    2. dim 1, degree 1: {M-1, s, α_3-α_4, α_2+α_4+1, α_1+α_4+1}
+       no positive points: it contains α_2+α_4+1
+    3. dim 1, degree 1: {M-1, s-4, α_3-α_4, α_2-α_4-1, α_1+α_4+1}
+       no positive points: it contains α_1+α_4+1
+    4. dim 1, degree 1: {M-1, s-4, α_3-α_4, α_2+α_4+1, α_1-α_4-1}
+       no positive points: it contains α_2+α_4+1
+    5. dim 1, degree 1: {M-1, s-4, α_3+α_4, α_2-α_4+1, α_1-α_4+1}
+       no positive points: it contains α_3+α_4
+    6. dim 1, degree 1: {M-1, s-4, α_3+α_4, α_2+α_4+1, α_1+α_4+1}
+       no positive points: it contains α_3+α_4
+    7. dim 1, degree 3: {α_3-α_4, α_2-α_4, α_1-α_4, M^2+s-10*M+9, α_4*M-5*α_4-2, α_4*s-16*α_4+2*M-10}
+
+where the jacobian of the Landau equations drops rank on Y:
+    1. dim 0: {M-9, s, 2*α_4-1, 2*α_3-1, 2*α_2-1, 2*α_1-1}
+       a positive point. f gets the factor 2*α_4-1
+    2. dim 0: {M-1, s, 2*α_4+1, 2*α_3+1, 2*α_2+1, 2*α_1+1}
+       no positive points. f gets the factor 2*α_4+1
+
+wrote /home/djohn225/Documents/Research/projects/routing_functions/examples/positive_landau/results/tdetri.txt

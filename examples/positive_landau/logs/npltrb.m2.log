@@ -1,0 +1,27 @@
+-- npltrb: 6 Landau equations in 7 unknowns (and y)
+
+irreducible components of Y:
+    saturated by α_1*α_2+α_1*α_3+α_2*α_3+α_1*α_4+α_2*α_4+α_2*α_5+α_3*α_5+α_4*α_5+α_1+α_3+α_4+α_5
+    saturated by α_1
+    saturated by α_2
+    saturated by α_3
+    saturated by α_4
+    saturated by α_5
+    1. dim 2, degree 1: {M-4, s-4, α_3-α_4, α_2-1, α_1-α_5}
+       the jacobian has rank below 6 on all of it
+    2. dim 2, degree 4: {s-M, α_4+α_5+1, α_1+α_2+α_3, α_2^2+α_2*α_3+α_3^2-α_5^2-α_5-1, α_5^2*M+α_2*α_5+2*α_3*α_5-2*α_5^2+α_5*M-α_2+α_3-2*α_5+M-2, α_3*α_5*M+α_2*α_3+2*α_3^2-2*α_3*α_5+α_2*M+α_3*M-2*α_2-2*α_3+α_5-1, α_2*α_5*M+α_2*α_3-α_3^2-2*α_2*α_5+α_5^2-α_3*M+2*α_3-α_5}
+       the jacobian has rank below 6 on all of it
+       no positive points: it contains α_4+α_5+1
+
+where the jacobian of the Landau equations drops rank on Y:
+    1. dim 2: {M-4, s-4, α_3-α_4, α_2-1, α_1-α_5}
+       f gets the factor M-4
+    2. dim 2: {s-M, α_4+α_5+1, α_1+α_2+α_3, α_2^2+α_2*α_3+α_3^2-α_5^2-α_5-1, α_5^2*M+α_2*α_5+2*α_3*α_5-2*α_5^2+α_5*M-α_2+α_3-2*α_5+M-2, α_3*α_5*M+α_2*α_3+2*α_3^2-2*α_3*α_5+α_2*M+α_3*M-2*α_2-2*α_3+α_5-1, α_2*α_5*M+α_2*α_3-α_3^2-2*α_2*α_5+α_5^2-α_3*M+2*α_3-α_5}
+       no positive points. f gets the factor α_4+α_5+1
+
+component 1 lies in the singular locus and could have positive points.
+    it is a component of the zero set of {M-4, s-4, α_3-α_4, α_2-1, α_1-α_5}
+    where the jacobian of these drops rank on it:
+    nowhere
+
+wrote /home/djohn225/Documents/Research/projects/routing_functions/examples/positive_landau/results/npltrb.txt

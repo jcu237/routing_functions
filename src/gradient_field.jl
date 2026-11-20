@@ -18,6 +18,12 @@ end
 # projected gradient field of r on X = V(G):
 #
 #   du = dir · sign(r) · (I - Jᵀ(JJᵀ + reg·I)⁻¹J) ∇r  -  Jᵀ(JJᵀ + reg·I)⁻¹ G
+# where J^T(JJ^T)^⁻¹ is the Moore-Penrose pseudoinverse of J, and reg·I is a small regularisation.
+# so Jᵀ(JJᵀ + reg·I)⁻¹J is the orthogonal onto the row space of J, which is the normal space of X, 
+#and I - Jᵀ(JJᵀ + reg·I)⁻¹J is the orthogonal onto ker J, the tangent space of X.
+#
+# Then (I - Jᵀ(JJᵀ + reg·I)⁻¹J) ∇r is the (regularized) ambient gradient with its normal part removed, 
+#and Jᵀ(JJᵀ + reg·I)⁻¹ G is a Newton correction to keep the path on X.
 #
 # the first term ascends |r| within X, the second is a Newton correction holding
 # the path on X. `dir` is the ODE parameter: its sign picks the direction and its

@@ -1,0 +1,26 @@
+# The singular locus of the Landau incidence variety Y of the diagram tdetri,
+# written by singular_locus.m2 and read by positive.jl. The fields are separated by " | ":
+#   ring | the variables, without y
+#   stratum | number | what it is | dimension      followed by its equations, components and pieces
+#   equation | polynomial                          the y equation is not listed
+#   component | number in Y | dimension | degree | regular or degenerate | positive points: none or unknown | generators
+#   piece | number | dimension | positive points: none, some: coordinates, or unknown | cut or squares | factor of f | generators
+#   unresolved | number in Y                       a degenerate component no equations were found for
+diagram | tdetri
+ring | α_1 α_2 α_3 α_4 s M
+stratum | 1 | Y | 1
+equation | α_2*α_3*α_4*s-2*α_1*α_2*α_3-α_2^2*α_3-α_2*α_3^2-2*α_1*α_2*α_4-α_2^2*α_4-2*α_1*α_3*α_4-4*α_2*α_3*α_4-α_3^2*α_4-α_2*α_4^2-α_3*α_4^2+α_2*α_3*M+α_2*α_4*M+α_3*α_4*M-2*α_1*α_3-3*α_2*α_3-α_3^2-2*α_1*α_4-3*α_2*α_4-3*α_3*α_4-α_4^2-α_3-α_4
+equation | α_1*α_3*α_4*s-α_1^2*α_3-2*α_1*α_2*α_3-α_1*α_3^2-α_1^2*α_4-2*α_1*α_2*α_4-4*α_1*α_3*α_4-2*α_2*α_3*α_4-α_3^2*α_4-α_1*α_4^2-α_3*α_4^2+α_1*α_3*M+α_1*α_4*M+α_3*α_4*M-3*α_1*α_3-2*α_2*α_3-α_3^2-3*α_1*α_4-2*α_2*α_4-3*α_3*α_4-α_4^2-α_3-α_4
+equation | α_1*α_2*α_4*s-α_1^2*α_2-α_1*α_2^2-2*α_1*α_2*α_3-α_1^2*α_4-4*α_1*α_2*α_4-α_2^2*α_4-2*α_1*α_3*α_4-2*α_2*α_3*α_4-α_1*α_4^2-α_2*α_4^2+α_1*α_2*M+α_1*α_4*M+α_2*α_4*M-α_1^2-3*α_1*α_2-α_2^2-2*α_1*α_3-2*α_2*α_3-3*α_1*α_4-3*α_2*α_4-α_1-α_2
+equation | α_1*α_2*α_3*s-α_1^2*α_2-α_1*α_2^2-α_1^2*α_3-4*α_1*α_2*α_3-α_2^2*α_3-α_1*α_3^2-α_2*α_3^2-2*α_1*α_2*α_4-2*α_1*α_3*α_4-2*α_2*α_3*α_4+α_1*α_2*M+α_1*α_3*M+α_2*α_3*M-α_1^2-3*α_1*α_2-α_2^2-3*α_1*α_3-3*α_2*α_3-2*α_1*α_4-2*α_2*α_4-α_1-α_2
+equation | α_1*α_2*α_3*M+α_1*α_2*α_4*M+α_1*α_3*α_4*M+α_2*α_3*α_4*M-α_1^2*α_3-3*α_1*α_2*α_3-α_2^2*α_3-α_1*α_3^2-α_2*α_3^2-α_1^2*α_4-3*α_1*α_2*α_4-α_2^2*α_4-3*α_1*α_3*α_4-3*α_2*α_3*α_4-α_1*α_4^2-α_2*α_4^2-2*α_1*α_3-2*α_2*α_3-2*α_1*α_4-2*α_2*α_4
+component | 1 | 1 | 1 | regular | unknown | M-9 ; s ; α_3-α_4 ; α_2+α_4-1 ; α_1+α_4-1
+component | 2 | 1 | 1 | regular | none | M-1 ; s ; α_3-α_4 ; α_2+α_4+1 ; α_1+α_4+1
+component | 3 | 1 | 1 | regular | none | M-1 ; s-4 ; α_3-α_4 ; α_2-α_4-1 ; α_1+α_4+1
+component | 4 | 1 | 1 | regular | none | M-1 ; s-4 ; α_3-α_4 ; α_2+α_4+1 ; α_1-α_4-1
+component | 5 | 1 | 1 | regular | none | M-1 ; s-4 ; α_3+α_4 ; α_2-α_4+1 ; α_1-α_4+1
+component | 6 | 1 | 1 | regular | none | M-1 ; s-4 ; α_3+α_4 ; α_2+α_4+1 ; α_1+α_4+1
+component | 7 | 1 | 3 | regular | unknown | α_3-α_4 ; α_2-α_4 ; α_1-α_4 ; M^2+s-10*M+9 ; α_4*M-5*α_4-2 ; α_4*s-16*α_4+2*M-10
+piece | 1 | 0 | some: 1/2 1/2 1/2 1/2 0 9 | cut | 2*α_4-1 | M-9 ; s ; 2*α_4-1 ; 2*α_3-1 ; 2*α_2-1 ; 2*α_1-1
+piece | 2 | 0 | none | cut | 2*α_4+1 | M-1 ; s ; 2*α_4+1 ; 2*α_3+1 ; 2*α_2+1 ; 2*α_1+1
+done

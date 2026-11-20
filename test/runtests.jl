@@ -43,30 +43,30 @@ eulers(C) = sort([c.euler_characteristic for c in C])
     end
 
     @testset "hessian on V(G)" begin
-        # the projected-lagrangian formula equals the W-matrix formula of the
-        # paper at any point, critical or not
+        # valid away from critical points too: on the unit sphere the hessian of a
+        # linear function a·x is -(a·P)·I, in any orthonormal tangent basis
+        @var z[1:3]
+        sphere = [z[1]^2 + z[2]^2 + z[3]^2 - 1]
+        a = [0.3, -1.2, 0.8]
+        lin = sum(a[i] * z[i] for i = 1:3)
+        for P in ([0.0, 0.0, 1.0], [0.6, 0.0, 0.8], [1.0, 2.0, -2.0] ./ 3)
+            @test hessian(lin, sphere, z[1:3], P) ≈ -(a' * P) * Matrix(I, 2, 2) atol = 1e-12
+        end
+
+        # example 2.5b of "Smooth Connectivity in Real Algebraic Varieties". hessian
+        # works in the basis V = nullspace(JG), with JG = [2 -2 -1] at (1, 1, 1); B is
+        # the paper's orthonormal tangent basis, and R = VᵀB changes between the two
         @var y[1:3]
         G = [y[1]^2 - y[2]^2 * y[3]]
         φ = 4 * y[1]^2 + 4 * y[2]^2 * y[3]^2 + y[2]^4
-        for P in ([1.0, 1.0, 1.0], [2.0, 1.0, 4.0], [0.5, -1.0, 0.25])
-            W, V = compute_matrices(G, y[1:3], P)
-            ∇φ, Hφ = ambient_gradient_hessian(φ, y[1:3], P)
-            Hw = transpose(V) * Hφ * V + sum(W[i] .* ∇φ[i] for i = 1:3)
-            @test hessian(φ, G, y[1:3], P) ≈ Hw atol = 1e-10
-        end
-
-        # example 2.5b of "Smooth Connectivity in Real Algebraic Varieties", after
-        # changing to the paper's basis of the tangent space
-        W, V = compute_matrices(G, y[1:3], [1.0, 1.0, 1.0])
         H = hessian(φ, G, y[1:3], [1.0, 1.0, 1.0])
-        B = hcat(1 / sqrt(2) * [1 1/3; 1 -1/3; 0 4/3], [2 / 3; -2 / 3; -1 / 3])
-        R = (transpose(hcat(V, [2 / 3; -2 / 3; -1 / 3])) * B)[1:2, 1:2]
+        V = nullspace([2.0 -2.0 -1.0])
+        B = [1 1/3; 1 -1/3; 0 4/3] ./ sqrt(2)
+        R = transpose(V) * B
         @test transpose(R) * H * R ≈ 2 / 81 * [567 303; 303 127]
-        @test transpose(R) * W[1] * R ≈ [0 4/27; 4/27 -16/81] atol = 1e-12
 
-        # at a routing point the hessian also equals the tangential block of the
-        # jacobian of the routing system, divided by gᵈ⁺¹ (form (3) in hessian.jl),
-        # and the symbolic hessian of r itself
+        # at routing points, the hessian built from the closed-form derivatives of r
+        # matches the one built from the symbolic expression of r
         Random.seed!(3)
         @var x[1:2]
         r = RoutingFunction(x[1] * x[2], [1 / 3, 1 / 2])
@@ -77,9 +77,7 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         rexpr = r.f / r.g^r.d
         for P in pts
             @test critical_distance(cache, P) < 1e-8
-            H = hessian(cache, P)
-            @test H ≈ first(CC._hessian_from_routing_system(cache, P)) rtol = 1e-8
-            @test H ≈ hessian(rexpr, G2, x[1:2], P) rtol = 1e-6
+            @test hessian(cache, P) ≈ hessian(rexpr, G2, x[1:2], P) rtol = 1e-6
         end
     end
 
