@@ -1,0 +1,22 @@
+Computing mixed cells... 2    Time: 0:00:00[K
+   mixed_volume: 2[K[A
+[K[AComputing mixed cells... 2    Time: 0:00:00[K
+   mixed_volume: 2[K
+
+LandauSystem B2 (bubble (banana with 2 edges)): 3 equations in (α₁, y, s), expected dimension 0
+
+Y ∖ Sing(Y), dimension 0
+finitely many points, so the system is solved directly; each is a component
+1 routing points (18 s), connectivity 0 s
+
+1 smoothly connected component, Euler characteristic 1 in all
+
+component 1: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [1.0, 1.0],  s = 4.0   on component 1 of Y
+
+the irreducible components of Y:
+   1. dim 0, degree 1: regular
+      {-4 + s, -1 + α₁}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.

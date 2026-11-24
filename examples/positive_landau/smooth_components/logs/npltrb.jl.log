@@ -1,0 +1,20 @@
+
+LandauSystem npltrb (non-planar triangle-box): 7 equations in (α₁, α₂, α₃, α₄, α₅, y, s, M), expected dimension 1
+
+Y ∖ Sing(Y), dimension 1
+every component of Y lies in the singular locus, so nothing is left to route on
+0 routing points (0 s), connectivity 0 s
+
+0 smoothly connected components, Euler characteristic 0 in all
+
+the irreducible components of Y:
+   1. dim 2, degree 1: lies in the singular locus (removed); smooth components not computed
+      {-4 + M, -4 + s, α₃ - α₄, -1 + α₂, α₁ - α₅}
+   2. dim 2, degree 4: lies in the singular locus (removed); smooth components not computed
+      {-M + s, 1 + α₄ + α₅, α₁ + α₂ + α₃, -1 - α₅ + α₃*α₂ + α₂^2 + α₃^2 - α₅^2, -2 + M - α₂ + α₃ - 2*α₅ + M*α₅ + M*α₅^2 + α₂*α₅ + 2*α₃*α₅ - 2*α₅^2, -1 - 2*α₂ - 2*α₃ + α₅ + M*α₂ + M*α₃ + α₃*α₂ - 2*α₃*α₅ + M*α₃*α₅ + 2*α₃^2, 2*α₃ - α₅ - M*α₃ - 2*α₂*α₅ + α₃*α₂ + M*α₂*α₅ - α₃^2 + α₅^2}
+the singular pieces removed by f:
+   1. dim 2: {-4 + M, -4 + s, α₃ - α₄, -1 + α₂, α₁ - α₅}
+   2. dim 2: {-M + s, 1 + α₄ + α₅, α₁ + α₂ + α₃, -1 - α₅ + α₃*α₂ + α₂^2 + α₃^2 - α₅^2, -2 + M - α₂ + α₃ - 2*α₅ + M*α₅ + M*α₅^2 + α₂*α₅ + 2*α₃*α₅ - 2*α₅^2, -1 - 2*α₂ - 2*α₃ + α₅ + M*α₂ + M*α₃ + α₃*α₂ - 2*α₃*α₅ + M*α₃*α₅ + 2*α₃^2, 2*α₃ - α₅ - M*α₃ - 2*α₂*α₅ + α₃*α₂ + M*α₂*α₅ - α₃^2 + α₅^2}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.

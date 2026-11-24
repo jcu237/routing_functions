@@ -1,0 +1,42 @@
+LandauSystem A3 (one-loop triangle, p₁ and p₂ on one vertex): 4 equations in (α₁, α₂, y, s, M), expected dimension 1
+
+Y ∖ Sing(Y), dimension 1
+f = -1 + 2*α₂
+8 routing points (33 s), connectivity 0 s
+
+8 smoothly connected components, Euler characteristic 8 in all
+
+component 1: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [3.59503, 3.59503, 1.0],  s = 3.92263,  M = 2.27816   on component 2 of Y
+
+component 2: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.401654, 0.401654, 1.0],  s = -2.19862,  M = 4.4897   on component 2 of Y
+
+component 3: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-2.05586, 3.05586, 1.0],  s = 0.0,  M = 4.0   on component 1 of Y
+
+component 4: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.197611, 0.802389, 1.0],  s = -5.27875e-33,  M = 4.0   on component 1 of Y
+
+component 5: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [3.05586, -2.05586, 1.0],  s = 2.73691e-48,  M = 4.0   on component 1 of Y
+
+component 6: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.802389, 0.197611, 1.0],  s = -1.0485399999999999e-32,  M = 4.0   on component 1 of Y
+
+component 7: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.348901, -0.348901, 1.0],  s = -4.21478,  M = -0.866143   on component 2 of Y
+
+component 8: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.05147, -1.05147, 1.0],  s = 3.09551,  M = 1.04895   on component 2 of Y
+
+the irreducible components of Y:
+   1. dim 1, degree 1: regular
+      {-4 + M, s, -1 + α₁ + α₂}
+   2. dim 1, degree 3: regular
+      {α₁ - α₂, -4*M + s + M^2, -1 - 2*α₂ + M*α₂, -2 + M - 4*α₂ + s*α₂}
+the singular pieces removed by f:
+   1. dim 0: {-4 + M, s, -1 + 2*α₂, -1 + 2*α₁}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.

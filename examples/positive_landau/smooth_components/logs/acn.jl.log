@@ -1,0 +1,406 @@
+129 routing points, 95 s
+127 components, 6 s
+
+LandauSystem acn (acnode): 6 equations in (α₁, α₂, α₃, α₄, y, s, t, M), expected dimension 2
+
+Y ∖ Sing(Y), dimension 2
+f = 4*M - s - t - 2*M*α₃ - 2*M*α₄ + s*t + 2*s*α₃ + 2*s*α₄ + 2*t*α₃ + 2*t*α₄
+129 routing points (95 s), connectivity 6 s
+
+127 smoothly connected components, Euler characteristic 127 in all
+
+component 1: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [2.48014, -0.80026, 0.179161, 4.52709, 1.0],  s = 8.52072,  t = -0.816418,  M = 4.28412   on component 2 of Y
+
+component 2: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [1.4618, -1.56904, 1.4618, -1.56904, 1.0],  s = 1.89267,  t = -0.187601,  M = 0.430975   on component 1 of Y
+
+component 3: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [2.17381, 2.16548, 2.17381, 2.16548, 1.0],  s = 4.30622,  t = 4.23044,  M = 3.78758   on component 1 of Y
+
+component 4: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.0065, 3.43448, 3.82876, 0.00671682, 1.0],  s = 6.99935,  t = -2.11624,  M = 3.93578   on component 2 of Y
+
+component 5: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.55101, 1.45383, -1.55101, 1.45383, 1.0],  s = -0.204862,  t = 1.94622,  M = 0.439292   on component 1 of Y
+
+component 6: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.699071, 0.82147, -0.33354, -1.03829, 1.0],  s = -0.915552,  t = 2.57304,  M = 2.78081   on component 2 of Y
+
+component 7: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.715542, 0.730169, -1.04053, -0.466371, 1.0],  s = 1.00641,  t = 1.73013,  M = 1.18942   on component 2 of Y
+
+component 8: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [1.52306, -1.12514, 1.52306, -1.12514, 1.0],  s = 3.69743,  t = -2.23308,  M = 0.49115   on component 1 of Y
+
+component 9: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [1.59819, 2.77973, 1.59819, 2.77973, 1.0],  s = -6.42853,  t = 7.38948,  M = 4.08914   on component 1 of Y
+
+component 10: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [3.25405, 0.00971533, 1.00928, 2.82929, 1.0],  s = 7.17609,  t = -2.12088,  M = 3.91098   on component 2 of Y
+
+component 11: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.828329, -0.391944, 0.828329, -0.391944, 1.0],  s = 8.38313,  t = 1.19816,  M = 2.4936   on component 1 of Y
+
+component 12: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.642478, -0.730757, 0.893444, -0.620072, 1.0],  s = 1.92157,  t = 0.911661,  M = 1.49111   on component 2 of Y
+
+component 13: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.31283, -0.316635, 0.709864, -0.373172, 1.0],  s = 2.29347,  t = -8.49922,  M = 3.76109   on component 2 of Y
+
+component 14: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [2.77845, 1.59889, 2.77845, 1.59889, 1.0],  s = 7.38685,  t = -6.39738,  M = 4.0881   on component 1 of Y
+
+component 15: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.0539878, 0.163038, 1.82446, 0.807425, 1.0],  s = -7.16732,  t = -24.7236,  M = 9.9179   on component 2 of Y
+
+component 16: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [3.37405, 1.00667, 0.0069011, 3.77088, 1.0],  s = -2.1168,  t = 7.01477,  M = 3.93378   on component 2 of Y
+
+component 17: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [4.65129, 0.242078, -0.750248, 3.15604, 1.0],  s = -1.10223,  t = 7.75054,  M = 4.08418   on component 2 of Y
+
+component 18: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.00906827, 3.35153, 2.93281, 1.00868, 1.0],  s = -2.12034,  t = 7.14195,  M = 3.9161   on component 2 of Y
+
+component 19: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-0.388287, 0.827915, -0.388287, 0.827915, 1.0],  s = 1.24658,  t = 8.40894,  M = 2.50951   on component 1 of Y
+
+component 20: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.289001, -2.39258, 1.16733, 0.692867, 1.0],  s = -2.20631,  t = 0.802596,  M = -0.179468   on component 2 of Y
+
+component 21: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.799504, -0.829793, -0.840463, 0.868277, 1.0],  s = 1.93163,  t = 2.06603,  M = 2.56629   on component 2 of Y
+
+component 22: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.21576, 0.731772, 0.253304, -2.42901, 1.0],  s = -2.03417,  t = 0.771599,  M = -0.159827   on component 2 of Y
+
+component 23: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.653315, -0.33053, -0.695798, 0.374686, 1.0],  s = 1.51503,  t = 2.92777,  M = 0.231977   on component 2 of Y
+
+component 24: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.08776, 0.485394, 1.30216, 0.123904, 1.0],  s = 8.62586,  t = -1.92978,  M = 3.47331   on component 2 of Y
+
+component 25: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.805081, 2.57701, 4.71476, 0.17411, 1.0],  s = -0.817124,  t = 8.47139,  M = 4.29383   on component 2 of Y
+
+component 26: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.10617, 0.375105, -1.10617, 0.375105, 1.0],  s = 1.01292,  t = 2.63521,  M = 1.12199   on component 1 of Y
+
+component 27: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.18807, -1.17475, 0.484644, -0.652927, 1.0],  s = 3.15328,  t = 0.445359,  M = 0.919948   on component 2 of Y
+
+component 28: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.261535, 7.73371, -2.33921, -0.606559, 1.0],  s = -5.58719,  t = 0.109931,  M = -1.55332   on component 2 of Y
+
+component 29: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.821009, -0.690885, -1.03549, -0.336871, 1.0],  s = 2.55659,  t = -0.918851,  M = 2.76819   on component 2 of Y
+
+component 30: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.247874, 4.66765, 3.21447, -0.745259, 1.0],  s = 7.70349,  t = -1.12585,  M = 4.0741   on component 2 of Y
+
+component 31: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.759517, 1.83271, 0.162321, -0.0687092, 1.0],  s = -25.7208,  t = -6.70654,  M = 10.0177   on component 2 of Y
+
+component 32: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.359994, 0.680096, -0.528616, 1.07105, 1.0],  s = -1.04043,  t = 8.91071,  M = 2.71774   on component 2 of Y
+
+component 33: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.653971, -1.01474, 0.200999, 0.652444, 1.0],  s = 7.58661,  t = 0.482123,  M = 1.65633   on component 2 of Y
+
+component 34: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-2.3531, 0.277049, 0.704748, 1.13162, 1.0],  s = 0.808111,  t = -2.26483,  M = -0.184767   on component 2 of Y
+
+component 35: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.578748, -1.73561, 0.720117, 1.59018, 1.0],  s = -1.55783,  t = 0.610514,  M = -0.0249891   on component 2 of Y
+
+component 36: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.830745, 0.772067, 0.900576, -0.850681, 1.0],  s = 2.12353,  t = 1.8682,  M = 2.58553   on component 2 of Y
+
+component 37: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.330508, 0.653182, 0.375007, -0.695987, 1.0],  s = 2.92725,  t = 1.51512,  M = 0.23341   on component 2 of Y
+
+component 38: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.316271, -1.31382, -0.372598, 0.709551, 1.0],  s = -8.54675,  t = 2.2936,  M = 3.76689   on component 2 of Y
+
+component 39: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.0985, -1.17261, -1.0985, -1.17261, 1.0],  s = 0.0599421,  t = 0.000849968,  M = 3.22793   on component 1 of Y
+
+component 40: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.4874, 1.48741, 0.110549, 0.110548, 1.0],  s = -15.0967,  t = -15.0967,  M = 9.44751   on component 2 of Y
+
+component 41: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.65475, -0.666734, 1.66554, 0.655915, 1.0],  s = 0.601654,  t = -1.51032,  M = 0.00214339   on component 2 of Y
+
+component 42: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.736472, 1.15173, -2.3632, 0.247729, 1.0],  s = 0.78783,  t = -2.15635,  M = -0.171828   on component 2 of Y
+
+component 43: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.726686, -0.653866, -0.611277, 0.891064, 1.0],  s = 0.891705,  t = 1.91721,  M = 1.50262   on component 2 of Y
+
+component 44: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.83685, -0.0983858, 1.11042, -3.37795, 1.0],  s = -2.42551,  t = 1.01974,  M = -0.221602   on component 2 of Y
+
+component 45: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.75799, -3.43675, -1.75799, -3.43675, 1.0],  s = 9.79829,  t = -1.6997,  M = 4.30094   on component 1 of Y
+
+component 46: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.447901, -0.448453, -0.69148, -0.691962, 1.0],  s = 1.10089,  t = 1.10063,  M = 0.965661   on component 2 of Y
+
+component 47: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-0.832644, -0.848008, -0.832644, -0.848008, 1.0],  s = 0.0651937,  t = 0.0789637,  M = 2.58408   on component 1 of Y
+
+component 48: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [3.03376, -1.7981, 4.47544, -7.26342, 1.0],  s = -9.59172,  t = 5.05774,  M = -0.766493   on component 2 of Y
+
+component 49: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.4382, 1.34183, -3.93657, -4.18177, 1.0],  s = -2.96204,  t = -2.82834,  M = -1.08529   on component 2 of Y
+
+component 50: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.759053, -2.6864, 0.759053, -2.6864, 1.0],  s = -0.615543,  t = 0.0498744,  M = -1.33129   on component 1 of Y
+
+component 51: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-2.71982, 0.575143, -2.71982, 0.575143, 1.0],  s = -0.104572,  t = 2.40181,  M = -2.30114   on component 1 of Y
+
+component 52: χ = 1, 3 routing points, on component 2 of Y
+   index 0:  α = [1.80553, 0.415643, -1.35413, -1.02609, 1.0],  s = 0.58655,  t = -1.09767,  M = 0.21185   on component 2 of Y
+   index 0:  α = [0.460095, 1.79979, -0.928769, -1.41205, 1.0],  s = -1.26232,  t = 0.589307,  M = 0.144362   on component 2 of Y
+   index 1:  α = [0.789578, 0.80707, -1.4228, -1.41783, 1.0],  s = 0.331614,  t = 0.341005,  M = 0.540691   on component 2 of Y
+
+component 53: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.261696, 0.261632, -1.11258, -1.1126, 1.0],  s = 0.806503,  t = 0.806466,  M = 0.94777   on component 2 of Y
+
+component 54: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.1315, -3.28835, 1.68764, -0.113575, 1.0],  s = -2.9222,  t = 1.13776,  M = -0.281515   on component 2 of Y
+
+component 55: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.17337, 1.1872, -0.644906, 0.480171, 1.0],  s = 0.447764,  t = 3.16021,  M = 0.922008   on component 2 of Y
+
+component 56: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.34064, -1.37033, 0.768862, 0.658699, 1.0],  s = 0.420274,  t = 0.357614,  M = 0.605776   on component 2 of Y
+
+component 57: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.173198, -6.71035, -3.03499, -1.23696, 1.0],  s = 7.09165,  t = -0.662189,  M = 4.61418   on component 2 of Y
+
+component 58: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.732308, -0.7178, -0.463635, -1.03971, 1.0],  s = 1.73291,  t = 1.00773,  M = 1.18928   on component 2 of Y
+
+component 59: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.378488, -3.96254, 1.34343, -1.68273, 1.0],  s = -2.23058,  t = 0.209376,  M = -1.10075   on component 2 of Y
+
+component 60: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-3.25748, 1.12817, -0.109738, 1.64268, 1.0],  s = 1.17009,  t = -3.07732,  M = -0.300428   on component 2 of Y
+
+component 61: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-2.66137, 0.734074, -2.66137, 0.734074, 1.0],  s = 0.050118,  t = -0.648948,  M = -1.38944   on component 1 of Y
+
+component 62: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.20602, 1.01478, -1.17007, 0.486368, 1.0],  s = 0.729335,  t = 2.08645,  M = 0.82189   on component 2 of Y
+
+component 63: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.596326, -2.73858, 0.596326, -2.73858, 1.0],  s = 2.21934,  t = -0.102532,  M = -2.19783   on component 1 of Y
+
+component 64: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.03728, 1.47797, -1.03728, 1.47797, 1.0],  s = -2.59896,  t = 4.00721,  M = 0.525609   on component 1 of Y
+
+component 65: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.379098, -1.10857, 0.379098, -1.10857, 1.0],  s = 2.59814,  t = 1.0097,  M = 1.1133   on component 1 of Y
+
+component 66: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-0.534757, -0.535297, -0.534757, -0.535297, 1.0],  s = 1.51108,  t = 1.51003,  M = 0.506593   on component 1 of Y
+
+component 67: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.60029, 0.574345, -1.60029, 0.574345, 1.0],  s = 0.620264,  t = -1.93917,  M = -0.0571935   on component 1 of Y
+
+component 68: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.78806, 3.00861, -7.34678, 4.53293, 1.0],  s = 5.32391,  t = -10.1213,  M = -0.806188   on component 2 of Y
+
+component 69: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.163025, -0.0539728, 0.807478, 1.82435, 1.0],  s = -24.7202,  t = -7.16772,  M = 9.91764   on component 2 of Y
+
+component 70: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.114644, 0.114815, 1.5118, 1.51093, 1.0],  s = -15.4123,  t = -15.4254,  M = 9.48213   on component 2 of Y
+
+component 71: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [6.97462, -1.82396, -0.587599, 3.40777, 1.0],  s = 8.0607,  t = -6.76045,  M = 4.4932   on component 2 of Y
+
+component 72: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.47089, -1.46569, 0.23872, -4.82557, 1.0],  s = -2.90381,  t = 0.201618,  M = -1.44463   on component 2 of Y
+
+component 73: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.601354, -1.60319, 0.601354, -1.60319, 1.0],  s = -1.67612,  t = 0.623468,  M = -0.00381871   on component 1 of Y
+
+component 74: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [0.754226, -1.0878, 0.754226, -1.0878, 1.0],  s = 3.33885,  t = 0.741671,  M = 1.08322   on component 1 of Y
+
+component 75: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.391301, 3.70777, 8.24827, -1.57224, 1.0],  s = 7.79859,  t = -7.48811,  M = 4.64141   on component 2 of Y
+
+component 76: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.641816, -2.22182, 7.56547, -0.229268, 1.0],  s = 0.125963,  t = -5.71911,  M = -1.63926   on component 2 of Y
+
+component 77: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-4.06826, -4.20272, 1.71333, 1.6504, 1.0],  s = -1.7938,  t = -1.74744,  M = -0.721754   on component 2 of Y
+
+component 78: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.01472, 0.653828, 0.65265, 0.200957, 1.0],  s = 0.482158,  t = 7.58836,  M = 1.65655   on component 2 of Y
+
+component 79: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.322592, -2.4229, -0.555513, -1.75252, 1.0],  s = 8.69707,  t = -0.326859,  M = 5.84786   on component 2 of Y
+
+component 80: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.463608, -1.08826, 1.11387, -1.1995, 1.0],  s = 2.22536,  t = 0.682693,  M = 0.824423   on component 2 of Y
+
+component 81: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.0935797, 1.77589, -3.33036, 1.1059, 1.0],  s = 1.05321,  t = -2.57401,  M = -0.239483   on component 2 of Y
+
+component 82: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.423132, 8.4323, -2.42797, -0.413705, 1.0],  s = -7.31709,  t = -0.1116,  M = -1.71208   on component 2 of Y
+
+component 83: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-2.36122, -0.414667, -0.419507, 8.29966, 1.0],  s = -7.50484,  t = -0.117857,  M = -1.74845   on component 2 of Y
+
+component 84: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.413342, -2.41321, 8.40694, -0.422808, 1.0],  s = -0.114087,  t = -7.36837,  M = -1.72147   on component 2 of Y
+
+component 85: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-3.45723, -1.77285, -3.45723, -1.77285, 1.0],  s = -1.71665,  t = 9.84783,  M = 4.29974   on component 1 of Y
+
+component 86: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.8248, 6.96198, 3.45172, -0.595258, 1.0],  s = -6.5918,  t = 7.99886,  M = 4.47114   on component 2 of Y
+
+component 87: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-2.30675, -1.18226, -0.104912, -6.98302, 1.0],  s = 8.43152,  t = -0.441256,  M = 5.29547   on component 2 of Y
+
+component 88: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.83275, 0.759526, -0.0687059, 0.162327, 1.0],  s = -6.70668,  t = -25.7218,  M = 10.0178   on component 2 of Y
+
+component 89: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.24204, 11.3087, -16.8945, -2.4598, 1.0],  s = 0.00106138,  t = -0.633087,  M = -0.158071   on component 2 of Y
+
+component 90: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [8.48283, -0.42474, -0.412964, -2.45211, 1.0],  s = -0.110161,  t = -7.25909,  M = -1.7004   on component 2 of Y
+
+component 91: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-6.76127, -0.174802, -1.23729, -3.09252, 1.0],  s = -0.671968,  t = 7.05872,  M = 4.59589   on component 2 of Y
+
+component 92: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-2.42597, -0.319763, -1.74957, -0.55344, 1.0],  s = -0.324605,  t = 8.72876,  M = 5.86676   on component 2 of Y
+
+component 93: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-2.17712, -0.643936, -0.22621, 7.48415, 1.0],  s = -5.81106,  t = 0.125178,  M = -1.66716   on component 2 of Y
+
+component 94: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.678819, 0.80998, -1.02107, 1.07501, 1.0],  s = -0.0748015,  t = 4.67928,  M = 1.15525   on component 2 of Y
+
+component 95: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.143721, -0.203151, 0.389166, 1.96575, 1.0],  s = -47.3485,  t = -3.58456,  M = 12.211   on component 2 of Y
+
+component 96: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.00069, -0.807366, 0.80709, -0.462678, 1.0],  s = 6.22456,  t = -0.372848,  M = 1.53464   on component 2 of Y
+
+component 97: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.836093, -0.483816, 0.979524, -0.745272, 1.0],  s = 6.43478,  t = -0.432857,  M = 1.5916   on component 2 of Y
+
+component 98: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.1812, -2.25947, -6.97098, -0.102673, 1.0],  s = -0.430885,  t = 8.52556,  M = 5.34587   on component 2 of Y
+
+component 99: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [7.77757, -0.263999, -0.604433, -2.3632, 1.0],  s = 0.109651,  t = -5.54807,  M = -1.54056   on component 2 of Y
+
+component 100: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.43573, 1.4523, -4.94731, 0.216785, 1.0],  s = 0.198053,  t = -3.1215,  M = -1.56091   on component 2 of Y
+
+component 101: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-16.4338, -2.60262, 1.36909, 11.1574, 1.0],  s = 0.00101487,  t = -0.586308,  M = -0.14638   on component 2 of Y
+
+component 102: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [3.65551, -0.385381, -1.57255, 8.28873, 1.0],  s = -7.73774,  t = 7.86912,  M = 4.67548   on component 2 of Y
+
+component 103: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.483897, 1.08755, 0.123695, 1.30109, 1.0],  s = -1.92892,  t = 8.62748,  M = 3.47236   on component 2 of Y
+
+component 104: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-4.65366, -4.66339, 0.926066, 0.923939, 1.0],  s = -11.2197,  t = -11.2017,  M = -3.00272   on component 2 of Y
+
+component 105: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.806561, 1.00075, -0.457327, 0.805213, 1.0],  s = -0.375269,  t = 6.24239,  M = 1.53975   on component 2 of Y
+
+component 106: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-4.05431, 0.346811, -1.63906, 1.33657, 1.0],  s = 0.207347,  t = -2.3745,  M = -1.17849   on component 2 of Y
+
+component 107: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.810217, -0.679151, 1.07494, -1.02097, 1.0],  s = 4.67915,  t = -0.0749103,  M = 1.15519   on component 2 of Y
+
+component 108: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.477531, 0.834697, -0.74197, 0.979088, 1.0],  s = -0.438684,  t = 6.46625,  M = 1.60079   on component 2 of Y
+
+component 109: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-2.60945, -16.4148, 11.1518, 1.37519, 1.0],  s = -0.584202,  t = 0.00101847,  M = -0.145853   on component 2 of Y
+
+component 110: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [11.3064, 1.24401, -2.46201, -16.887, 1.0],  s = -0.632298,  t = 0.00106947,  M = -0.157872   on component 2 of Y
+
+component 111: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.678868, 0.361814, 1.071, -0.530105, 1.0],  s = 8.91079,  t = -1.03831,  M = 2.71728   on component 2 of Y
+
+component 112: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.287634, 0.198061, -1.06133, 0.851086, 1.0],  s = 0.621385,  t = 4.84784,  M = 1.21193   on component 2 of Y
+
+component 113: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.07759, 0.443555, -1.19266, 1.11694, 1.0],  s = 0.694241,  t = 2.22313,  M = 0.829551   on component 2 of Y
+
+component 114: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.771416, 0.178465, -1.00072, 0.568471, 1.0],  s = 0.497009,  t = 8.82942,  M = 1.81356   on component 2 of Y
+
+component 115: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.0127, -1.21344, 0.509867, -1.17711, 1.0],  s = 2.09274,  t = 0.716448,  M = 0.816206   on component 2 of Y
+
+component 116: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.178599, 0.770647, 0.569034, -1.00082, 1.0],  s = 8.81957,  t = 0.496957,  M = 1.81232   on component 2 of Y
+
+component 117: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.07232, 0.742065, -1.07232, 0.742065, 1.0],  s = 0.765104,  t = 3.4654,  M = 1.11963   on component 1 of Y
+
+component 118: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.702427, -0.702933, -0.435377, -0.435965, 1.0],  s = 1.10021,  t = 1.09993,  M = 0.966371   on component 2 of Y
+
+component 119: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.198124, 0.287758, 0.851029, -1.06133, 1.0],  s = 4.84896,  t = 0.621215,  M = 1.21212   on component 2 of Y
+
+component 120: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.20312, 0.143729, 1.96571, 0.38924, 1.0],  s = -3.58511,  t = -47.3386,  M = 12.2101   on component 2 of Y
+
+component 121: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-0.310095, -0.310098, -0.310095, -0.310098, 1.0],  s = 9.89961,  t = 9.89937,  M = -6.39935   on component 1 of Y
+
+component 122: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.665663, 0.665664, -0.106503, -0.106504, 1.0],  s = -5.42112,  t = -5.42111,  M = 9.69511   on component 2 of Y
+
+component 123: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.0604377, 1.08237, -0.0221388, -0.804545, 1.0],  s = 61.5215,  t = 0.791884,  M = -5.17852   on component 2 of Y
+
+component 124: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.0221444, -0.811299, -0.0583771, 1.08199, 1.0],  s = 64.7734,  t = 0.798679,  M = -5.14478   on component 2 of Y
+
+component 125: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.811299, -0.0221444, 1.08199, -0.0583771, 1.0],  s = 0.798679,  t = 64.7733,  M = -5.14478   on component 2 of Y
+
+component 126: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.08237, -0.0604377, -0.804545, -0.0221388, 1.0],  s = 0.791884,  t = 61.5215,  M = -5.17852   on component 2 of Y
+
+component 127: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-0.110808, -0.110807, 0.65238, 0.652377, 1.0],  s = -5.29443,  t = -5.29447,  M = 9.7761   on component 2 of Y
+
+the irreducible components of Y:
+   1. dim 2, degree 11: regular
+      {α₂ - α₄, α₁ - α₃, 12*M - 5*s - 5*t + 6*M*α₃ + 6*M*α₄ - 2*M^2*α₃ - 2*M^2*α₄ + s*t - 4*s*α₃ - 4*s*α₄ - 4*t*α₃ - 4*t*α₄ + 3*M*s*α₃ + 3*M*t*α₄ - 4*M^2, -3 - 5*α₃ - 5*α₄ + 2*M*α₄ + M*α₄^2 + s*α₃ - 2*α₃*α₄ - α₃^2 - α₄^2, 1 - 2*α₃*α₄ + M*α₃*α₄ - α₃^2 - α₄^2, -3 - 5*α₃ - 5*α₄ + 2*M*α₃ + M*α₃^2 + t*α₄ - 2*α₃*α₄ - α₃^2 - α₄^2, -12 + 24*M - s - 19*t - 12*α₃ - 12*α₄ + 12*M*α₃ + 12*M*α₄ - 4*M^2*α₃ - 4*M^2*α₄ + 2*s*t + 4*s*α₃ + 7*s*α₄ + 3*s*α₄^2 - 23*t*α₃ - 3*t*α₃^2 - 20*t*α₄ + 6*t*α₄^2 - 6*α₃*α₄ + 12*M*t*α₄ + 3*s*t*α₃ - 3*s*t*α₄ - 8*M^2 - 3*α₃^2 - 3*α₄^2, 2 - 2*M + 3*t - α₃ - α₄ - M*α₃ - M*α₄ + s*α₃ + 5*t*α₃ + t*α₃^2 + 5*t*α₄ - t*α₄^2 - 2*α₃*α₄ - 2*M*t*α₄ - s*t*α₃ + s*α₃*α₄ + t*α₃*α₄ - α₃^2 - α₄^2, -4 - 4*α₃ - 4*α₄ + s*α₃^2 + t*α₄^2 - 2*α₃*α₄ - α₃^2 - α₄^2, -2 - α₃ - 3*α₄ + t*α₄^2 - α₃*α₄ - α₃*α₄^2 + α₃^2*α₄ + 2*α₃^2 + α₃^3 - 3*α₄^2 - α₄^3, 79608*M - 26798*s - 26798*t - 21570*M*s - 1152*M*s^2 - 21570*M*t - 1152*M*t^2 + 39804*M*α₃ + 39804*M*α₄ + 16461*M^2*s + 16461*M^2*t - 26750*M^2*α₃ - 26750*M^2*α₄ - 3060*M^3*s - 3060*M^3*t + 4494*M^3*α₃ + 4494*M^3*α₄ + 25894*s*t - 3267*s*t^2 - 864*s*t^3 - 13792*s*α₃ - 13792*s*α₄ - 3267*s^2*t - 1548*s^2*t^2 + 567*s^2*t^3 + 4896*s^2*α₃ + 2772*s^2*α₄ - 864*s^3*t + 567*s^3*t^2 - 54*s^3*t^3 - 864*s^3*α₃ + 243*s^3*α₄ - 13792*t*α₃ - 13792*t*α₄ + 2772*t^2*α₃ + 4896*t^2*α₄ + 243*t^3*α₃ - 864*t^3*α₄ - 1950*M*s*t + 5463*M*s*t^2 - 7158*M*s*α₄ + 5463*M*s^2*t - 2808*M*s^2*t^2 - 306*M*s^2*α₄ - 7158*M*t*α₃ - 306*M*t^2*α₃ - 6984*M^2*s*t - 540*M^2*s*t^2 + 7083*M^2*s*α₄ - 540*M^2*s^2*t + 432*M^2*s^2*t^2 + 243*M^2*s^2*α₄ + 7083*M^2*t*α₃ + 243*M^2*t^2*α₃ + 4320*M^3*s*t - 1530*M^3*s*α₄ - 1530*M^3*t*α₃ - 864*M^4*s*t - 828*s*t*α₃ - 828*s*t*α₄ + 3924*s*t^2*α₃ + 2817*s*t^2*α₄ - 405*s*t^3*α₃ - 351*s*t^3*α₄ + 2817*s^2*t*α₃ + 3924*s^2*t*α₄ - 972*s^2*t^2*α₃ - 972*s^2*t^2*α₄ + 54*s^2*t^3*α₃ + 54*s^2*t^3*α₄ - 351*s^3*t*α₃ - 405*s^3*t*α₄ + 54*s^3*t^2*α₃ + 54*s^3*t^2*α₄ - 53500*M^2 + 8988*M^3 + 8568*s^2 + 243*s^3 + 8568*t^2 + 243*t^3}
+   2. dim 2, degree 33: regular
+      {-2*α₁ + 2*α₂ + 2*α₃ - 2*α₄ + s*α₁ - s*α₃ - t*α₂ + t*α₄, -s - t + 2*α₁ - 2*α₂ - 2*α₃ + 2*α₄ - 2*M*α₂ - 2*M*α₄ + s*t + s*α₂ + 2*s*α₃ + s*α₄ - t*α₁ - t*α₃ - 2*t*α₄ + M*t*α₂ + M*t*α₄, -2*α₁ + 2*α₂ + 2*α₃ - 2*α₄ - 2*M*α₃ + 2*M*α₄ - s*α₂ - 2*s*α₃ - s*α₄ + t*α₁ + t*α₃ + 2*t*α₄ + M*s*α₃ - M*t*α₄, -2 - 2*α₁ - 3*α₂ - 3*α₃ - 2*α₄ + M*α₂ + M*α₄ + s*α₃ - 2*α₁*α₂ - 2*α₁*α₃ - 2*α₂*α₄ - 2*α₃*α₄ + M*α₂*α₄ + M*α₃*α₄, 1 - 2*α₁*α₄ + M*α₁*α₄ - α₁^2 - α₄^2, 1 - 2*α₃*α₂ + M*α₃*α₂ - α₂^2 - α₃^2, -2 - 3*α₁ - 2*α₂ - 2*α₃ - 3*α₄ + M*α₁ + M*α₃ + t*α₄ - 2*α₁*α₂ - 2*α₁*α₃ - 2*α₂*α₄ - 2*α₃*α₄ + M*α₁*α₃ + M*α₃*α₄, α₁ - α₂ - α₃ + α₄ + t*α₂ - t*α₄ + M*α₁*α₂ - M*α₃*α₄, -2*M + s + t - 2*α₁ + 2*α₂ + 2*α₃ - 2*α₄ + M*t - 3*M*α₁ - 3*M*α₃ + 2*M^2*α₁ + 2*M^2*α₃ - s*t - s*α₂ - 2*s*α₃ - s*α₄ + 3*t*α₁ + t*α₃ + 4*t*α₄ - t^2*α₄ - M*t*α₁ - M*t*α₃ + s*t*α₃, 4*M - 5*s - 5*t + 4*α₁ - 4*α₂ - 4*α₃ + 4*α₄ + M*s - M*t + 3*M*α₁ - 3*M*α₂ + 3*M*α₃ - 3*M*α₄ - 2*M^2*α₁ + 2*M^2*α₂ - 2*M^2*α₃ + 2*M^2*α₄ + 5*s*t + 2*s*α₂ + 4*s*α₃ + 2*s*α₄ - 4*t*α₁ - 2*t*α₂ - 4*t*α₃ - 6*t*α₄ + t^2*α₂ + t^2*α₄ - M*s*t - M*s*α₂ - M*s*α₄ + M*t*α₁ + M*t*α₃ + s*t*α₂ + s*t*α₄, -3 + t - 3*α₁ - 2*α₂ - 2*α₃ - 3*α₄ + 2*M*α₁ + 2*M*α₃ + t*α₄ - α₁*α₂ - α₁*α₃ - α₂*α₄ - α₃*α₄ + M*α₃*α₄ + t*α₁*α₃ - t*α₂*α₄, 2*M - s - t - 2*α₁ + 2*α₂ + 2*α₃ - 2*α₄ - M*s + 3*M*α₂ + 3*M*α₄ - 2*M^2*α₂ - 2*M^2*α₄ + s*t - 3*s*α₂ - 4*s*α₃ - s*α₄ + s^2*α₃ + t*α₁ + t*α₃ + 2*t*α₄ + M*s*α₂ + M*s*α₄ - s*t*α₄, 3 + α₁ + 3*α₂ + 3*α₃ + α₄ - 2*M*α₃ + t*α₁ + t*α₃ + 2*t*α₄ + 2*α₁*α₂ + 2*α₁*α₃ + 2*α₂*α₄ + 2*α₃*α₄ - M*t*α₄ - 3*M*α₃*α₄ + s*α₃*α₄ + t*α₃*α₄, -5 + s - 5*α₁ - 4*α₂ - 4*α₃ - 5*α₄ + 2*M*α₂ + 2*M*α₄ + s*α₃ - t*α₂ + t*α₄ - 4*α₁*α₂ - 4*α₁*α₃ - 4*α₂*α₄ - 4*α₃*α₄ + 3*M*α₃*α₄ + s*α₂*α₄ + t*α₂*α₄, -2 - 3*α₁ - α₂ - α₃ - 3*α₄ + s*α₃^2 - t*α₂ + t*α₄ - 3*α₁*α₂ - α₁*α₃ - 3*α₂*α₄ - 2*α₃*α₂ - α₃*α₄ + 2*M*α₃*α₄ + t*α₂*α₄ + t*α₃*α₂ - t*α₃*α₄ - 2*α₃^2, 3 - s - t + 8*α₁ - 4*α₂ - 4*α₃ + 8*α₄ - 2*M*α₁ - 2*M*α₂ - 2*M*α₄ + s*t + s*α₂ + 2*s*α₃ + s*α₄ + 5*t*α₂ + t*α₂^2 - 5*t*α₄ + 4*α₁*α₂ + 2*α₁*α₃ + 4*α₂*α₄ - 2*α₃*α₂ + 2*α₃*α₄ + M*t*α₄ - 3*M*α₃*α₄ + s*α₃*α₂ + t*α₁*α₂ - t*α₂*α₄ - 2*α₂^2, 1 + 2*α₁ + α₂ - α₃ + 2*α₄ + t*α₂ - t*α₄ + 3*α₁*α₂ + α₁*α₂^2 - α₁*α₃^2 + 3*α₂*α₄ + α₂^2*α₄ - α₃^2*α₄ - M*α₃*α₄ - t*α₂*α₄ + α₂^2 - α₃^2, -1 - α₂ - α₃ - 2*α₄ + α₁^2*α₂ + α₁^2*α₃ - 3*α₂*α₄ - α₂*α₄^2 - 3*α₃*α₄ - α₃*α₄^2 + M*α₃*α₄ + t*α₂*α₄ + α₁^2 - α₄^2, 2 + 2*M - t + 8*α₁ + 4*α₂ - 4*α₃ + 4*α₄ - M*t + 5*M*α₁ + 2*M*α₂ + 5*M*α₃ - 2*M*α₃^2 + 2*M*α₄ - 2*M^2*α₁ - 2*M^2*α₃ - s*α₃ - 4*t*α₁ + t*α₂ - t*α₂^2 - 3*t*α₃ + t*α₃^2 - 7*t*α₄ + t*α₄^2 + t^2*α₄ + 9*α₁*α₂ - 4*α₁*α₃ - 3*α₁*α₃^2 + 2*α₁*α₃^3 + α₁*α₄ + 2*α₁^2*α₃ + 7*α₂*α₄ - α₂*α₄^2 + 2*α₂^2*α₄ - α₂^3*α₄ + 3*α₃*α₂ - 3*α₃*α₂^2 - 6*α₃*α₄ - α₃*α₄^2 + α₃^2*α₄ + α₃^3*α₄ + M*t*α₁ + M*t*α₃ - 2*M*α₃*α₄ - t*α₁*α₂ - 3*t*α₂*α₄ - t*α₂*α₄^2 + t*α₂^2*α₄ - 3*t*α₃*α₂ + t*α₃*α₂^2 + 4*t*α₃*α₄ + t*α₃*α₄^2 + t*α₃^2*α₄ - α₁*α₂*α₄ - 5*α₁*α₃*α₂ + α₁*α₃*α₄ + 2*α₁*α₃^2*α₂ + α₃*α₂*α₄ - 3*α₃*α₂^2*α₄ - α₃^2*α₂*α₄ + 2*α₁^2 + 3*α₂^2 - α₂^3 + 2*α₃^2 + 2*α₃^3 - α₄^2, 1 + 2*M - t + 5*α₁ + 3*α₂ + 2*α₄ - M*t + 5*M*α₁ + 2*M*α₂ + 5*M*α₃ - 2*M*α₃^2 + 2*M*α₄ - 2*M^2*α₁ - 2*M^2*α₃ - s*α₃ - 4*t*α₁ - t*α₂ - 3*t*α₃ + t*α₃^2 - 5*t*α₄ + t*α₄^2 + t^2*α₄ + 6*α₁*α₂ - α₁*α₃ - 2*α₁*α₃^2 - α₁*α₄ + 2*α₁^2*α₃ + α₁^2*α₃^2 + 4*α₂*α₄ - 2*α₂*α₄^2 + α₂^2*α₄ - α₂^2*α₄^2 + 5*α₃*α₂ - 3*α₃*α₄ - α₃*α₄^2 + M*t*α₁ + M*t*α₃ - M*α₃*α₄ - t*α₁*α₂ - 3*t*α₂*α₄ - 2*t*α₃*α₂ + 3*t*α₃*α₄ + t*α₃*α₄^2 + t*α₃^2*α₄ - 2*α₁*α₂*α₄ - 2*α₁*α₃*α₂ + α₁*α₃*α₄ + 2*α₁*α₃^2*α₄ + α₃*α₂*α₄ - 2*α₃*α₂*α₄^2 + α₁^2 + 2*α₂^2 + 2*α₃^2 - α₄^2, 2 - α₁ + α₃ + 2*α₄ - 2*t*α₄^2 - α₁*α₃ - 2*α₁*α₄^2 - α₁^2*α₃ + α₁^2*α₄ + α₁^3*α₃ + 2*α₂*α₄ - 2*α₂*α₄^2 - 2*α₂*α₄^3 + α₃*α₄ - 3*α₃*α₄^2 - α₃*α₄^3 - 2*M*α₃*α₄ + t*α₁*α₄^2 + 2*t*α₂*α₄^2 + 2*α₁*α₂*α₄ - 2*α₁*α₂*α₄^2 + α₁*α₃*α₄^2 + 3*α₁^2*α₃*α₄ - 2*α₁^2 + α₁^3 - 2*α₄^3}
+the singular pieces removed by f:
+   1. dim 1: ┌ Warning: flow_to_routing_points: the jacobian of G has rank below 6 at 5 of the 400 starts on V(G), around 5 distinct point(s), off V(f). Make f vanish there or rewrite G; see `jacobian_rank_locus`.
+└ @ ConnectedComponents ~/Documents/Research/projects/routing_functions/src/routing_points.jl:165
+{α₂ - α₄, α₁ - α₃, 4*M - s - t - 2*M*α₃ - 2*M*α₄ + s*t + 2*s*α₃ + 2*s*α₄ + 2*t*α₃ + 2*t*α₄, -10*M + 2*s + 2*t - 4*M*α₃ - 4*M*α₄ + M^2*α₃ + M^2*α₄ + 2*M^2, -2*M + M*α₃ - M*α₄ - 2*t*α₃ - 2*t*α₄ + M*t*α₄, -20*M + 6*s + 6*t - M*s - M*t - 4*M*α₃ - 4*M*α₄ - 2*s*t + M*s*t + 2*M*s*α₄ + 2*M*t*α₃ + 8*M^2, -6 - 4*M + s + t - 10*α₃ - 10*α₄ + 2*M*α₃ + 6*M*α₄ + 2*M*α₄^2 - s*t - 2*s*α₄ - 2*t*α₃ - 2*t*α₄ - 4*α₃*α₄ - 2*α₃^2 - 2*α₄^2, 1 - 2*α₃*α₄ + M*α₃*α₄ - α₃^2 - α₄^2, -3 - 5*α₃ - 5*α₄ + 2*M*α₃ + M*α₃^2 + t*α₄ - 2*α₃*α₄ - α₃^2 - α₄^2, -72*M + 15*s + 11*t - 2*M*t - 14*M*α₃ - 26*M*α₄ + 8*M^2*α₄ + s*t + 2*s*α₄ - 12*t*α₃ - 10*t*α₄ + 2*t^2*α₄ + 4*M*t*α₃ + 16*M^2, 48*M - 10*s - 6*t + 6*M*t + 10*M*α₃ + 18*M*α₄ - 8*M^2*α₄ - 3*s*t + s*t^2 - 2*s*α₄ + 8*t*α₃ + 6*t*α₄ + 2*t^2*α₃ - 6*M*t*α₃ - 16*M^2 - t^2, -23*M*s - 23*M*t + 5*M^2*s + 5*M^2*t + 6*s*t + s*t^2 + s^2*t - M*s*t + 32*M^2 - 8*M^3 + 3*s^2 + 3*t^2, 4*M - 2*s + 2*M*α₃ + 2*M*α₄ - s*α₄ - t*α₄ + s*t*α₄, -4 + t - 5*α₃ - 5*α₄ + 4*M*α₃ + t*α₃^2 + t*α₄ - t*α₄^2, -104*M + 31*s + 27*t + 26*M*s + 20*M*t - 20*M*α₃ - 28*M*α₄ - 5*M^2*s - 5*M^2*t + 8*M^2*α₄ - 18*s*t - s*t^2 + 2*s*α₄ + 2*s^2*α₄ - 8*t*α₃ - 6*t*α₄ + 4*M*s*t + 6*M*t*α₃ - 8*M^2 + 8*M^3 - 4*s^2 - 3*t^2, -16 - 4*M + 3*s + t - 18*α₃ - 18*α₄ + 2*M*α₃ + 10*M*α₄ - s*t - 2*s*α₄ + 2*s*α₄^2 - 2*t*α₃ - 2*t*α₄ + 2*t*α₄^2 - 4*α₃*α₄ - 2*α₃^2 - 2*α₄^2, -2 - α₃ - 3*α₄ + t*α₄^2 - α₃*α₄ - α₃*α₄^2 + α₃^2*α₄ + 2*α₃^2 + α₃^3 - 3*α₄^2 - α₄^3}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.

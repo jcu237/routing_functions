@@ -1,0 +1,42 @@
+Computing mixed cells... 2    Time: 0:00:00[K
+   mixed_volume: 2[K[A
+[K[AComputing mixed cells... 20    Time: 0:00:00[K
+   mixed_volume: 31[K
+
+LandauSystem B4 (banana with 4 edges): 5 equations in (α₁, α₂, α₃, y, s), expected dimension 0
+
+Y ∖ Sing(Y), dimension 0
+finitely many points, so the system is solved directly; each is a component
+5 routing points (20 s), connectivity 0 s
+
+5 smoothly connected components, Euler characteristic 5 in all
+
+component 1: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.0, 1.0, 1.0, 1.0],  s = 4.0   on component 2 of Y
+
+component 2: χ = 1, 1 routing point, on component 4 of Y
+   index 0:  α = [1.0, 1.0, -1.0, 1.0],  s = 4.0   on component 4 of Y
+
+component 3: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [1.0, 1.0, 1.0, 1.0],  s = 16.0   on component 1 of Y
+
+component 4: χ = 1, 1 routing point, on component 3 of Y
+   index 0:  α = [1.0, -1.0, 1.0, 1.0],  s = 4.0   on component 3 of Y
+
+component 5: χ = 1, 1 routing point, on component 5 of Y
+   index 0:  α = [-1.0, -1.0, -1.0, 1.0],  s = 4.0   on component 5 of Y
+
+the irreducible components of Y:
+   1. dim 0, degree 1: regular
+      {-16 + s, -1 + α₃, -1 + α₂, -1 + α₁}
+   2. dim 0, degree 1: regular
+      {-4 + s, -1 + α₃, -1 + α₂, 1 + α₁}
+   3. dim 0, degree 1: regular
+      {-4 + s, -1 + α₃, 1 + α₂, -1 + α₁}
+   4. dim 0, degree 1: regular
+      {-4 + s, 1 + α₃, -1 + α₂, -1 + α₁}
+   5. dim 0, degree 1: regular
+      {-4 + s, 1 + α₃, 1 + α₂, 1 + α₁}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.

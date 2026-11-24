@@ -1,0 +1,69 @@
+LandauSystem par (parachute): 5 equations in (α₁, α₂, α₃, y, s, M), expected dimension 1
+
+Y ∖ Sing(Y), dimension 1
+f = (-1 + 2*α₂)*(1 + 2*α₂)*(1 + α₃)
+15 routing points (50 s), connectivity 0 s
+
+15 smoothly connected components, Euler characteristic 15 in all
+
+component 1: χ = 1, 1 routing point, on component 4 of Y
+   index 0:  α = [-0.169879, -0.169879, 1.0, 1.0],  s = -30.6513,  M = -6.77307   on component 4 of Y
+
+component 2: χ = 1, 1 routing point, on component 4 of Y
+   index 0:  α = [4.97586, 4.97586, 1.0, 1.0],  s = 3.95961,  M = 5.40194   on component 4 of Y
+
+component 3: χ = 1, 1 routing point, on component 4 of Y
+   index 0:  α = [0.396482, 0.396482, 1.0, 1.0],  s = -2.36142,  M = 10.0444   on component 4 of Y
+
+component 4: χ = 1, 1 routing point, on component 4 of Y
+   index 0:  α = [-0.467683, -0.467683, 1.0, 1.0],  s = -0.571898,  M = 0.723601   on component 4 of Y
+
+component 5: χ = 1, 1 routing point, on component 3 of Y
+   index 0:  α = [-2.60953, 1.60953, 1.0, 1.0],  s = -7.87587e-18,  M = 1.0   on component 3 of Y
+
+component 6: χ = 1, 1 routing point, on component 3 of Y
+   index 0:  α = [-1.3468, 0.346798, 1.0, 1.0],  s = -6.74877e-17,  M = 1.0   on component 3 of Y
+
+component 7: χ = 1, 1 routing point, on component 3 of Y
+   index 0:  α = [0.698236, -1.69824, 1.0, 1.0],  s = 1.7429999999999998e-31,  M = 1.0   on component 3 of Y
+
+component 8: χ = 1, 1 routing point, on component 3 of Y
+   index 0:  α = [-0.30394, -0.69606, 1.0, 1.0],  s = -1.06342e-16,  M = 1.0   on component 3 of Y
+
+component 9: χ = 1, 1 routing point, on component 4 of Y
+   index 0:  α = [-3.96339, -3.96339, 1.0, 1.0],  s = 3.93634,  M = 4.49538   on component 4 of Y
+
+component 10: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.111107, 0.888893, 1.0, 1.0],  s = -1.12579e-16,  M = 9.0   on component 2 of Y
+
+component 11: χ = 1, 1 routing point, on component 3 of Y
+   index 0:  α = [-0.666927, -0.333073, 1.0, 1.0],  s = -6.09707e-17,  M = 1.0   on component 3 of Y
+
+component 12: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-5.47499, 6.47499, 1.0, 1.0],  s = 1.05388e-17,  M = 9.0   on component 2 of Y
+
+component 13: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [0.849223, 0.150777, 1.0, 1.0],  s = -3.8723e-17,  M = 9.0   on component 2 of Y
+
+component 14: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [7.47866, -6.47866, 1.0, 1.0],  s = -1.20371e-17,  M = 9.0   on component 2 of Y
+
+component 15: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [1.15774, -0.15774, 1.0, 1.0],  s = -3.95502e-17,  M = 9.0   on component 2 of Y
+
+the irreducible components of Y:
+   1. dim 2, degree 3: lies in the singular locus (removed); smooth components not computed
+      {-1 + M, 1 + α₃, 1 - 2*α₁*α₂ + s*α₁*α₂ - α₁^2 - α₂^2}
+   2. dim 1, degree 1: regular
+      {-9 + M, s, -1 + α₃, -1 + α₁ + α₂}
+   3. dim 1, degree 1: regular
+      {-1 + M, s, -1 + α₃, 1 + α₁ + α₂}
+   4. dim 1, degree 3: regular
+      {-1 + α₃, α₁ - α₂, 9 - 10*M + 4*s + M^2, -2 - 5*α₂ + M*α₂, -5 + M - 8*α₂ + 2*s*α₂}
+the singular pieces removed by f:
+   1. dim 2: {-1 + M, 1 + α₃, 1 - 2*α₁*α₂ + s*α₁*α₂ - α₁^2 - α₂^2}
+   2. dim 0: {-9 + M, s, -1 + α₃, -1 + 2*α₂, -1 + 2*α₁}
+   3. dim 0: {-1 + M, s, -1 + α₃, 1 + 2*α₂, 1 + 2*α₁}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.

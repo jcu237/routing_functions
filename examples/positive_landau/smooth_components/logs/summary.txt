@@ -1,0 +1,613 @@
+
+run_all.sh started 2026-11-23 17:25:34
+limits: Macaulay2 4h and 48 GB, Julia 3h, monodromy 3600 s (0 = none)
+diagrams: A3
+
+A3      Julia ok  (0:01:07)
+        8 routing points, 33 s
+        8 components, 0 s
+        8 smoothly connected components, Euler characteristic 8 in all
+        component 1: χ = 1, 1 routing point, on component 2 of Y
+        component 2: χ = 1, 1 routing point, on component 2 of Y
+        component 3: χ = 1, 1 routing point, on component 1 of Y
+        component 4: χ = 1, 1 routing point, on component 1 of Y
+        component 5: χ = 1, 1 routing point, on component 1 of Y
+        component 6: χ = 1, 1 routing point, on component 1 of Y
+        component 7: χ = 1, 1 routing point, on component 2 of Y
+        component 8: χ = 1, 1 routing point, on component 2 of Y
+
+finished 2026-11-23 17:26:41, after 0:01:07
+
+run_all.sh started 2026-11-23 17:26:49
+limits: Macaulay2 4h and 48 GB, Julia 3h, monodromy 3600 s (0 = none)
+diagrams: A3 A4 B2 B3 B4 par acn env npltrb tdetri debox tdebox pltrb dbox pentb
+
+A3      already done: smooth_components/results/A3.txt is there (FORCE=1 runs it again)
+env     no singular locus yet: env.m2 starts in the background
+pentb   no singular locus yet: pentb.m2 starts in the background
+A4      Julia ok  (0:01:30)
+        83 routing points, 45 s
+        79 components, 5 s
+        79 smoothly connected components, Euler characteristic 79 in all
+        component 1: χ = 1, 1 routing point, on component 3 of Y
+        component 2: χ = 1, 1 routing point, on component 2 of Y
+        component 3: χ = 1, 1 routing point, on component 4 of Y
+        component 4: χ = 1, 1 routing point, on component 4 of Y
+        component 5: χ = 1, 1 routing point, on component 2 of Y
+        component 6: χ = 1, 1 routing point, on component 3 of Y
+        component 7: χ = 1, 1 routing point, on component 3 of Y
+        component 8: χ = 1, 1 routing point, on component 4 of Y
+        component 9: χ = 1, 1 routing point, on component 3 of Y
+        component 10: χ = 1, 1 routing point, on component 4 of Y
+        component 11: χ = 1, 1 routing point, on component 1 of Y
+        component 12: χ = 1, 1 routing point, on component 3 of Y
+        component 13: χ = 1, 1 routing point, on component 4 of Y
+        component 14: χ = 1, 1 routing point, on component 1 of Y
+        component 15: χ = 1, 3 routing points, on component 3 of Y
+        component 16: χ = 1, 1 routing point, on component 1 of Y
+        component 17: χ = 1, 1 routing point, on component 2 of Y
+        component 18: χ = 1, 1 routing point, on component 3 of Y
+        component 19: χ = 1, 1 routing point, on component 4 of Y
+        component 20: χ = 1, 1 routing point, on component 4 of Y
+        component 21: χ = 1, 1 routing point, on component 2 of Y
+        component 22: χ = 1, 1 routing point, on component 2 of Y
+        component 23: χ = 1, 1 routing point, on component 4 of Y
+        component 24: χ = 1, 1 routing point, on component 2 of Y
+        component 25: χ = 1, 1 routing point, on component 1 of Y
+        component 26: χ = 1, 1 routing point, on component 3 of Y
+        component 27: χ = 1, 1 routing point, on component 2 of Y
+        component 28: χ = 1, 1 routing point, on component 3 of Y
+        component 29: χ = 1, 1 routing point, on component 3 of Y
+        component 30: χ = 1, 1 routing point, on component 3 of Y
+        component 31: χ = 1, 1 routing point, on component 1 of Y
+        component 32: χ = 1, 1 routing point, on component 1 of Y
+        component 33: χ = 1, 1 routing point, on component 2 of Y
+        component 34: χ = 1, 1 routing point, on component 2 of Y
+        component 35: χ = 1, 1 routing point, on component 3 of Y
+        component 36: χ = 1, 1 routing point, on component 1 of Y
+        component 37: χ = 1, 1 routing point, on component 2 of Y
+        component 38: χ = 1, 1 routing point, on component 1 of Y
+        component 39: χ = 1, 1 routing point, on component 2 of Y
+        component 40: χ = 1, 1 routing point, on component 3 of Y
+        component 41: χ = 1, 1 routing point, on component 4 of Y
+        component 42: χ = 1, 1 routing point, on component 1 of Y
+        component 43: χ = 1, 1 routing point, on component 3 of Y
+        component 44: χ = 1, 1 routing point, on component 4 of Y
+        component 45: χ = 1, 1 routing point, on component 2 of Y
+        component 46: χ = 1, 1 routing point, on component 3 of Y
+        component 47: χ = 1, 1 routing point, on component 2 of Y
+        component 48: χ = 1, 1 routing point, on component 2 of Y
+        component 49: χ = 1, 1 routing point, on component 3 of Y
+        component 50: χ = 1, 1 routing point, on component 2 of Y
+        component 51: χ = 1, 1 routing point, on component 3 of Y
+        component 52: χ = 1, 1 routing point, on component 4 of Y
+        component 53: χ = 1, 1 routing point, on component 4 of Y
+        component 54: χ = 1, 1 routing point, on component 1 of Y
+        component 55: χ = 1, 1 routing point, on component 2 of Y
+        component 56: χ = 1, 1 routing point, on component 1 of Y
+        component 57: χ = 1, 1 routing point, on component 3 of Y
+        component 58: χ = 1, 1 routing point, on component 2 of Y
+        component 59: χ = 1, 1 routing point, on component 3 of Y
+        component 60: χ = 1, 1 routing point, on component 1 of Y
+        component 61: χ = 1, 1 routing point, on component 2 of Y
+        component 62: χ = 1, 1 routing point, on component 1 of Y
+        component 63: χ = 1, 1 routing point, on component 1 of Y
+        component 64: χ = 1, 1 routing point, on component 1 of Y
+        component 65: χ = 1, 3 routing points, on component 2 of Y
+        component 66: χ = 1, 1 routing point, on component 2 of Y
+        component 67: χ = 1, 1 routing point, on component 3 of Y
+        component 68: χ = 1, 1 routing point, on component 3 of Y
+        component 69: χ = 1, 1 routing point, on component 1 of Y
+        component 70: χ = 1, 1 routing point, on component 3 of Y
+        component 71: χ = 1, 1 routing point, on component 3 of Y
+        component 72: χ = 1, 1 routing point, on component 3 of Y
+        component 73: χ = 1, 1 routing point, on component 1 of Y
+        component 74: χ = 1, 1 routing point, on component 2 of Y
+        component 75: χ = 1, 1 routing point, on component 2 of Y
+        component 76: χ = 1, 1 routing point, on component 1 of Y
+        component 77: χ = 1, 1 routing point, on component 1 of Y
+        component 78: χ = 1, 1 routing point, on component 2 of Y
+        component 79: χ = 1, 1 routing point, on component 1 of Y
+B2      Julia ok  (0:00:53)
+        1 smoothly connected component, Euler characteristic 1 in all
+        component 1: χ = 1, 1 routing point, on component 1 of Y
+B3      Julia ok  (0:00:55)
+        4 smoothly connected components, Euler characteristic 4 in all
+        component 1: χ = 1, 1 routing point, on component 1 of Y
+        component 2: χ = 1, 1 routing point, on component 3 of Y
+        component 3: χ = 1, 1 routing point, on component 4 of Y
+        component 4: χ = 1, 1 routing point, on component 2 of Y
+B4      Julia ok  (0:00:56)
+        5 smoothly connected components, Euler characteristic 5 in all
+        component 1: χ = 1, 1 routing point, on component 2 of Y
+        component 2: χ = 1, 1 routing point, on component 4 of Y
+        component 3: χ = 1, 1 routing point, on component 1 of Y
+        component 4: χ = 1, 1 routing point, on component 3 of Y
+        component 5: χ = 1, 1 routing point, on component 5 of Y
+par     Julia ok  (0:01:30)
+        15 routing points, 50 s
+        15 components, 0 s
+        15 smoothly connected components, Euler characteristic 15 in all
+        component 1: χ = 1, 1 routing point, on component 4 of Y
+        component 2: χ = 1, 1 routing point, on component 4 of Y
+        component 3: χ = 1, 1 routing point, on component 4 of Y
+        component 4: χ = 1, 1 routing point, on component 4 of Y
+        component 5: χ = 1, 1 routing point, on component 3 of Y
+        component 6: χ = 1, 1 routing point, on component 3 of Y
+        component 7: χ = 1, 1 routing point, on component 3 of Y
+        component 8: χ = 1, 1 routing point, on component 3 of Y
+        component 9: χ = 1, 1 routing point, on component 4 of Y
+        component 10: χ = 1, 1 routing point, on component 2 of Y
+        component 11: χ = 1, 1 routing point, on component 3 of Y
+        component 12: χ = 1, 1 routing point, on component 2 of Y
+        component 13: χ = 1, 1 routing point, on component 2 of Y
+        component 14: χ = 1, 1 routing point, on component 2 of Y
+        component 15: χ = 1, 1 routing point, on component 2 of Y
+           1. dim 2, degree 3: lies in the singular locus (removed); smooth components not computed
+acn     Julia ok  (0:02:22)
+        129 routing points, 95 s
+        127 components, 6 s
+        127 smoothly connected components, Euler characteristic 127 in all
+        component 1: χ = 1, 1 routing point, on component 2 of Y
+        component 2: χ = 1, 1 routing point, on component 1 of Y
+        component 3: χ = 1, 1 routing point, on component 1 of Y
+        component 4: χ = 1, 1 routing point, on component 2 of Y
+        component 5: χ = 1, 1 routing point, on component 1 of Y
+        component 6: χ = 1, 1 routing point, on component 2 of Y
+        component 7: χ = 1, 1 routing point, on component 2 of Y
+        component 8: χ = 1, 1 routing point, on component 1 of Y
+        component 9: χ = 1, 1 routing point, on component 1 of Y
+        component 10: χ = 1, 1 routing point, on component 2 of Y
+        component 11: χ = 1, 1 routing point, on component 1 of Y
+        component 12: χ = 1, 1 routing point, on component 2 of Y
+        component 13: χ = 1, 1 routing point, on component 2 of Y
+        component 14: χ = 1, 1 routing point, on component 1 of Y
+        component 15: χ = 1, 1 routing point, on component 2 of Y
+        component 16: χ = 1, 1 routing point, on component 2 of Y
+        component 17: χ = 1, 1 routing point, on component 2 of Y
+        component 18: χ = 1, 1 routing point, on component 2 of Y
+        component 19: χ = 1, 1 routing point, on component 1 of Y
+        component 20: χ = 1, 1 routing point, on component 2 of Y
+        component 21: χ = 1, 1 routing point, on component 2 of Y
+        component 22: χ = 1, 1 routing point, on component 2 of Y
+        component 23: χ = 1, 1 routing point, on component 2 of Y
+        component 24: χ = 1, 1 routing point, on component 2 of Y
+        component 25: χ = 1, 1 routing point, on component 2 of Y
+        component 26: χ = 1, 1 routing point, on component 1 of Y
+        component 27: χ = 1, 1 routing point, on component 2 of Y
+        component 28: χ = 1, 1 routing point, on component 2 of Y
+        component 29: χ = 1, 1 routing point, on component 2 of Y
+        component 30: χ = 1, 1 routing point, on component 2 of Y
+        component 31: χ = 1, 1 routing point, on component 2 of Y
+        component 32: χ = 1, 1 routing point, on component 2 of Y
+        component 33: χ = 1, 1 routing point, on component 2 of Y
+        component 34: χ = 1, 1 routing point, on component 2 of Y
+        component 35: χ = 1, 1 routing point, on component 2 of Y
+        component 36: χ = 1, 1 routing point, on component 2 of Y
+        component 37: χ = 1, 1 routing point, on component 2 of Y
+        component 38: χ = 1, 1 routing point, on component 2 of Y
+        component 39: χ = 1, 1 routing point, on component 1 of Y
+        component 40: χ = 1, 1 routing point, on component 2 of Y
+        component 41: χ = 1, 1 routing point, on component 2 of Y
+        component 42: χ = 1, 1 routing point, on component 2 of Y
+        component 43: χ = 1, 1 routing point, on component 2 of Y
+        component 44: χ = 1, 1 routing point, on component 2 of Y
+        component 45: χ = 1, 1 routing point, on component 1 of Y
+        component 46: χ = 1, 1 routing point, on component 2 of Y
+        component 47: χ = 1, 1 routing point, on component 1 of Y
+        component 48: χ = 1, 1 routing point, on component 2 of Y
+        component 49: χ = 1, 1 routing point, on component 2 of Y
+        component 50: χ = 1, 1 routing point, on component 1 of Y
+        component 51: χ = 1, 1 routing point, on component 1 of Y
+        component 52: χ = 1, 3 routing points, on component 2 of Y
+        component 53: χ = 1, 1 routing point, on component 2 of Y
+        component 54: χ = 1, 1 routing point, on component 2 of Y
+        component 55: χ = 1, 1 routing point, on component 2 of Y
+        component 56: χ = 1, 1 routing point, on component 2 of Y
+        component 57: χ = 1, 1 routing point, on component 2 of Y
+        component 58: χ = 1, 1 routing point, on component 2 of Y
+        component 59: χ = 1, 1 routing point, on component 2 of Y
+        component 60: χ = 1, 1 routing point, on component 2 of Y
+        component 61: χ = 1, 1 routing point, on component 1 of Y
+        component 62: χ = 1, 1 routing point, on component 2 of Y
+        component 63: χ = 1, 1 routing point, on component 1 of Y
+        component 64: χ = 1, 1 routing point, on component 1 of Y
+        component 65: χ = 1, 1 routing point, on component 1 of Y
+        component 66: χ = 1, 1 routing point, on component 1 of Y
+        component 67: χ = 1, 1 routing point, on component 1 of Y
+        component 68: χ = 1, 1 routing point, on component 2 of Y
+        component 69: χ = 1, 1 routing point, on component 2 of Y
+        component 70: χ = 1, 1 routing point, on component 2 of Y
+        component 71: χ = 1, 1 routing point, on component 2 of Y
+        component 72: χ = 1, 1 routing point, on component 2 of Y
+        component 73: χ = 1, 1 routing point, on component 1 of Y
+        component 74: χ = 1, 1 routing point, on component 1 of Y
+        component 75: χ = 1, 1 routing point, on component 2 of Y
+        component 76: χ = 1, 1 routing point, on component 2 of Y
+        component 77: χ = 1, 1 routing point, on component 2 of Y
+        component 78: χ = 1, 1 routing point, on component 2 of Y
+        component 79: χ = 1, 1 routing point, on component 2 of Y
+        component 80: χ = 1, 1 routing point, on component 2 of Y
+        component 81: χ = 1, 1 routing point, on component 2 of Y
+        component 82: χ = 1, 1 routing point, on component 2 of Y
+        component 83: χ = 1, 1 routing point, on component 2 of Y
+        component 84: χ = 1, 1 routing point, on component 2 of Y
+        component 85: χ = 1, 1 routing point, on component 1 of Y
+        component 86: χ = 1, 1 routing point, on component 2 of Y
+        component 87: χ = 1, 1 routing point, on component 2 of Y
+        component 88: χ = 1, 1 routing point, on component 2 of Y
+        component 89: χ = 1, 1 routing point, on component 2 of Y
+        component 90: χ = 1, 1 routing point, on component 2 of Y
+        component 91: χ = 1, 1 routing point, on component 2 of Y
+        component 92: χ = 1, 1 routing point, on component 2 of Y
+        component 93: χ = 1, 1 routing point, on component 2 of Y
+        component 94: χ = 1, 1 routing point, on component 2 of Y
+        component 95: χ = 1, 1 routing point, on component 2 of Y
+        component 96: χ = 1, 1 routing point, on component 2 of Y
+        component 97: χ = 1, 1 routing point, on component 2 of Y
+        component 98: χ = 1, 1 routing point, on component 2 of Y
+        component 99: χ = 1, 1 routing point, on component 2 of Y
+        component 100: χ = 1, 1 routing point, on component 2 of Y
+        component 101: χ = 1, 1 routing point, on component 2 of Y
+        component 102: χ = 1, 1 routing point, on component 2 of Y
+        component 103: χ = 1, 1 routing point, on component 2 of Y
+        component 104: χ = 1, 1 routing point, on component 2 of Y
+        component 105: χ = 1, 1 routing point, on component 2 of Y
+        component 106: χ = 1, 1 routing point, on component 2 of Y
+        component 107: χ = 1, 1 routing point, on component 2 of Y
+        component 108: χ = 1, 1 routing point, on component 2 of Y
+        component 109: χ = 1, 1 routing point, on component 2 of Y
+        component 110: χ = 1, 1 routing point, on component 2 of Y
+        component 111: χ = 1, 1 routing point, on component 2 of Y
+        component 112: χ = 1, 1 routing point, on component 2 of Y
+        component 113: χ = 1, 1 routing point, on component 2 of Y
+        component 114: χ = 1, 1 routing point, on component 2 of Y
+        component 115: χ = 1, 1 routing point, on component 2 of Y
+        component 116: χ = 1, 1 routing point, on component 2 of Y
+        component 117: χ = 1, 1 routing point, on component 1 of Y
+        component 118: χ = 1, 1 routing point, on component 2 of Y
+        component 119: χ = 1, 1 routing point, on component 2 of Y
+        component 120: χ = 1, 1 routing point, on component 2 of Y
+        component 121: χ = 1, 1 routing point, on component 1 of Y
+        component 122: χ = 1, 1 routing point, on component 2 of Y
+        component 123: χ = 1, 1 routing point, on component 2 of Y
+        component 124: χ = 1, 1 routing point, on component 2 of Y
+        component 125: χ = 1, 1 routing point, on component 2 of Y
+        component 126: χ = 1, 1 routing point, on component 2 of Y
+        component 127: χ = 1, 1 routing point, on component 2 of Y
+npltrb  Julia ok  (0:00:36)
+        0 smoothly connected components, Euler characteristic 0 in all
+           1. dim 2, degree 1: lies in the singular locus (removed); smooth components not computed
+           2. dim 2, degree 4: lies in the singular locus (removed); smooth components not computed
+tdetri  Julia ok  (0:01:25)
+        35 routing points, 45 s
+        35 components, 0 s
+        35 smoothly connected components, Euler characteristic 35 in all
+        component 1: χ = 1, 1 routing point, on component 1 of Y
+        component 2: χ = 1, 1 routing point, on component 7 of Y
+        component 3: χ = 1, 1 routing point, on component 3 of Y
+        component 4: χ = 1, 1 routing point, on component 7 of Y
+        component 5: χ = 1, 1 routing point, on component 4 of Y
+        component 6: χ = 1, 1 routing point, on component 7 of Y
+        component 7: χ = 1, 1 routing point, on component 5 of Y
+        component 8: χ = 1, 1 routing point, on component 6 of Y
+        component 9: χ = 1, 1 routing point, on component 4 of Y
+        component 10: χ = 1, 1 routing point, on component 3 of Y
+        component 11: χ = 1, 1 routing point, on component 1 of Y
+        component 12: χ = 1, 1 routing point, on component 2 of Y
+        component 13: χ = 1, 1 routing point, on component 4 of Y
+        component 14: χ = 1, 1 routing point, on component 3 of Y
+        component 15: χ = 1, 1 routing point, on component 2 of Y
+        component 16: χ = 1, 1 routing point, on component 5 of Y
+        component 17: χ = 1, 1 routing point, on component 6 of Y
+        component 18: χ = 1, 1 routing point, on component 1 of Y
+        component 19: χ = 1, 1 routing point, on component 1 of Y
+        component 20: χ = 1, 1 routing point, on component 6 of Y
+        component 21: χ = 1, 1 routing point, on component 6 of Y
+        component 22: χ = 1, 1 routing point, on component 3 of Y
+        component 23: χ = 1, 1 routing point, on component 5 of Y
+        component 24: χ = 1, 1 routing point, on component 2 of Y
+        component 25: χ = 1, 1 routing point, on component 2 of Y
+        component 26: χ = 1, 1 routing point, on component 7 of Y
+        component 27: χ = 1, 1 routing point, on component 5 of Y
+        component 28: χ = 1, 1 routing point, on component 5 of Y
+        component 29: χ = 1, 1 routing point, on component 2 of Y
+        component 30: χ = 1, 1 routing point, on component 6 of Y
+        component 31: χ = 1, 1 routing point, on component 4 of Y
+        component 32: χ = 1, 1 routing point, on component 1 of Y
+        component 33: χ = 1, 1 routing point, on component 7 of Y
+        component 34: χ = 1, 1 routing point, on component 4 of Y
+        component 35: χ = 1, 1 routing point, on component 3 of Y
+debox   Julia ok  (0:01:47)
+        51 routing points, 63 s
+        47 components, 5 s
+        47 smoothly connected components, Euler characteristic 47 in all
+        component 1: χ = 1, 1 routing point, on component 3 of Y
+        component 2: χ = 1, 1 routing point, on component 3 of Y
+        component 3: χ = 1, 1 routing point, on component 3 of Y
+        component 4: χ = 1, 1 routing point, on component 3 of Y
+        component 5: χ = 1, 1 routing point, on component 2 of Y
+        component 6: χ = 1, 1 routing point, on component 2 of Y
+        component 7: χ = 1, 1 routing point, on component 3 of Y
+        component 8: χ = 1, 1 routing point, on component 3 of Y
+        component 9: χ = 1, 1 routing point, on component 3 of Y
+        component 10: χ = 1, 1 routing point, on component 2 of Y
+        component 11: χ = 1, 3 routing points, on component 2 of Y
+        component 12: χ = 1, 1 routing point, on component 2 of Y
+        component 13: χ = 1, 1 routing point, on component 2 of Y
+        component 14: χ = 1, 3 routing points, on component 2 of Y
+        component 15: χ = 1, 1 routing point, on component 2 of Y
+        component 16: χ = 1, 1 routing point, on component 2 of Y
+        component 17: χ = 1, 1 routing point, on component 3 of Y
+        component 18: χ = 1, 1 routing point, on component 2 of Y
+        component 19: χ = 1, 1 routing point, on component 3 of Y
+        component 20: χ = 1, 1 routing point, on component 2 of Y
+        component 21: χ = 1, 1 routing point, on component 2 of Y
+        component 22: χ = 1, 1 routing point, on component 3 of Y
+        component 23: χ = 1, 1 routing point, on component 2 of Y
+        component 24: χ = 1, 1 routing point, on component 2 of Y
+        component 25: χ = 1, 1 routing point, on component 2 of Y
+        component 26: χ = 1, 1 routing point, on component 3 of Y
+        component 27: χ = 1, 1 routing point, on component 2 of Y
+        component 28: χ = 1, 1 routing point, on component 2 of Y
+        component 29: χ = 1, 1 routing point, on component 2 of Y
+        component 30: χ = 1, 1 routing point, on component 3 of Y
+        component 31: χ = 1, 1 routing point, on component 2 of Y
+        component 32: χ = 1, 1 routing point, on component 2 of Y
+        component 33: χ = 1, 1 routing point, on component 3 of Y
+        component 34: χ = 1, 1 routing point, on component 3 of Y
+        component 35: χ = 1, 1 routing point, on component 2 of Y
+        component 36: χ = 1, 1 routing point, on component 2 of Y
+        component 37: χ = 1, 1 routing point, on component 3 of Y
+        component 38: χ = 1, 1 routing point, on component 2 of Y
+        component 39: χ = 1, 1 routing point, on component 2 of Y
+        component 40: χ = 1, 1 routing point, on component 2 of Y
+        component 41: χ = 1, 1 routing point, on component 2 of Y
+        component 42: χ = 1, 1 routing point, on component 3 of Y
+        component 43: χ = 1, 1 routing point, on component 2 of Y
+        component 44: χ = 1, 1 routing point, on component 2 of Y
+        component 45: χ = 1, 1 routing point, on component 2 of Y
+        component 46: χ = 1, 1 routing point, on component 2 of Y
+        component 47: χ = 1, 1 routing point, on component 3 of Y
+           1. dim 3, degree 3: lies in the singular locus (removed); smooth components not computed
+tdebox  Julia ok  (0:03:35)
+        147 routing points, 170 s
+        143 components, 5 s
+        143 smoothly connected components, Euler characteristic 143 in all
+        component 1: χ = 1, 1 routing point, on component 7 of Y
+        component 2: χ = 1, 1 routing point, on component 5 of Y
+        component 3: χ = 1, 1 routing point, on component 5 of Y
+        component 4: χ = 1, 1 routing point, on component 6 of Y
+        component 5: χ = 1, 1 routing point, on component 6 of Y
+        component 6: χ = 1, 1 routing point, on component 7 of Y
+        component 7: χ = 1, 1 routing point, on component 7 of Y
+        component 8: χ = 1, 1 routing point, on component 3 of Y
+        component 9: χ = 1, 1 routing point, on component 6 of Y
+        component 10: χ = 1, 1 routing point, on component 5 of Y
+        component 11: χ = 1, 1 routing point, on component 6 of Y
+        component 12: χ = 1, 1 routing point, on component 4 of Y
+        component 13: χ = 1, 1 routing point, on component 6 of Y
+        component 14: χ = 1, 1 routing point, on component 5 of Y
+        component 15: χ = 1, 1 routing point, on component 7 of Y
+        component 16: χ = 1, 1 routing point, on component 3 of Y
+        component 17: χ = 1, 1 routing point, on component 7 of Y
+        component 18: χ = 1, 1 routing point, on component 6 of Y
+        component 19: χ = 1, 1 routing point, on component 5 of Y
+        component 20: χ = 1, 1 routing point, on component 3 of Y
+        component 21: χ = 1, 1 routing point, on component 6 of Y
+        component 22: χ = 1, 1 routing point, on component 5 of Y
+        component 23: χ = 1, 1 routing point, on component 7 of Y
+        component 24: χ = 1, 1 routing point, on component 5 of Y
+        component 25: χ = 1, 1 routing point, on component 6 of Y
+        component 26: χ = 1, 1 routing point, on component 7 of Y
+        component 27: χ = 1, 1 routing point, on component 6 of Y
+        component 28: χ = 1, 1 routing point, on component 6 of Y
+        component 29: χ = 1, 1 routing point, on component 7 of Y
+        component 30: χ = 1, 1 routing point, on component 3 of Y
+        component 31: χ = 1, 1 routing point, on component 5 of Y
+        component 32: χ = 1, 1 routing point, on component 5 of Y
+        component 33: χ = 1, 1 routing point, on component 7 of Y
+        component 34: χ = 1, 1 routing point, on component 6 of Y
+        component 35: χ = 1, 1 routing point, on component 5 of Y
+        component 36: χ = 1, 1 routing point, on component 5 of Y
+        component 37: χ = 1, 1 routing point, on component 7 of Y
+        component 38: χ = 1, 1 routing point, on component 3 of Y
+        component 39: χ = 1, 1 routing point, on component 3 of Y
+        component 40: χ = 1, 1 routing point, on component 3 of Y
+        component 41: χ = 1, 1 routing point, on component 5 of Y
+        component 42: χ = 1, 1 routing point, on component 6 of Y
+        component 43: χ = 1, 1 routing point, on component 6 of Y
+        component 44: χ = 1, 1 routing point, on component 3 of Y
+        component 45: χ = 1, 1 routing point, on component 6 of Y
+        component 46: χ = 1, 1 routing point, on component 5 of Y
+        component 47: χ = 1, 1 routing point, on component 4 of Y
+        component 48: χ = 1, 1 routing point, on component 5 of Y
+        component 49: χ = 1, 1 routing point, on component 5 of Y
+        component 50: χ = 1, 1 routing point, on component 7 of Y
+        component 51: χ = 1, 3 routing points, on component 3 of Y
+        component 52: χ = 1, 1 routing point, on component 5 of Y
+        component 53: χ = 1, 1 routing point, on component 4 of Y
+        component 54: χ = 1, 1 routing point, on component 3 of Y
+        component 55: χ = 1, 1 routing point, on component 3 of Y
+        component 56: χ = 1, 1 routing point, on component 6 of Y
+        component 57: χ = 1, 1 routing point, on component 5 of Y
+        component 58: χ = 1, 1 routing point, on component 5 of Y
+        component 59: χ = 1, 1 routing point, on component 4 of Y
+        component 60: χ = 1, 1 routing point, on component 4 of Y
+        component 61: χ = 1, 1 routing point, on component 4 of Y
+        component 62: χ = 1, 1 routing point, on component 5 of Y
+        component 63: χ = 1, 1 routing point, on component 7 of Y
+        component 64: χ = 1, 1 routing point, on component 6 of Y
+        component 65: χ = 1, 1 routing point, on component 3 of Y
+        component 66: χ = 1, 1 routing point, on component 6 of Y
+        component 67: χ = 1, 1 routing point, on component 3 of Y
+        component 68: χ = 1, 1 routing point, on component 7 of Y
+        component 69: χ = 1, 1 routing point, on component 5 of Y
+        component 70: χ = 1, 1 routing point, on component 6 of Y
+        component 71: χ = 1, 1 routing point, on component 6 of Y
+        component 72: χ = 1, 1 routing point, on component 3 of Y
+        component 73: χ = 1, 1 routing point, on component 3 of Y
+        component 74: χ = 1, 1 routing point, on component 5 of Y
+        component 75: χ = 1, 1 routing point, on component 6 of Y
+        component 76: χ = 1, 1 routing point, on component 4 of Y
+        component 77: χ = 1, 1 routing point, on component 3 of Y
+        component 78: χ = 1, 1 routing point, on component 6 of Y
+        component 79: χ = 1, 1 routing point, on component 6 of Y
+        component 80: χ = 1, 1 routing point, on component 6 of Y
+        component 81: χ = 1, 1 routing point, on component 6 of Y
+        component 82: χ = 1, 1 routing point, on component 3 of Y
+        component 83: χ = 1, 1 routing point, on component 6 of Y
+        component 84: χ = 1, 1 routing point, on component 6 of Y
+        component 85: χ = 1, 1 routing point, on component 6 of Y
+        component 86: χ = 1, 1 routing point, on component 6 of Y
+        component 87: χ = 1, 1 routing point, on component 5 of Y
+        component 88: χ = 1, 1 routing point, on component 3 of Y
+        component 89: χ = 1, 1 routing point, on component 3 of Y
+        component 90: χ = 1, 1 routing point, on component 3 of Y
+        component 91: χ = 1, 1 routing point, on component 3 of Y
+        component 92: χ = 1, 1 routing point, on component 4 of Y
+        component 93: χ = 1, 1 routing point, on component 5 of Y
+        component 94: χ = 1, 1 routing point, on component 4 of Y
+        component 95: χ = 1, 1 routing point, on component 6 of Y
+        component 96: χ = 1, 1 routing point, on component 5 of Y
+        component 97: χ = 1, 1 routing point, on component 7 of Y
+        component 98: χ = 1, 1 routing point, on component 5 of Y
+        component 99: χ = 1, 1 routing point, on component 6 of Y
+        component 100: χ = 1, 1 routing point, on component 4 of Y
+        component 101: χ = 1, 1 routing point, on component 7 of Y
+        component 102: χ = 1, 1 routing point, on component 4 of Y
+        component 103: χ = 1, 1 routing point, on component 4 of Y
+        component 104: χ = 1, 3 routing points, on component 4 of Y
+        component 105: χ = 1, 1 routing point, on component 4 of Y
+        component 106: χ = 1, 1 routing point, on component 6 of Y
+        component 107: χ = 1, 1 routing point, on component 3 of Y
+        component 108: χ = 1, 1 routing point, on component 5 of Y
+        component 109: χ = 1, 1 routing point, on component 6 of Y
+        component 110: χ = 1, 1 routing point, on component 4 of Y
+        component 111: χ = 1, 1 routing point, on component 4 of Y
+        component 112: χ = 1, 1 routing point, on component 4 of Y
+        component 113: χ = 1, 1 routing point, on component 4 of Y
+        component 114: χ = 1, 1 routing point, on component 4 of Y
+        component 115: χ = 1, 1 routing point, on component 5 of Y
+        component 116: χ = 1, 1 routing point, on component 4 of Y
+        component 117: χ = 1, 1 routing point, on component 5 of Y
+        component 118: χ = 1, 1 routing point, on component 5 of Y
+        component 119: χ = 1, 1 routing point, on component 4 of Y
+        component 120: χ = 1, 1 routing point, on component 4 of Y
+        component 121: χ = 1, 1 routing point, on component 4 of Y
+        component 122: χ = 1, 1 routing point, on component 3 of Y
+        component 123: χ = 1, 1 routing point, on component 4 of Y
+        component 124: χ = 1, 1 routing point, on component 5 of Y
+        component 125: χ = 1, 1 routing point, on component 4 of Y
+        component 126: χ = 1, 1 routing point, on component 4 of Y
+        component 127: χ = 1, 1 routing point, on component 4 of Y
+        component 128: χ = 1, 1 routing point, on component 6 of Y
+        component 129: χ = 1, 1 routing point, on component 3 of Y
+        component 130: χ = 1, 1 routing point, on component 5 of Y
+        component 131: χ = 1, 1 routing point, on component 6 of Y
+        component 132: χ = 1, 1 routing point, on component 3 of Y
+        component 133: χ = 1, 1 routing point, on component 3 of Y
+        component 134: χ = 1, 1 routing point, on component 3 of Y
+        component 135: χ = 1, 1 routing point, on component 5 of Y
+        component 136: χ = 1, 1 routing point, on component 3 of Y
+        component 137: χ = 1, 1 routing point, on component 3 of Y
+        component 138: χ = 1, 1 routing point, on component 5 of Y
+        component 139: χ = 1, 1 routing point, on component 3 of Y
+        component 140: χ = 1, 1 routing point, on component 4 of Y
+        component 141: χ = 1, 1 routing point, on component 4 of Y
+        component 142: χ = 1, 1 routing point, on component 4 of Y
+        component 143: χ = 1, 1 routing point, on component 5 of Y
+           1. dim 3, degree 3: lies in the singular locus (removed); smooth components not computed
+           2. dim 3, degree 3: lies in the singular locus (removed); smooth components not computed
+pltrb   Julia ok  (0:01:25)
+        6 routing points, 45 s
+        6 components, 0 s
+        6 smoothly connected components, Euler characteristic 6 in all
+        component 1: χ = 1, 1 routing point, on component 1 of Y
+        component 2: χ = 1, 1 routing point, on component 1 of Y
+        component 3: χ = 1, 1 routing point, on component 2 of Y
+        component 4: χ = 1, 1 routing point, on component 2 of Y
+        component 5: χ = 1, 1 routing point, on component 1 of Y
+        component 6: χ = 1, 1 routing point, on component 2 of Y
+dbox    Julia ok  (0:03:05)
+        74 routing points, 140 s
+        70 components, 5 s
+        70 smoothly connected components, Euler characteristic 70 in all
+        component 1: χ = 1, 1 routing point, on component 3 of Y
+        component 2: χ = 1, 1 routing point, on component 5 of Y
+        component 3: χ = 1, 1 routing point, on component 3 of Y
+        component 4: χ = 1, 1 routing point, on component 5 of Y
+        component 5: χ = 1, 1 routing point, on component 5 of Y
+        component 6: χ = 1, 1 routing point, on component 5 of Y
+        component 7: χ = 1, 1 routing point, on component 3 of Y
+        component 8: χ = 1, 1 routing point, on component 3 of Y
+        component 9: χ = 1, 1 routing point, on component 4 of Y
+        component 10: χ = 1, 1 routing point, on component 3 of Y
+        component 11: χ = 1, 1 routing point, on component 5 of Y
+        component 12: χ = 1, 1 routing point, on component 4 of Y
+        component 13: χ = 1, 1 routing point, on component 4 of Y
+        component 14: χ = 1, 1 routing point, on component 4 of Y
+        component 15: χ = 1, 1 routing point, on component 5 of Y
+        component 16: χ = 1, 1 routing point, on component 3 of Y
+        component 17: χ = 1, 1 routing point, on component 5 of Y
+        component 18: χ = 1, 1 routing point, on component 5 of Y
+        component 19: χ = 1, 1 routing point, on component 5 of Y
+        component 20: χ = 1, 1 routing point, on component 4 of Y
+        component 21: χ = 1, 3 routing points, on component 3 of Y
+        component 22: χ = 1, 1 routing point, on component 5 of Y
+        component 23: χ = 1, 1 routing point, on component 5 of Y
+        component 24: χ = 1, 1 routing point, on component 5 of Y
+        component 25: χ = 1, 1 routing point, on component 4 of Y
+        component 26: χ = 1, 1 routing point, on component 5 of Y
+        component 27: χ = 1, 1 routing point, on component 5 of Y
+        component 28: χ = 1, 1 routing point, on component 4 of Y
+        component 29: χ = 1, 1 routing point, on component 3 of Y
+        component 30: χ = 1, 1 routing point, on component 5 of Y
+        component 31: χ = 1, 1 routing point, on component 4 of Y
+        component 32: χ = 1, 1 routing point, on component 4 of Y
+        component 33: χ = 1, 1 routing point, on component 4 of Y
+        component 34: χ = 1, 1 routing point, on component 3 of Y
+        component 35: χ = 1, 3 routing points, on component 3 of Y
+        component 36: χ = 1, 1 routing point, on component 5 of Y
+        component 37: χ = 1, 1 routing point, on component 3 of Y
+        component 38: χ = 1, 1 routing point, on component 5 of Y
+        component 39: χ = 1, 1 routing point, on component 4 of Y
+        component 40: χ = 1, 1 routing point, on component 3 of Y
+        component 41: χ = 1, 1 routing point, on component 3 of Y
+        component 42: χ = 1, 1 routing point, on component 5 of Y
+        component 43: χ = 1, 1 routing point, on component 4 of Y
+        component 44: χ = 1, 1 routing point, on component 4 of Y
+        component 45: χ = 1, 1 routing point, on component 5 of Y
+        component 46: χ = 1, 1 routing point, on component 4 of Y
+        component 47: χ = 1, 1 routing point, on component 5 of Y
+        component 48: χ = 1, 1 routing point, on component 3 of Y
+        component 49: χ = 1, 1 routing point, on component 3 of Y
+        component 50: χ = 1, 1 routing point, on component 4 of Y
+        component 51: χ = 1, 1 routing point, on component 3 of Y
+        component 52: χ = 1, 1 routing point, on component 3 of Y
+        component 53: χ = 1, 1 routing point, on component 4 of Y
+        component 54: χ = 1, 1 routing point, on component 3 of Y
+        component 55: χ = 1, 1 routing point, on component 5 of Y
+        component 56: χ = 1, 1 routing point, on component 5 of Y
+        component 57: χ = 1, 1 routing point, on component 5 of Y
+        component 58: χ = 1, 1 routing point, on component 4 of Y
+        component 59: χ = 1, 1 routing point, on component 4 of Y
+        component 60: χ = 1, 1 routing point, on component 5 of Y
+        component 61: χ = 1, 1 routing point, on component 3 of Y
+        component 62: χ = 1, 1 routing point, on component 3 of Y
+        component 63: χ = 1, 1 routing point, on component 5 of Y
+        component 64: χ = 1, 1 routing point, on component 5 of Y
+        component 65: χ = 1, 1 routing point, on component 4 of Y
+        component 66: χ = 1, 1 routing point, on component 4 of Y
+        component 67: χ = 1, 1 routing point, on component 5 of Y
+        component 68: χ = 1, 1 routing point, on component 5 of Y
+        component 69: χ = 1, 1 routing point, on component 3 of Y
+        component 70: χ = 1, 1 routing point, on component 3 of Y
+           1. dim 3, degree 4: lies in the singular locus (removed); smooth components not computed
+           2. dim 3, degree 6: lies in the singular locus (removed); smooth components not computed
+pentb   Macaulay2 STOPPED at its limit of 4h  (4:00:01)
+        pentb: Macaulay2 timed out or failed, so there is no singular locus and no components (see logs/pentb.m2.log)
+env     Macaulay2 STOPPED at its limit of 4h  (4:00:02)
+        env: Macaulay2 timed out or failed, so there is no singular locus and no components (see logs/env.m2.log)
+
+finished 2026-11-23 21:26:51, after 4:00:02

@@ -1,0 +1,39 @@
+┌ Warning: pltrb: only 25 of 200 starting points from the positive part of the box landed on the variety (box = 10.0)
+└ @ Main ~/Documents/Research/projects/routing_functions/examples/positive_landau/positive.jl:288
+6 routing points, 45 s
+6 components, 0 s
+
+LandauSystem pltrb (planar triangle-box): 7 equations in (α₁, α₂, α₃, α₄, α₅, y, s, M), expected dimension 1
+
+Y ∖ Sing(Y), dimension 1
+f = 1
+6 routing points (45 s), connectivity 0 s
+
+6 smoothly connected components, Euler characteristic 6 in all
+
+component 1: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.0, -0.495372, 0.504628, -0.495372, -1.0, 1.0],  s = 3.0,  M = 3.0   on component 1 of Y
+
+component 2: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.0, 0.657658, 1.65766, 0.657658, -1.0, 1.0],  s = 3.0,  M = 3.0   on component 1 of Y
+
+component 3: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.0, 0.587828, -1.58783, 0.587828, -1.0, 1.0],  s = 3.0,  M = 1.0   on component 2 of Y
+
+component 4: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.0, -0.499859, -0.500141, -0.499859, -1.0, 1.0],  s = 3.0,  M = 1.0   on component 2 of Y
+
+component 5: χ = 1, 1 routing point, on component 1 of Y
+   index 0:  α = [-1.0, -1.46948, -0.469475, -1.46948, -1.0, 1.0],  s = 3.0,  M = 3.0   on component 1 of Y
+
+component 6: χ = 1, 1 routing point, on component 2 of Y
+   index 0:  α = [-1.0, -1.56778, 0.567779, -1.56778, -1.0, 1.0],  s = 3.0,  M = 1.0   on component 2 of Y
+
+the irreducible components of Y:
+   1. dim 1, degree 1: regular
+      {-3 + M, -3 + s, 1 + α₅, -1 + α₃ - α₄, α₂ - α₄, 1 + α₁}
+   2. dim 1, degree 1: regular
+      {-1 + M, -3 + s, 1 + α₅, 1 + α₃ + α₄, α₂ - α₄, 1 + α₁}
+
+Components are complete only if every routing point was found, and the search for them
+stops heuristically. Each routing point has its Morse index, and χ = ∑ (-1)^index.
