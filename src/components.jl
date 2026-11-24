@@ -130,3 +130,77 @@ end
 
 connected_components(r::RoutingFunction, G; kwargs...) =
     connected_components(RoutingCache(r, G); kwargs...)
+
+"""
+    component_index(cache, components, z; tol=1e-4, kwargs...)
+
+Numerically identify the component of `z ∈ X_r`. Returns an index into
+`components`, or `nothing` if the flow fails to reach a known routing point
+or the endpoint lies within `tol` of targets from different components.
+
+Assumes `z` lies on the variety and `components` was computed for `cache`.
+Additional keywords, such as `dtmax`, `tspan`, and `maxiters`, go to
+`gradient_flow!`. The input `z` is left unchanged.
+"""
+function component_index(
+    cache::RoutingCache,
+    components::AbstractVector{Component},
+    z::AbstractVector{<:Real};
+    tol::Real = 1e-4,
+    kwargs...,
+)
+    length(z) == cache.n || throw(DimensionMismatch("expected $(cache.n) coordinates"))
+    isfinite(tol) && tol > 0 || throw(ArgumentError("tol must be finite and positive"))
+
+    # gradient_flow! overwrites its starting point with the final position.
+    x = collect(Float64, z)
+    all(isfinite, x) || throw(ArgumentError("expected finite coordinates"))
+
+    # The denominator of r is positive, so sign(f) = sign(r) throughout X_r.
+    # A path in X_r can only reach routing points with the same sign.
+    side = sign(evaluate_f(cache.r, x))
+    iszero(side) && throw(DomainError(z, "z lies on the deleted zero locus"))
+
+    targets = Vector{Float64}[]
+    owners = Int[]
+    for i in eachindex(components), p in components[i].points
+        # A stored routing point already has a known component. This also
+        # handles a query starting exactly at a saddle, where the flow is stationary.
+        x == p && return i
+        sign(evaluate_f(cache.r, p)) == side || continue
+
+        # Any routing index is eligible: reaching a saddle identifies its
+        # component just as well as reaching a maximum.
+        push!(targets, p)
+        push!(owners, i)
+    end
+
+    isempty(targets) && return nothing
+    gradient_flow!(cache, x, targets; tol, kwargs...) || return nothing
+
+    # The flow has stopped within tol of a target. Overlapping capture balls
+    # are harmless when their routing points belong to the same component.
+    j = nearest_index(x, targets)
+    for k in eachindex(targets)
+        if owners[k] != owners[j] && LA.norm(x - targets[k]) <= tol
+            return nothing
+        end
+    end
+    return owners[j]
+end
+
+"""
+    component_of(cache, components, z; kwargs...)
+
+Return the `Component` containing `z`, or `nothing` if `component_index`
+could not resolve the query.
+"""
+function component_of(
+    cache::RoutingCache,
+    components::AbstractVector{Component},
+    z::AbstractVector{<:Real};
+    kwargs...,
+)
+    i = component_index(cache, components, z; kwargs...)
+    return isnothing(i) ? nothing : components[i]
+end

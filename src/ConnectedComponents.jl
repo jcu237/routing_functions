@@ -28,6 +28,9 @@ include("components.jl")        # grouping it into components with Euler charact
 # the whole pipeline
 export RoutingFunction, RoutingCache, connected_components, Component, euler_characteristic
 
+# membership tests
+export component_index, component_of
+
 # stage by stage: routing points, their indices, the paths between them
 export routing_points, flow_to_routing_points, routing_system
 export morse_index, routing_point_indices, sort_routing_points_by_index
