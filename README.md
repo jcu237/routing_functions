@@ -54,8 +54,9 @@ Two components, each a circle (Euler characteristic 0).
 ## What goes in
 
 **The variety.** `G` is a vector of polynomials (or a single polynomial, or a
-HomotopyContinuation `System`). It must cut out `V(G)` with a jacobian of full rank:
-reduced equations (no repeated factors), as many as the codimension.
+HomotopyContinuation `System`). It must cut out `V(G)` with reduced equations (no repeated
+factors); there may be more equations than the codimension (`RoutingCache(r, G; dim = ...)`
+fixes the dimension, otherwise it is estimated).
 
 **The removed hypersurface.** `RoutingFunction(f, vars)` builds the routing function
 `r = f / gᵈ` with `g = ‖x − c‖² + 1`. The zero set of `f` is removed:
@@ -87,9 +88,8 @@ wherever the jacobian of `G` drops rank, which depends on how `G` is written. Fo
 it vanishes on all of `(x^2 + y^2 - 1)^2 = 0`, a smooth circle. See its docstring for the
 exact criterion.
 
-**`G` must have a full-rank jacobian.** Where the rank drops on a whole piece of `V(G)`
-that you want to keep, no choice of `f` helps: rewrite `G` with no repeated factors and as
-many equations as the codimension. The flows warn when they start at a point of `V(G)`
+**The jacobian of `G` must have rank equal to the codimension on `V(G)`.** Where the rank drops on a whole piece of `V(G)`
+that you want to keep, no choice of `f` helps: rewrite `G` with no repeated factors. The flows warn when they start at a point of `V(G)`
 where the rank drops and `f` does not vanish.
 
 **The centre `c`.** `RoutingFunction(f, vars, c)` fixes the centre of `g`; otherwise it is

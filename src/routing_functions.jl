@@ -26,7 +26,8 @@ connected components of `V(G) \\ V(f)`. Typical choices:
   coordinate product sorts points by the signs of the coordinates;
 * the singular points of `V(G)` **must** lie in `V(f)`: multiply `f` by a polynomial
   that vanishes on `V(G)` only at those points. [`jacobian_rank_locus`](@ref)`(G, vars)`
-  is a fallback, which can remove more than the singular points.
+  is a fallback, which can remove more than the singular points. It works when `G` has
+  more equations than the codimension of `V(G)`; do not square `G` up to get it.
 
 `vars` are the ambient variables, in the order points are written in; pass them
 whenever `f` does not involve all of them (a constant `f` involves none). `c` is the

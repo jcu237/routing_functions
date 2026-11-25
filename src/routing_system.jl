@@ -19,6 +19,11 @@ where `grad_num = g ∇f − d f ∇g = g^(d+1) ∇r` is the numerator of `∇r`
 `V(G) ∖ V(f)`); its other real solutions lie on `V(f)`. The multipliers `μ` are
 `g^(d+1)` times the Lagrange multipliers of `∇r`, and get fresh variable names, so they
 never collide with the caller's.
+
+This is the system for `G` as given, which is square only when `G` has as many
+equations as the codimension of `V(G)`. The system of a cache, `routing_system(cache)`,
+is built from the cache's squared-up equations `cache.H` (see [`RoutingCache`](@ref)),
+so it is always square; its solutions on `V(G)` are the routing points.
 """
 function routing_system(r::RoutingFunction, G)::System
     G = _as_expressions(G)

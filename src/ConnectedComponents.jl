@@ -5,6 +5,7 @@ using HomotopyContinuation, LinearAlgebra
 # bringing both into scope would make the `solve` this module re-exports ambiguous
 # for everyone who loads it. every SciML call below is qualified.
 import SciMLBase, OrdinaryDiffEq
+import Random                   # a fixed-seed stream for estimating the codimension
 
 const HC = HomotopyContinuation
 const LA = LinearAlgebra
@@ -41,7 +42,7 @@ export evaluate_r, evaluate_f, evaluate_g, evaluate_grad_r, evaluate_grad_hessia
 export distance_to_zero_locus, on_zero_locus, critical_distance
 
 # the variety X = V(G)
-export jacobian_rank_locus, evaluate_G!, jacobian_G!
+export jacobian_rank_locus, codimension, evaluate_G!, jacobian_G!
 export project_to_variety!, project_to_variety, project_to_variety_residual!
 
 # lower-level pieces: hessians on X, gradient fields and single paths

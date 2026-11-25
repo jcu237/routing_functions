@@ -16,16 +16,26 @@
 # the projected lagrangian hessian Vᵀ(∇²φ - ∑ⱼ λⱼ ∇²gⱼ)V with JGᵀλ = ∇φ in the
 # least-squares sense, for any function φ whose gradient and hessian at P are given.
 # `JG` is k × n and `HG` stacks the n × n hessians of the gⱼ row-block by row-block.
+#
+# JG has rank c on X, the codimension, which is below k when G has more equations than
+# that. the tangent space and the multipliers come from the rank-c truncated SVD: at a
+# point a little off X the singular values after the c-th are small but not zero, and
+# a rank test near machine precision would count them, losing tangent directions. the
+# multipliers are then not unique, but Vᵀ(∑ⱼ λⱼ ∇²gⱼ)V is the same for all of them.
 function _projected_hessian(
     JG::AbstractMatrix{Float64},
     HG::AbstractMatrix{Float64},
     ∇φ::AbstractVector{Float64},
-    ∇²φ::AbstractMatrix{Float64}
+    ∇²φ::AbstractMatrix{Float64},
+    c::Integer = size(JG, 1)
     )
 
     k, n = size(JG)
-    V = LA.nullspace(JG)                 # orthonormal basis of T_P X; SVD, so rank revealing
-    λ = transpose(JG) \ ∇φ               # least squares; JGᵀ is n × k, λ has length k
+    F = LA.svd(JG; full = true)
+    c = min(c, length(F.S))
+    V = F.V[:, c+1:n]                    # orthonormal basis of T_P X
+    # least squares JGᵀλ = ∇φ, truncated at rank c; λ has length k
+    λ = F.U[:, 1:c] * ((transpose(F.V[:, 1:c]) * ∇φ) ./ F.S[1:c])
     L = copy(∇²φ)
     @inbounds for j = 1:k
         L .-= λ[j] .* view(HG, (j-1)*n+1:j*n, :)
@@ -47,16 +57,18 @@ function hessian_and_tangent(cache::RoutingCache, point::AbstractVector{<:Real})
     JG = copy(jacobian_G!(cache, x))
     HC.jacobian!(cache.HG_val, cache.∇G_sys, x)
     ∇r, ∇²r = evaluate_grad_hessian_r(cache.r, x)
-    return _projected_hessian(JG, cache.HG_val, ∇r, ∇²r)
+    return _projected_hessian(JG, cache.HG_val, ∇r, ∇²r, cache.c)
 end
 
 """
     hessian(cache, P)
     hessian(r, G, P)
-    hessian(φ::Expression, G, vars, P)
+    hessian(φ::Expression, G, vars, P; dim = nothing)
 
 The hessian of `r` (or of any expression `φ`) restricted to `V(G)` at `P`, in the
 orthonormal tangent basis returned by `hessian_and_tangent`. Valid at every point.
+For an expression, `dim` is the dimension of `V(G)` at `P`; by default it is read off
+the numerical rank of the jacobian of `G` at `P`.
 """
 hessian(cache::RoutingCache, point::AbstractVector{<:Real}) =
     first(hessian_and_tangent(cache, point))
@@ -68,12 +80,16 @@ function hessian(
     φ::Expression,
     G,
     vars::Vector{Variable},
-    point::AbstractVector{<:Real}
+    point::AbstractVector{<:Real};
+    dim::Union{Nothing,Integer} = nothing
     )
 
-    JG, HG = _G_derivatives(_as_expressions(G), vars, point)
+    G = _as_expressions(G)
+    JG, HG = _G_derivatives(G, vars, point)
     ∇φ, Hφ = ambient_gradient_hessian(φ, vars, point)
-    return first(_projected_hessian(JG, HG, ∇φ, Hφ))
+    c = dim !== nothing ? length(vars) - dim :
+        _numerical_rank(LA.svdvals(JG ./ _row_scales(G, vars)))
+    return first(_projected_hessian(JG, HG, ∇φ, Hφ, c))
 end
 
 # tangential part of ∇r relative to its size: 0 at a critical point of r|X. the
@@ -82,10 +98,14 @@ function _critical_residual(
     ∇r::AbstractVector{Float64},
     JG::AbstractMatrix{Float64},
     r_val::Float64,
-    point::AbstractVector{Float64}
+    point::AbstractVector{Float64},
+    c::Integer = size(JG, 1)
     )::Float64
 
-    t = ∇r - transpose(JG) * (transpose(JG) \ ∇r)
+    # minus the projection onto the normal space, the span of the top c right singular vectors
+    F = LA.svd(JG)
+    Vc = F.V[:, 1:min(c, length(F.S))]
+    t = ∇r - Vc * (transpose(Vc) * ∇r)
     scale = LA.norm(∇r) + abs(r_val) / (1 + LA.norm(point))
     return scale == 0 ? 0.0 : LA.norm(t) / scale
 end
@@ -103,7 +123,7 @@ function _criticality(cache::RoutingCache, x::Vector{Float64})
     JG = copy(jacobian_G!(cache, x))
     HC.jacobian!(cache.HG_val, cache.∇G_sys, x)
     ∇r, ∇²r = evaluate_grad_hessian_r(cache.r, x)
-    H, V = _projected_hessian(JG, cache.HG_val, ∇r, ∇²r)
+    H, V = _projected_hessian(JG, cache.HG_val, ∇r, ∇²r, cache.c)
     gT = transpose(V) * ∇r
     E = LA.eigen(LA.Symmetric(H))
     μmax = maximum(abs, E.values; init = 0.0)
@@ -114,7 +134,7 @@ function _criticality(cache::RoutingCache, x::Vector{Float64})
     else
         LA.norm(E.vectors * ((transpose(E.vectors) * gT) ./ E.values))
     end
-    return dist, _critical_residual(∇r, JG, evaluate_r(cache.r, x), x)
+    return dist, _critical_residual(∇r, JG, evaluate_r(cache.r, x), x, cache.c)
 end
 
 """

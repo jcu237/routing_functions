@@ -14,7 +14,8 @@ Hauenstein, Hong, Smyth), with ideas borrowed from `HypersurfaceRegions.jl` and
 
 Given
 
-- `X = V(G) ⊆ ℝⁿ`, a real variety cut out by `G = [g₁, …, g_k]`, and
+- `X = V(G) ⊆ ℝⁿ`, a real variety cut out by `G = [g₁, …, g_k]` (`k` may exceed the
+  codimension `c` of `X`), and
 - a **routing function** `r = f / gᵈ`,
 
 the package returns the connected components of `U = X ∖ V(f)`, each with its Euler
@@ -24,8 +25,10 @@ Since `r|X` is a routing function, each component contains at least one
 critical point, gradient flow connects those critical points within a component and
 never between components.
 
-**Standing assumption.** `X` is smooth of dimension `n − k` at every point of `U`:
-`JG` has rank `k` there. Singular points of `X` must lie in `V(f)`, and finding an `f`
+**Standing assumption.** `X` is smooth of dimension `n − c` at every point of `U`:
+`JG` has rank `c` there (`c ≤ k`: `G` is reduced along `X`, e.g. no repeated factors; it
+need not generate the ideal of `X`).
+Singular points of `X` must lie in `V(f)`, and finding an `f`
 that puts them there is up to the caller. `jacobian_rank_locus(G, vars)` (for a
 hypersurface `g` that is `‖∇g‖²`) is a fallback: its zeros on `X` contain the singular
 points but can contain nonsingular ones too, since they depend on how `G` is written.
@@ -36,13 +39,17 @@ Notation, as in the code:
 |---|---|---|
 | `x ∈ ℝⁿ` | ambient coordinates | `vars`, `n` |
 | `G = (g₁,…,g_k)` | equations of `X` | `G`, `k` |
+| `c` | codimension of `X`, `rank JG` on `X` (`c ≤ k`) | `cache.c` |
 | `JG` | `k × n` jacobian of `G` | `JG_val`, `jacobian_G!` |
+| `H = B G` | squared-up system, `B` a random `c × k` matrix with orthonormal rows (§1.3); `H = G` if `c = k` | `cache.H`, `cache.B` |
 | `f` | numerator; `V(f)` is removed | `r.f` |
-| `c`, `g = ‖x − c‖² + 1` | centre, denominator base | `r.c`, `r.g` |
+| `ĉ`, `g = ‖x − ĉ‖² + 1` | centre, denominator base | `r.c`, `r.g` |
 | `d = deg f ÷ 2 + 1` | denominator exponent | `r.d` |
-| `V` | orthonormal basis of `T_P X` (`nullspace(JG)`) | `V` |
-| `λ` | Lagrange multipliers, `JGᵀλ = ∇r` | `λ` |
-| `μ` | scaled multipliers `μ = g^(d+1) λ`, `JGᵀμ = grad_num` | `μ` |
+| `V` | orthonormal basis of `T_P X`: last `n − c` right singular vectors of `JG` | `V` |
+| `λ` | Lagrange multipliers: `JGᵀλ = ∇r` (length `k`, rank-`c` truncated least squares, not unique if `k > c`) | `λ` |
+| `μ` | scaled multipliers of `H`, length `c`: `μ = g^(d+1) λ_H`, `JHᵀμ = grad_num` | `μ` |
+
+(The centre is written `ĉ` here to keep `c` for the codimension; in the code it is `r.c`.)
 
 ---
 
@@ -78,25 +85,55 @@ which is only right if every routing point of `C` was found.
 
 ### 1.3 The routing system
 
-`P ∈ X` is critical for `r|X` iff `∇r(P) = JGᵀλ` for some `λ ∈ ℝᵏ`. By the quotient rule
+`P ∈ X` is critical for `r|X` iff `∇r(P) = JGᵀλ` for some `λ ∈ ℝᵏ` (first take `k = c`;
+see *Squaring up* below). By the quotient rule
 
 ```
 ∇r = (g ∇f − d f ∇g) / g^(d+1) = grad_num / g^(d+1)
 ```
 
 and clearing denominators (`μ = g^(d+1) λ`) gives the **routing system** in the
-`N = n + k` unknowns `(x, μ)`:
+`N = n + c` unknowns `(x, μ)` (`c = k` here):
 
 ```
-F₁(x, μ) = grad_num(x) − JG(x)ᵀ μ  =  0        (n equations)
-F₂(x)    = G(x)                    =  0        (k equations)
+F₁(x, μ) = grad_num(x) − JH(x)ᵀ μ  =  0        (n equations)
+F₂(x)    = H(x)                    =  0        (c equations)
 ```
 
-Its real solutions with `f ≠ 0` are exactly the routing points (`g ≥ 1` on `ℝⁿ`, so real
+(For `k > c`, `G` and `JG` are replaced by `H` and `JH`, below.) Its real solutions with `f ≠ 0` are exactly the routing points (`g ≥ 1` on `ℝⁿ`, so real
 `(x, λ)` and `(x, μ)` correspond one to one). It also has real solutions on `V(f)`, which
 are discarded (§3.4), and complex ones with `g = 0`. Writing it in `μ` rather than `λ`
 keeps the degree of `F₁` at `max(deg f + 1, deg G)` instead of
 `max(deg f + 1, 2d + deg G + 2)` (Clebsch: `[10, 10, 10, 3]` instead of `[15, 15, 15, 3]`).
+
+**Squaring up (`k > c`).** On `X`, `JGᵀ` has rank `c`, so with `μ ∈ ℂᵏ` the multipliers
+of a routing point form a `(k − c)`-dimensional family and the solutions are not isolated.
+Fixing that still leaves `G = 0`, `k` equations cutting out codimension `c`: at best
+`n + k` equations in `n + c` unknowns, over by `k − c`, and HomotopyContinuation (and the
+Newton refinement of the seeds) needs square systems. Instead:
+
+- `H = B·G`, `B` a random `c × k` matrix with orthonormal rows, applied after dividing each
+  `gᵢ` by its coefficient norm (the scaling is folded into `cache.B`, so `JH = B·JG`).
+  The routing system is built from `H`: `F₁ = grad_num − JHᵀμ`, `F₂ = H`, `N = n + c`
+  unknowns `(x, μ)`, `μ ∈ ℂᶜ`. `V(H) ⊇ V(G)`, with extra (excess) components.
+- Routing points are the solutions on `V(G)`. `_is_routing_point` discards a candidate
+  whose Gauss–Newton distance to `V(G)` (rank-`c` truncated step length) exceeds
+  `crit_tol·(1 + ‖x‖)`, which removes the solutions on the excess components.
+- Only finite sets are found through `H`. Everything defined on all of `X` (flows,
+  projection, hessian, tangent spaces, rank checks, `jacobian_rank_locus`) uses `G`: at
+  smooth points of `X`, `JH = B·JG` drops rank on a `B`-dependent hypersurface of `X`
+  (where `im JGᵀ` meets `ker B`, a codimension-1 Schubert condition), a spurious wall
+  that would split components. Randomise to solve for a finite set of points, never to
+  define a function on all of `X`; for generic `B` the finitely many routing points avoid
+  that hypersurface.
+- `c` comes from `RoutingCache(r, G; dim)` (`c = n − dim`), else `c = 1` if `k = 1`, else
+  `codimension(G, vars)`: the largest numerical rank of `JG` (rows normalised, rank = singular
+  values `> 1e-8·σ₁`) at 10 points of `V(G)` over ℂ (Gauss–Newton from random complex
+  starts, fixed-seed RNG). Complex points so that real pieces made of singular points
+  (Whitney umbrella handle, sphere tangent to a plane) do not lower the estimate. For
+  `c < k` the cache checks that `G` looks reduced (a short step along the rank-`c`
+  tangent space must project back within `O(step²)`); a repeated factor such as
+  `[(x²+y²−1)², z]` gives too small a rank and warns.
 
 ### 1.4 The gradient flow on `X`
 
@@ -111,6 +148,12 @@ With `P_T = I − JGᵀ(JGJGᵀ)⁻¹JG` the projection onto the tangent space, 
   `r`, and converges to a critical point — generically a local maximum of `|r|`.
 - Normal part: `d G(x)/dt = −G(x)` (because `JG P_T = 0`), so drift off `X` decays like `e⁻ᵗ`.
 - `JGJGᵀ` is replaced by `JGJGᵀ + reg·I` so that a rank-deficient `JG` damps the step.
+- For `k > c` the field and the projection are unchanged (`G`, not `H`). In singular values
+  the step is `Jᵀ(JJᵀ + reg·I)⁻¹G = Σ σ/(σ² + reg)(uᵢ·G)vᵢ`: directions with `σ² ≫ reg` get
+  the Gauss–Newton factor `1/σ`, those with `σ² ≪ reg` are dropped. The `k − c` extra
+  singular values vanish on `X`, so near `X` this is the rank-`c` truncated
+  Gauss–Newton step; farther out `G` has only a second-order component along them.
+  `reg = 0` would divide by rounding noise.
 
 The routing-point search rescales time by `1/|r(x₀)|` (`x₀` the start), so the speed
 does not depend on the scale of `f`. The connectivity stage uses the unit-speed field
@@ -129,6 +172,14 @@ H = Vᵀ ( ∇²r − Σⱼ λⱼ ∇²gⱼ ) V,        JGᵀλ = ∇r  (least s
 
 the projected hessian of the Lagrangian `r − λᵀG`. (1) holds at every point of `X`.
 The package uses (1).
+
+For `k > c`: `V` is the last `n − c` right singular vectors of `JG` and `λ` the rank-`c`
+truncated least-squares solution (`_projected_hessian(JG, HG, ∇φ, ∇²φ, c)`), because
+`LA.nullspace`'s eps-level tolerance would count the small-but-nonzero extra singular
+values at a point slightly off `X` and lose tangent directions. `λ` is not unique, but
+`Vᵀ(Σⱼ λⱼ∇²gⱼ)V` is the same for all solutions. `_critical_residual` projects onto the
+span of the top `c` right singular vectors. `hessian(φ, G, vars, P; dim)` defaults `c` to
+the numerical rank of `JG` at `P`.
 
 *The paper's form.* `H = Vᵀ∇²r V + Σᵢ ∂ᵢr · Wᵢ`, with the `Wᵢ` solving a
 `(k·d' + d'²) × (n·d')` linear system (`d' = dim X`). The `Wᵢ` encode the second
@@ -213,7 +264,7 @@ found rarely; `starts` placed near `V(f)` is the remedy (`examples/clebsch_cubic
 
 ### 3.2 Monodromy (`routing_points`)
 
-Monodromy collects the solutions of the routing system by moving it around loops in the
+Monodromy collects the solutions of the routing system (of `H`, §1.3) by moving it around loops in the
 parameter space of a family containing it: along a loop the solutions are permuted, and
 known solutions turn into new ones. Two families (`monodromy_family`):
 
@@ -221,34 +272,44 @@ known solutions turn into new ones. Two families (`monodromy_family`):
 `(c, a) ∈ ℂⁿ⁺¹`:
 
 ```
-F₁(x, μ; c, a) = (‖x − c‖² + a) ∇f − 2d f (x − c) − JGᵀμ,     F₂ = G.
+F₁(x, μ; c, a) = (‖x − c‖² + a) ∇f − 2d f (x − c) − JHᵀμ,     F₂ = H.
 ```
+
+(Here `c ∈ ℂⁿ` is the centre parameter, not the codimension.)
 
 The routing system of `r` is the member at `p₀ = (r.c, 1)`, and monodromy runs there
 directly: no tracking to or from a generic member.
 
 *Transitivity.* `x ∈ X ∖ V(f)` is critical for `(c, a)` iff
-`(uᵀu + a)∇f − 2d f u = JGᵀμ` with `u = x − c`. Given `x`, every solution is
-`u = (s∇f − JGᵀμ)/(2d f)`, `a = s − uᵀu` for a unique `(s, μ) ∈ ℂ^(k+1)` (`s = g(x)`). So the
-incidence variety `{(x, μ, c, a)}` over `X ∖ V(f)` is `(X ∖ V(f)) × ℂ^(k+1)`: irreducible when
+`(uᵀu + a)∇f − 2d f u = JHᵀμ` with `u = x − c`. Given `x`, every solution is
+`u = (s∇f − JHᵀμ)/(2d f)`, `a = s − uᵀu` for a unique `(s, μ) ∈ ℂ^(c+1)` (`s = g(x)`; at
+a point where `JH` has rank `c`). So the
+incidence variety `{(x, μ, c, a)}` over `X ∖ V(f)` is `(X ∖ V(f)) × ℂ^(c+1)`: irreducible when
 `X` is, of dimension `n + 1`, the number of parameters. Monodromy from any one routing
 point therefore reaches every complex critical point of `r` on `X ∖ V(f)`, and nothing
 else (the solutions on `V(f)` lie on other components). When `X` is reducible, a start
 solution on each irreducible component is needed.
+
+*Excess components (`c < k`).* The incidence variety of `H` also has components over the
+excess components of `V(H)`. Monodromy started on `X` stays on the components over `X`;
+the excess components of `V(H)` meet `X` only where `JH` drops rank, which in the
+projective chart below shows up as `μ₀ = 0` and is discarded. Solutions that nevertheless
+land on excess components are removed by the distance filter of §3.4.
 
 *Projective multipliers.* `μ` grows like `‖x‖^(deg f + 1)`: on 3RPR it is `10⁹` times `x`,
 and HomotopyContinuation rejects such solutions as singular (jacobian condition number
 `~10²⁰`). The family is solved in `(x, μ₀, μ̂)` with `μ = μ̂/μ₀` on a random chart:
 
 ```
-μ₀ grad_num_{c,a}(x) − JGᵀμ̂ = 0,     G = 0,     ℓ₀μ₀ + ℓ·μ̂ = 1,
+μ₀ grad_num_{c,a}(x) − JHᵀμ̂ = 0,     H = 0,     ℓ₀μ₀ + ℓ·μ̂ = 1,
 ```
 
 which keeps the multipliers of every solution of size about 1 (`_to_chart`, `_from_chart`).
 
-1. Start solutions: the seeds of §3.1, and six constructed ones: a random complex point
+1. Start solutions: the seeds of §3.1 (their `H`-multipliers by least squares against
+   `JH = B·JG`), and six constructed ones: a random complex point
    `x₀` of `X` (Gauss–Newton from random complex points at 1, 2, …, 32 times the extent of
-   the points of `X` seen), random `(s, μ₀)` giving `(c₁, a₁)` as above, and the solution
+   the points of `X` seen; rank-`c` truncated steps when `c < k`), random `(s, μ₀)` giving `(c₁, a₁)` as above, and the solution
    `(x₀, μ₀)` at `(c₁, a₁)` tracked to `p₀`. They make monodromy possible when the flows
    find nothing, and can reach components of a reducible `X` without seeds (two circles,
    seeds on the inner one only: the outer one is found in 25 of 30 runs).
@@ -270,7 +331,8 @@ flows reached: on a variety far larger than the sampling box, raise `box` (3RPR)
 **The affine family** (`monodromy_family = :affine`). With `z = (x, μ)`,
 
 ```
-F(z) − (Q z + q),        parameters Q ∈ ℂ^(N×N), q ∈ ℂ^N;  (Q, q) = 0 is F itself.
+F(z) − (Q z + q),        parameters Q ∈ ℂ^(N×N), q ∈ ℂ^N;  (Q, q) = 0 is F itself
+                          (F the routing system of `H`, N = n + c).
 ```
 
 A random `z₀`, `Q₀` and `q₀ = F(z₀) − Q₀z₀` give a start pair at `p₁ = (Q₀, q₀)`; the seeds
@@ -298,14 +360,17 @@ a complete fibre. Completeness is not certified.
 
 ### 3.3 The index of each point
 
-`routing_point_indices` computes `H` by (1) and counts eigenvalues with the sign of
+`routing_point_indices` computes the hessian by (1) (with `G`, §1.5; the matrix `H` there is not `B·G`) and counts eigenvalues with the sign of
 `r(P)`. It warns when an eigenvalue is below `1e-10·|r(P)|/(1 + ‖P‖)²` (degenerate:
 `r` is not Morse there).
 
 ### 3.4 Which solutions count (`_is_routing_point`)
 
-A candidate `x` is kept iff it is finite, real (`|Im xᵢ| < 1e-8`), off `V(f)`, and critical.
+A candidate `x` is kept iff it is finite, real (`|Im xᵢ| < 1e-8`), on `V(G)`, off `V(f)`, and critical.
 
+- **On `V(G)`** (matters for `c < k`, where solutions of the routing system on excess
+  components of `V(H)` are not on `X`): the rank-`c` truncated Gauss–Newton step length to
+  `V(G)` (`_distance_to_variety`) is at most `crit_tol·(1 + ‖x‖)`.
 - **Off `V(f)`**: its distance to `V(f)` exceeds `locus_tol·(1 + ‖x‖)`, with the
   distance bounded below by the Taylor model of `f` (`|f|` can drop by at most
   `‖∇f‖δ + ½‖∇²f‖δ²` within `δ`):
@@ -357,8 +422,17 @@ Functions starting with `_` are internal.
 - `_project_to_variety!` — Gauss–Newton steps `−Jᵀ(JJᵀ + reg·I)⁻¹G`, each backtracked until
   `‖G‖` decreases; stops when `‖G‖ < tol` or it stops decreasing; returns the point and `‖G‖`.
 - `project_to_variety!(P, G, vars)` — the same without a cache.
-- `jacobian_rank_locus(G, vars)` — `Σ (maximal minors of JG)²`; vanishes where `rank JG < k`,
-  which contains the singular points of `X` and can contain nonsingular ones.
+- `jacobian_rank_locus(G, vars; dim)` — `e_c(JJᵀ)` = sum of squares of all `c × c` minors of
+  `JG` (Cauchy–Binet), `= det(JJᵀ)` when `c = k`; degree `2c(deg G − 1)`. Vanishes where
+  `rank JG < c`, which contains the singular points of `X` and can contain nonsingular
+  ones. (`det JJᵀ` would vanish identically on `X` for `k > c`.) `k > n` is allowed.
+- `codimension(G, vars; samples = 10)` — `c` of §1.3: largest numerical rank of `JG` at
+  `samples` complex points of `V(G)`. Exported.
+- `_numerical_rank(σ)` — number of singular values `> 1e-8·σ₁`. `_truncated_solve(J, b, c)` —
+  least squares through the top `c` singular triplets. `_row_scales(G, vars)` — coefficient
+  norm of each `gᵢ`, for normalising rows.
+- `_complex_newton_to_variety` — Gauss–Newton from a complex start (rank-truncated), used by
+  `codimension`. `_reduced_at` — the §1.3 reducedness check at one point.
 
 ### `src/gradient_field.jl`
 - `_projected_gradient_field(r, G_sys, n, k, reg, unit_speed)` — returns the ODE
@@ -369,28 +443,35 @@ Functions starting with `_` are internal.
   `InexactError`); the field then returns zero and the solver ends the path.
 
 ### `src/routing_system.jl`
-- `routing_system(r, G)` — the system of §1.3, in `(x, μ)`. `μ` gets fresh names
+- `routing_system(r, H)` — the system of §1.3 (`H = cache.H`), in `(x, μ)`. `μ` gets fresh names
   (`@unique_var`), so a user variable called `μ` cannot collide.
-- `_centre_family(r, G, sys_vars)` — the centre family of §3.2, with parameters
+- `_centre_family(r, H, sys_vars)` — the centre family of §3.2, with parameters
   `(c₁, …, cₙ, a)` (fresh names).
 
 ### `src/cache.jl`
-- `RoutingCache(r, G; reg = 1e-8)` — everything precomputed from `(r, G)`: `G_sys`
+- `RoutingCache(r, G; dim = nothing, reg = 1e-8)` — everything precomputed from `(r, G)`:
+  `c` (`n − dim`, 1 if `k = 1`, else `codimension`), `B`, `H` (§1.3), `G_sys`
   (`G`; its jacobian is `JG`), `∇G_sys` (the gradients stacked, so the `i`-th `n×n` block
-  of its jacobian is `∇²gᵢ`), `sys`/`sys_interp` (routing system), `centre_sys` and
-  `param_sys` (the centre and affine families of §3.2), `flow!` and `flow_unit!` (the two fields),
+  of its jacobian is `∇²gᵢ`), `sys`/`sys_interp` (routing system of `H`), `centre_sys` and
+  `param_sys` (the centre and affine families of §3.2, from `H`), `flow!` and `flow_unit!` (the two fields),
   and scratch buffers. Checks that `G` uses only `r`'s variables. Stateful: one per thread.
+- `_cache_codimension` — picks `c` (§1.3), warns if the rank looks too small.
+  `_looks_reduced` — the short-step reducedness check. `_square_up` — `(B, H)`.
+  `_jacobian_H(cache, J)` — `B·J` (or `J` when `c = k`). `_distance_to_variety(cache, x)` —
+  the rank-`c` truncated Gauss–Newton step length of §3.4.
 - `evaluate_G!`, `jacobian_G!` — into the cache's buffers (overwritten by the next call).
-- `_rank_drops_at(cache, P)` — whether `JG` drops rank at `P ∈ X`: `σ_min(JG)` at `P` is
-  below a tenth of its value a short step away. The ratio needs no scale for `JG`.
+- `_rank_drops_at(cache, P)` — whether `JG` drops rank (below `c`) at `P ∈ X`: `σ_c(JG)` at
+  `P` is below a tenth of its value a short step away (`σ_c`, not `σ_min`: the trailing
+  singular values vanish on all of `X` when `k > c`). The ratio needs no scale for `JG`.
 - `project_to_variety!(P, cache)`, `project_to_variety(P, cache)`,
   `project_to_variety_residual!(P, cache)` — §4 `variety.jl`, with the cache's `reg`.
 - `projected_gradient_field(cache; unit_speed)` — the stored field and `f_sys`.
 
 ### `src/hessian.jl`
-- `_projected_hessian(JG, HG, ∇φ, ∇²φ)` — formula (1) for any function `φ`; returns `(H, V)`.
+- `_projected_hessian(JG, HG, ∇φ, ∇²φ, c)` — formula (1) for any function `φ`, truncated SVD
+  at rank `c`; returns `(H, V)`.
 - `hessian_and_tangent(cache, P)` — `(H, V)` for `r`. `hessian(cache, P)`, `hessian(r, G, P)`,
-  `hessian(φ, G, vars, P)` — `H` alone.
+  `hessian(φ, G, vars, P; dim)` — `H` alone.
 - `_hessian_from_routing_system(cache, P)` — form (3); tests only.
 - `_criticality(cache, x)` — `(‖H⁻¹Vᵀ∇r‖, relative tangential gradient)`;
   `critical_distance(cache, P)` exports the first. `_is_critical` — the §3.4 test.
@@ -412,7 +493,7 @@ Functions starting with `_` are internal.
   `_extent` (centre and spread of the points of `X` seen), `_centre_sampler`,
   `_affine_sampler` (loop nodes), `_complex_point_on_variety`, `_centre_start_pair`
   (constructed start solutions).
-- `_is_routing_point`, `_satisfies` — the §3.4 test; `stop_when` on the `x` part.
+- `_is_routing_point`, `_satisfies` — the §3.4 test (including the distance to `V(G)`); `stop_when` on the `x` part.
 - `_unique_by_x`, `_real_x` — duplicates and realness judged on `x` alone (`μ` can be
   orders of magnitude larger than `x`).
 - `_monodromy_options` — passes `monodromy_options` on, with `timeout` as a Float64.
@@ -450,6 +531,11 @@ Functions starting with `_` are internal.
 ## 5. Call graph
 
 ```
+RoutingCache(r, G; dim)                                       cache.jl
+├── _cache_codimension → codimension → _complex_newton_to_variety, _numerical_rank   variety.jl
+├── _looks_reduced → _reduced_at       (c < k)
+└── _square_up → H = B·G               (c < k)
+
 connected_components(cache)                                   components.jl
 └── find_connectivity_matrix(cache)                           connectivity.jl
     ├── routing_points(cache)                                 routing_points.jl
@@ -461,7 +547,7 @@ connected_components(cache)                                   components.jl
     │   ├── _monodromy_centre                 (default; _monodromy_affine otherwise)
     │   │   ├── _complex_point_on_variety, _centre_start_pair, HC.solve(centre_sys)
     │   │   └── monodromy_solve(centre_sys; parameter_sampler = _centre_sampler)
-    │   └── _is_routing_point → on_zero_locus, _is_critical → _criticality
+    │   └── _is_routing_point → _distance_to_variety, on_zero_locus, _is_critical → _criticality
     └── find_connectivity_matrix(cache, pts)
         ├── routing_point_indices → hessian → hessian_and_tangent  hessian.jl
         ├── solve_ivp(cache, P, targets)                      mountain_pass.jl
@@ -479,6 +565,7 @@ connected_components(cache)                                   components.jl
 | keyword | default | where | effect |
 |---|---|---|---|
 | `c` (in `RoutingFunction`) | random in `[0,1]ⁿ` | §1.1 | centre of `g`; must be generic |
+| `dim` (in `RoutingCache`, `jacobian_rank_locus`, `hessian`) | `nothing` | §1.3 | `dim X`, so `c = n − dim`; else `c` is estimated (`codimension`). Choose which components to keep when dimensions differ |
 | `reg` (in `RoutingCache`) | `1e-8` | §1.4 | damping of `JJᵀ` |
 | `nstarts` | `100` | §3.1 | starts that must land on `X` |
 | `box` | `3.0` | §3.1 | sampling box; too small misses a far-away `X` |
@@ -488,7 +575,7 @@ connected_components(cache)                                   components.jl
 | `flow_options` | `(;)` | §3.1 | `tspan = (0.0, 200.0)`, `maxiters = 10_000` of each flow |
 | `stop_when` | `nothing` | §3.1 | return the first routing point satisfying it |
 | `locus_tol` | `1e-6` | §3.4 | distance to `V(f)`, relative to `1 + ‖P‖` |
-| `crit_tol` | `1e-6` | §3.4 | Newton step to a critical point, relative to `1 + ‖P‖` |
+| `crit_tol` | `1e-6` | §3.4 | Newton step to a critical point and distance to `V(G)`, relative to `1 + ‖P‖` |
 | `monodromy_family` | `:centre` | §3.2 | `:affine` if `X` is reducible and a component may lack seeds |
 | `monodromy_options` | `(;)` | §3.2 | to `monodromy_solve`, e.g. `(timeout = 60,)` |
 | `start_step_size` | `0.1` | §2 | first step off a critical point |
@@ -523,8 +610,19 @@ accepted, with a warning.
 - **Singular `X` off `V(f)`**: the theory does not apply; put the singular locus into `f`.
 - **Degenerate critical points** (non-generic `c`): indices and paths unreliable, with a
   warning.
-- **`G` not reduced, or more equations than the codimension**: `JG` is rank deficient
-  everywhere, the multipliers are undetermined, and nothing downstream is meaningful.
+- **`G` not reduced along `X`** (a repeated factor): `JG` has rank below the codimension
+  on all of `X`, nothing downstream is meaningful, and `codimension` comes out too small
+  (warned, §1.3). Where `G` is reduced at generic points but not at special ones (an
+  embedded point, `[x², xy]` at the origin) the rank drops only there, at nonsingular
+  points of `X`, which `jacobian_rank_locus` then removes too. More equations than the
+  codimension are supported (§1.3).
+- **`X` not equidimensional.** There is one global `c`. Lower-dimensional pieces are lost
+  with the singular locus: the handle of the Whitney umbrella `x² = y²z` (a 1-dimensional
+  real set of singular points inside a 2-dimensional surface). Complex components of
+  different dimension (plane `z = 0` ∪ line `x = y = 0` from `[xz, yz]`): `codimension`
+  returns the largest rank it sees (2, the line), so pass `dim` to choose which components
+  to keep; the others appear as rank drops (warned) and must go into `V(f)` or be handled
+  separately.
 
 Consistency checks: every component contains an index-0 point; `χ` is plausible for
 `dim X` (a connected curve has `χ ∈ {0, 1}`; a connected surface `χ ≤ 2`, and `χ ≤ 1` if

@@ -21,10 +21,11 @@ function _satisfies(stop_when, z::AbstractVector{<:Number}, n::Int64)::Bool
 end
 
 # whether a solution of the routing system (or just its x part) is a routing point:
-# real, off V(f) (distance to V(f) against locus_tol, see `on_zero_locus`), and a
-# critical point of r|V(G) (Newton step to the critical point against crit_tol, see
-# `_criticality`). the last is a safety net: Newton's method and homotopy endgames
-# can report success at a point merely close to a solution.
+# real, off V(f) (distance to V(f) against locus_tol, see `on_zero_locus`), on V(G)
+# when the routing system was squared up (V(H) is larger; Gauss-Newton distance to
+# V(G) against crit_tol), and a critical point of r|V(G) (Newton step to the critical
+# point against crit_tol, see `_criticality`). the last is a safety net: Newton's
+# method and homotopy endgames can report success at a point merely close to a solution.
 function _is_routing_point(
     cache::RoutingCache,
     z::AbstractVector{<:Number};
@@ -38,6 +39,8 @@ function _is_routing_point(
     end
     x = Float64[real(z[i]) for i = 1:n]
     on_zero_locus(cache.r, x; locus_tol = locus_tol) && return false
+    cache.B === nothing || _distance_to_variety(cache, x) <= crit_tol * (1 + LA.norm(x)) ||
+        return false
     return _is_critical(cache, x; crit_tol = Float64(crit_tol))
 end
 
@@ -84,9 +87,8 @@ function _flow_and_refine(cache::RoutingCache, x0::Vector{Float64}, dir::Float64
     x = last(sol.u)
     all(isfinite, x) || return nothing
 
-    # μ by least squares from grad_num = JGᵀμ, then Newton on the routing system
-    jacobian_G!(cache, x)
-    μ = transpose(cache.JG_val) \ _grad_num(r, x)
+    # μ by least squares from grad_num = JHᵀμ, then Newton on the routing system
+    μ = transpose(_jacobian_H(cache, jacobian_G!(cache, x))) \ _grad_num(r, x)
     newton_result = HC.newton(cache.sys_interp, ComplexF64.(vcat(x, μ)))
     return HC.is_success(newton_result) ? HC.solution(newton_result) : nothing
 end
@@ -156,13 +158,13 @@ end
 # the distinct-point test use this coarse relative tolerance.
 const _RANK_DROP_TOL = 1e-3
 
-function _warn_rank_drops(points::Vector{Vector{Float64}}, started::Integer, k::Integer)
+function _warn_rank_drops(points::Vector{Vector{Float64}}, started::Integer, c::Integer)
     isempty(points) && return nothing
     distinct = Vector{Float64}[]
     for P in points
         any(Q -> LA.norm(P - Q) < _RANK_DROP_TOL * (1 + LA.norm(P)), distinct) || push!(distinct, P)
     end
-    @warn("flow_to_routing_points: the jacobian of G has rank below $k at " *
+    @warn("flow_to_routing_points: the jacobian of G has rank below $c at " *
           "$(length(points)) of the $started starts on V(G), around $(length(distinct)) " *
           "distinct point(s), off V(f). Make f vanish there or rewrite G; see " *
           "`jacobian_rank_locus`.")
@@ -215,7 +217,7 @@ function _flow_seeds(
     start_pt = zeros(Float64, n)
     started = 0
     attempts = 0
-    rank_drops = Vector{Float64}[]      # the starts off V(f) where JG has rank below k
+    rank_drops = Vector{Float64}[]      # the starts off V(f) where JG has rank below c
 
     while started < wanted && attempts < budget
         attempts += 1
@@ -254,7 +256,7 @@ function _flow_seeds(
         end
     end
 
-    _warn_rank_drops(rank_drops, started, cache.k)
+    _warn_rank_drops(rank_drops, started, cache.c)
 
     if started < wanted
         @warn(supplied ?
@@ -262,8 +264,8 @@ function _flow_seeds(
               "flow_to_routing_points: only $started of $nstarts starts landed on V(G) in " *
               "$attempts attempts (box = $box). If V(G) lies far from the origin, raise " *
               "`box` or `max_attempts`. If no start lands at all, check that G cuts out V(G) " *
-              "with a full-rank jacobian: reduced equations (no repeated factors), as many " *
-              "as the codimension, and V(G) real.")
+              "with a jacobian of rank $(cache.c), its codimension: reduced equations (no " *
+              "repeated factors), and V(G) real.")
     elseif verbose
         println(supplied ?
                 "flow_to_routing_points: all $wanted supplied starts lie on V(G)" :
@@ -428,7 +430,8 @@ end
 _affine_sampler(p) = (LA.norm(p) / sqrt(length(p))) .* randn(ComplexF64, length(p))
 
 # a random complex point of X near `centre`: minimum-norm Gauss-Newton steps
-# x ← x - JGᴴ(JG JGᴴ)⁻¹ G(x) from a random complex point. nothing if it fails.
+# x ← x - JG⁺ G(x) from a random complex point, JG truncated at rank c (with more
+# equations than c, JG JGᴴ is singular on X). nothing if it fails.
 function _complex_point_on_variety(cache::RoutingCache, centre::Vector{Float64}, scale::Float64)
     n, k = cache.n, cache.k
     x = ComplexF64.(centre) .+ scale .* randn(ComplexF64, n)
@@ -442,7 +445,7 @@ function _complex_point_on_variety(cache::RoutingCache, centre::Vector{Float64},
             return nothing
         end
         (all(isfinite, Gx) && all(isfinite, J)) || return nothing
-        δ = J' * ((J * J') \ Gx)
+        δ = cache.c == k ? J' * ((J * J') \ Gx) : _truncated_solve(J, Gx, cache.c)
         all(isfinite, δ) || return nothing
         x .-= δ
         LA.norm(δ) <= 1e-13 * (1 + LA.norm(x)) && return x
@@ -452,19 +455,21 @@ end
 
 # a start pair for the centre family from a point x0 of X: parameters (c, a) that
 # make x0 a critical point, with multipliers μ. given random (s, ν), the choice
-# u = x0 - c = (s ∇f - JGᵀν) / (2d f), a = s - uᵀu gives g(x0) = s and
-# grad_num(x0) = s ∇f - 2d f u = JGᵀν, so μ = ν. (s, ν) is scaled so that ‖u‖ = scale.
+# u = x0 - c = (s ∇f - JHᵀν) / (2d f), a = s - uᵀu gives g(x0) = s and
+# grad_num(x0) = s ∇f - 2d f u = JHᵀν, so μ = ν. (s, ν) is scaled so that ‖u‖ = scale.
+# JH is the jacobian of the equations H of the routing system (G, or G squared up).
 function _centre_start_pair(cache::RoutingCache, x0::Vector{ComplexF64}, scale::Float64)
     r = cache.r
     n, k = cache.n, cache.k
     fx = zeros(ComplexF64, 1)
     ∇f = zeros(ComplexF64, n)
-    J = zeros(ComplexF64, k, n)
+    JG = zeros(ComplexF64, k, n)
     HC.evaluate!(fx, r.f_sys, x0)
     HC.evaluate!(∇f, r.∇f_sys, x0)
-    HC.jacobian!(J, cache.G_sys, x0)
+    HC.jacobian!(JG, cache.G_sys, x0)
+    J = _jacobian_H(cache, JG)
     s = randn(ComplexF64)
-    ν = randn(ComplexF64, k)
+    ν = randn(ComplexF64, cache.c)
     u = (s .* ∇f .- transpose(J) * ν) ./ (2 * r.d * fx[1])
     t = scale / LA.norm(u)
     (isfinite(t) && t > 0) || return nothing
