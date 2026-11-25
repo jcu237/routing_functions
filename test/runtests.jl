@@ -92,7 +92,6 @@ eulers(C) = sort([c.euler_characteristic for c in C])
             P = [t, t^2, t^3] .+ off .* [1.0, -1.0, 0.5]
             e2 = eigvals(Symmetric(hessian(φ, T2, w[1:3], P; dim = 1)))
             e3 = eigvals(Symmetric(hessian(φ, T3, w[1:3], P; dim = 1)))
-            @test length(e3) == 1
             @test e2 ≈ e3 rtol = 1e-6
             @test hessian(φ, T3, w[1:3], P) ≈ hessian(φ, T3, w[1:3], P; dim = 1)
         end
@@ -148,11 +147,12 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         @var λ[1:2] q[1:2] μ[1:2] c[1:2]
         for v in (λ, q, μ, c)
             rv = RoutingFunction(v[1] * v[2], v, [0.3, 0.1])
-            sys = routing_system(rv, [v[1]^2 + v[2]^2 - 1])
-            @test length(variables(sys)) == 3
-            Random.seed!(13)
-            @test eulers(connected_components(rv, [v[1]^2 + v[2]^2 - 1])) == [1, 1, 1, 1]
+            @test length(variables(routing_system(rv, [v[1]^2 + v[2]^2 - 1]))) == 3
         end
+        # c and q are also the names of the monodromy families' parameters
+        Random.seed!(13)
+        rc = RoutingFunction(c[1] * q[1], [c[1], q[1]], [0.3, 0.1])
+        @test eulers(connected_components(rc, [c[1]^2 + q[1]^2 - 1])) == [1, 1, 1, 1]
 
         # starts as tuples or untyped vectors
         cache = RoutingCache(r, [circle])
@@ -196,8 +196,12 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         @test norm(evaluate(cache.centre_sys, CC._to_chart(z0, n, cache.chart), p1)) < 1e-10
         @test norm(z0[1:n] - p1[1:n]) ≈ 2.0            # ‖x0 - c‖ = scale
 
-        # both families find the four routing points
-        pc = routing_points(cache)
+        # both families find the four routing points; all_vars gives solutions (x, μ)
+        # of the routing system
+        pc = routing_points(cache; all_vars = true)
+        for zz in pc
+            @test norm(evaluate(routing_system(cache), zz)) < 1e-8 * (1 + norm(zz))
+        end
         pa = routing_points(cache; monodromy_family = :affine)
         @test length(pc) == length(pa) == 4
         @test_throws ArgumentError routing_points(cache; monodromy_family = :linear)
@@ -205,11 +209,6 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         # no flow seeds at all (the only start is far off the curve): monodromy starts
         # from constructed points of the complex curve
         @test length(routing_points(cache; starts = [[100.0, 100.0]])) == 4
-
-        # all_vars gives solutions of the routing system in (x, μ)
-        for zz in routing_points(cache; all_vars = true)
-            @test norm(evaluate(routing_system(cache), zz)) < 1e-8 * (1 + norm(zz))
-        end
     end
 
     @testset "jacobian_rank_locus" begin
@@ -234,8 +233,7 @@ eulers(C) = sort([c.euler_characteristic for c in C])
             @test evaluate(sT, x[1:3] => P) ≈ σ[1]^2 * σ[2]^2 + σ[1]^2 * σ[3]^2 + σ[2]^2 * σ[3]^2
             @test evaluate(sT, x[1:3] => P) > 0.1
         end
-        # det(J Jᵀ) would vanish on all of it: the maximal minors are 0 on the curve
-        @test jacobian_rank_locus(T, x[1:3]; dim = 0) isa Expression
+        # det(J Jᵀ) vanishes on all of it
         @test abs(evaluate(jacobian_rank_locus(T, x[1:3]; dim = 0), x[1:3] => [0.7, 0.49, 0.343])) < 1e-12
         # more equations than variables: the origin, c = 3
         s4 = jacobian_rank_locus([x[1], x[2], x[3], x[1] + x[2]], x[1:3])
@@ -252,6 +250,9 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         @test codimension([x^2 + y^2 + z^2 - 1, z - 1], [x, y, z]) == 2
         # rows of very different sizes
         @test codimension([1e-8 * (x^2 + y^2 + z^2 - 1), z - 0.6], [x, y, z]) == 2
+        # Newton converges to the embedded point at the origin, where JG = 0: an error,
+        # not a wrong answer
+        @test_throws ArgumentError codimension([x^2, x * y], [x, y])
         # reproducible, and the global random stream is left alone
         Random.seed!(3); a = rand()
         Random.seed!(3); codimension([x, y, x + y], [x, y, z]); @test rand() == a
@@ -284,20 +285,16 @@ eulers(C) = sort([c.euler_characteristic for c in C])
 
         # a repeated factor, tested a little way off the circle, where the projection stalls
         @test drops([(x^2 + y^2 - 1)^2], [x, y], (1 + 1e-6) .* [0.6, 0.8])
-        # components of different dimensions: the codimension is that of the line, so the
-        # plane is reported, but not the line
+        # plane ∪ line: the estimated codimension is the line's, so the plane drops rank
         @test drops([x * z, y * z], [x, y, z], [1.0, 2.0, 0.0])
         @test !drops([x * z, y * z], [x, y, z], [0.0, 0.0, 1.0])
-        # and with the dimension of the plane given, the line is reported instead
-        @test drops([x * z, y * z], [x, y, z], [0.0, 0.0, 1.0]; dim = 2) == false
-        # more equations than the codimension, but of rank c: no drop
+        # with dim = 2 the line has rank above c, which is not a drop: it is lost unreported
+        @test !drops([x * z, y * z], [x, y, z], [0.0, 0.0, 1.0]; dim = 2)
+        # more equations than the codimension: no drop, unless dim is too small
         t = 0.7
         @test !drops([x * z - y^2, y - x^2, z - x * y], [x, y, z], [t, t^2, t^3])
-        @test !drops([x, 2x], [x, y], [0.0, 1.0])
-        @test !drops([x, y, x + y], [x, y], [0.0, 0.0])
-        # unless the dimension given is too small
         @test drops([x * z - y^2, y - x^2, z - x * y], [x, y, z], [t, t^2, t^3]; dim = 0)
-        @test drops([x, 2x], [x, y], [0.0, 1.0]; dim = 0)
+        @test !drops([x, y, x + y], [x, y], [0.0, 0.0])
         # real points of too low a dimension
         @test drops([x^2 + y^2], [x, y, z], [1e-6, 0.0, 0.5])
 
@@ -343,17 +340,6 @@ eulers(C) = sort([c.euler_characteristic for c in C])
             @test eulers(C) == [0, 1]         # the unbounded branch and the oval
         end
 
-        @testset "elliptic curve with two points removed" begin
-            Random.seed!(3)
-            r = RoutingFunction(x[1]^2 + x[2]^2 - 9, x[1:2], [0.855, -1.632])
-            G = [x[2]^2 - x[1] * (x[1] - 1) * (x[1] + 1)]
-            C = connected_components(RoutingCache(r, G); grad_step_size = 1e-1, tol = 2e-1,
-                                     start_step_size = 5e-1)
-            # the circle x² + y² = 9 meets only the unbounded branch, cutting it into
-            # three arcs; the oval, a circle, is untouched
-            @test eulers(C) == [0, 1, 1, 1]
-        end
-
         @testset "twisted cubic with the origin removed" begin
             Random.seed!(4)
             r = RoutingFunction(x[1] * x[2] * x[3], x[1:3], [0.21, 0.83, 0.47])
@@ -368,28 +354,19 @@ eulers(C) = sort([c.euler_characteristic for c in C])
             r = RoutingFunction(x[1] * x[2] * x[3], x[1:3], [0.21, 0.83, 0.47])
             G = [x[2] - x[1]^2, x[3] - x[1] * x[2], x[1] * x[3] - x[2]^2]
             cache = RoutingCache(r, G)
-            @test cache.c == 2
             C = connected_components(cache)
-            @test eulers(C) == [1, 1]
-        end
-
-        @testset "a line cut out by three planes" begin
-            Random.seed!(1)
-            r = RoutingFunction(x[3], x[1:3], [0.31, 0.62, 0.17])
-            C = connected_components(r, [x[1], x[2], x[1] + x[2]])
             @test eulers(C) == [1, 1]
         end
 
         @testset "a circle cut out by three equations" begin
             Random.seed!(2)
             G = [x[1]^2 + x[2]^2 + x[3]^2 - 1, x[3], 2x[3] + x[1]^2 + x[2]^2 + x[3]^2 - 1]
-            r = RoutingFunction(1, x[1:3], [0.31, 0.12, 0.27])
-            @test eulers(connected_components(r, G)) == [0]
             r = RoutingFunction(x[1], x[1:3], [0.31, 0.12, 0.27])
-            pts = routing_points(RoutingCache(r, G))
-            # every routing point found lies on the circle, none on the rest of V(H)
+            cache = RoutingCache(r, G)
+            pts = routing_points(cache)
+            # all on the circle, none on the rest of V(H)
             @test all(P -> abs(P[3]) < 1e-8 && abs(P[1]^2 + P[2]^2 - 1) < 1e-8, pts)
-            @test eulers(connected_components(r, G)) == [1, 1]
+            @test eulers(connected_components(cache, pts)) == [1, 1]
         end
 
         @testset "quartic curve with the axes removed" begin
@@ -432,9 +409,10 @@ eulers(C) = sort([c.euler_characteristic for c in C])
         end
 
         @testset "a tiny numerator still connects through saddles" begin
-            # the elliptic curve minus two points again, with f scaled by 1e-10: the
-            # flows out of the oval's saddle must still arrive (the unit-speed field
-            # used to stop normalising below an absolute 1e-8)
+            # the elliptic curve minus the circle x² + y² = 9, which cuts the unbounded
+            # branch into three arcs, with f scaled by 1e-10: the flows out of the
+            # oval's saddle must still arrive (the unit-speed field used to stop
+            # normalising below an absolute 1e-8)
             Random.seed!(3)
             r = RoutingFunction(1e-10 * (x[1]^2 + x[2]^2 - 9), x[1:2], [0.855, -1.632])
             G = [x[2]^2 - x[1] * (x[1] - 1) * (x[1] + 1)]

@@ -128,7 +128,7 @@ Newton refinement of the seeds) needs square systems. Instead:
   that hypersurface.
 - `c` comes from `RoutingCache(r, G; dim)` (`c = n − dim`), else `c = 1` if `k = 1`, else
   `codimension(G, vars)`: the largest numerical rank of `JG` (rows normalised, rank = singular
-  values `> 1e-8·σ₁`) at 10 points of `V(G)` over ℂ (Gauss–Newton from random complex
+  values `> 1e-8·max(σ₁, 1)`) at 10 points of `V(G)` over ℂ (Gauss–Newton from random complex
   starts, fixed-seed RNG). Complex points so that real pieces made of singular points
   (Whitney umbrella handle, sphere tangent to a plane) do not lower the estimate. For
   `c < k` the cache checks that `G` looks reduced (a short step along the rank-`c`
@@ -428,7 +428,7 @@ Functions starting with `_` are internal.
   ones. (`det JJᵀ` would vanish identically on `X` for `k > c`.) `k > n` is allowed.
 - `codimension(G, vars; samples = 10)` — `c` of §1.3: largest numerical rank of `JG` at
   `samples` complex points of `V(G)`. Exported.
-- `_numerical_rank(σ)` — number of singular values `> 1e-8·σ₁`. `_truncated_solve(J, b, c)` —
+- `_numerical_rank(σ; rtol, atol)` — number of singular values `> max(rtol·σ₁, atol)`. `_truncated_solve(J, b, c)` —
   least squares through the top `c` singular triplets. `_row_scales(G, vars)` — coefficient
   norm of each `gᵢ`, for normalising rows.
 - `_complex_newton_to_variety` — Gauss–Newton from a complex start (rank-truncated), used by
@@ -621,8 +621,8 @@ accepted, with a warning.
   real set of singular points inside a 2-dimensional surface). Complex components of
   different dimension (plane `z = 0` ∪ line `x = y = 0` from `[xz, yz]`): `codimension`
   returns the largest rank it sees (2, the line), so pass `dim` to choose which components
-  to keep; the others appear as rank drops (warned) and must go into `V(f)` or be handled
-  separately.
+  to keep. Components of larger dimension than `n − c` then show up as rank drops
+  (warned); those of smaller dimension have rank above `c` and are lost without a warning.
 
 Consistency checks: every component contains an index-0 point; `χ` is plausible for
 `dim X` (a connected curve has `χ ∈ {0, 1}`; a connected surface `χ ≤ 2`, and `χ ≤ 1` if

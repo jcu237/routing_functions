@@ -3,7 +3,7 @@
 # mountain pass theorem, two maxima in the same component are joined this way
 # through the index 1 points between them.
 
-# minimum distance from `point` to the index 0 routing points. runs inside the ODE
+# minimum distance from `point` to the index 0 routing points. called in the ODE
 # callback, so it does not allocate.
 function distance_to_endpoints(
     point::AbstractVector{Float64},
@@ -52,8 +52,9 @@ Follows the unit-speed gradient flow of `|r|` on `V(G)` from `P` until it comes 
 where the flow stopped and returns whether it arrived.
 
 Keywords: `dtmax` (largest step, default `tol`), `tspan = (0.0, 1e3)` (arc length),
-`maxiters = 10^6`, `origin` (the critical point the flow is leaving, see below),
-`verbose`.
+`maxiters = 10^6`, `origin` (the critical point the flow is leaving: a start nearer
+to a target than to `origin` counts as arrived, otherwise `tol` is shrunk below that
+distance), `verbose`. The `(r, G, P, targets)` method also takes `reg = 1e-8`.
 """
 function gradient_flow!(
     cache::RoutingCache,
@@ -74,8 +75,8 @@ function gradient_flow!(
     dtmax = dtmax > 0 ? Float64(dtmax) : tol
 
     # the arrival callback fires on a sign change, so a start already inside a ball
-    # would never trigger it. such a start counts as arrived, unless the critical
-    # point it is leaving (`origin`) is nearer still: then shrink the balls instead.
+    # never triggers it. such a start counts as arrived, unless `origin` is nearer
+    # still: then shrink the balls.
     d0 = distance_to_endpoints(point, index0_points)
     if d0 <= tol
         if origin === nothing || d0 < LA.norm(point - origin)
@@ -85,8 +86,7 @@ function gradient_flow!(
         tol = d0 / 2
     end
 
-    # time is arc length, so this fires when the path first comes within tol of a
-    # target; the callback also checks interpolated points inside each step
+    # fires when the path first comes within tol of a target, also between steps
     arrived(u, t, integrator) = distance_to_endpoints(u, index0_points) - tol
     callback = SciMLBase.ContinuousCallback(arrived, SciMLBase.terminate!)
 
@@ -127,9 +127,11 @@ each unstable eigenvector `v` of the hessian `H` of `r|V(G)` (written in the tan
 basis `V`). Unstable means eigenvalue `μ` with `sign(μ) = sign(r(P))`, so that `|r|`
 increases along `v`.
 
-`ε` starts at `step_size` and is halved until the step can be trusted to stay in `P`'s
-own region of `V(G) ∖ V(f)`: `r` keeps its sign, and `|r(Q)| − |r(P)|` is within a
-factor 2 of the quadratic model `½|μ|ε²` at both `ε` and `ε/2`.
+`ε` starts at `step_size` and is halved, at most `max_halvings` times, until the step
+stays in `P`'s own region of `V(G) ∖ V(f)`: `r` keeps its sign and `|r(Q)| − |r(P)|` is
+within a factor 2 of the quadratic model `½|μ|ε²` at both `ε` and `ε/2`. If no `ε`
+passes, the smallest one that kept the sign and increased `|r|` is used; failing that,
+the path is skipped with a warning. Returns the start points.
 """
 function find_starting_points_for_flow(
     cache::RoutingCache,

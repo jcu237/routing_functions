@@ -1,14 +1,11 @@
-# the variety X = V(G) itself: the normal equations J Jᵀ that the flow fields and
-# the projection solve against, and the projection of a point onto X.
+# the variety X = V(G): the normal equations J Jᵀ, projection onto X, the codimension
+# of X, and `jacobian_rank_locus`.
 
-# M updates to the Cholesky factor of J Jᵀ + reg·I, in M's lower triangle. the
-# regularisation damps the step where J is rank deficient (a singular point of V(G)).
-#
-# in exact arithmetic every pivot is ≥ reg; in floating point, when J is rank
-# deficient with large entries, the rounding in J Jᵀ (≈ eps·‖J‖²) can make a pivot
-# negative, so the pivots are clamped at reg. (a reg relative to ‖J‖² cost a fifth
-# of the Clebsch seeds; scaling the rows of G is the better cure, see IDEAS.md.)
-#
+# the Cholesky factor of J Jᵀ + reg·I, written into M's lower triangle. reg damps the
+# step where J is rank deficient. in exact arithmetic every pivot is ≥ reg, but when J
+# is rank deficient with large entries the rounding in J Jᵀ (≈ eps·‖J‖²) can make one
+# negative, so pivots are clamped at reg. (a reg relative to ‖J‖² lost a fifth of the
+# Clebsch seeds.)
 function normal_factor!(M::AbstractMatrix{Float64}, J::AbstractMatrix{Float64}, reg::Float64)
     LA.mul!(M, J, transpose(J))
     k = size(M, 1)
@@ -30,7 +27,7 @@ function normal_factor!(M::AbstractMatrix{Float64}, J::AbstractMatrix{Float64}, 
     return M
 end
 
-# solves L Lᵀ y = y in place, L being the factor left by `normal_factor!`
+# solves L Lᵀ y = b in place (y holds b on entry), L the factor from `normal_factor!`
 function normal_solve!(y::AbstractVector{Float64}, L::AbstractMatrix{Float64})
     k = length(y)
     @inbounds for i = 1:k
@@ -50,16 +47,14 @@ function normal_solve!(y::AbstractVector{Float64}, L::AbstractMatrix{Float64})
     return y
 end
 
-# Gauss-Newton projection onto V(G): steps Jᵀ(J Jᵀ + reg·I)⁻¹G along the normal
-# directions, each backtracked until ‖G‖ decreases. stops when ‖G‖ < tol or stops
-# decreasing, and returns the point with the residual ‖G(point)‖ reached.
+# Gauss-Newton projection onto V(G): steps Jᵀ(J Jᵀ + reg·I)⁻¹G, each halved until ‖G‖
+# decreases. stops when ‖G‖ < tol or no step decreases it; returns the point and ‖G‖.
 #
-# this needs no change when G has more equations than the codimension c of V(G). in
-# the singular values σ of J the step is ∑ σ/(σ² + reg) (u·G) v: directions with
-# σ² ≫ reg get the Gauss-Newton factor 1/σ, and those with σ² ≪ reg are dropped. the
-# m - c extra singular values vanish on V(G), so near it the step is the rank-c
-# truncated Gauss-Newton step; further away G has only a second-order component along
-# them, so they do no harm either. reg = 0 would divide by rounding noise there.
+# also correct when G has more equations k than the codimension c. in terms of the
+# singular values the step is ∑ σ/(σ² + reg) (u·G) v, so directions with σ² ≪ reg are
+# dropped. the k - c extra singular values vanish on V(G), so near it this is the
+# rank-c truncated step, and further away G has only a second-order component along
+# them. with reg = 0 they would divide rounding noise.
 function _project_to_variety!(
     point::AbstractVector{Float64},
     G_sys::HC.InterpretedSystem,
@@ -147,34 +142,33 @@ function project_to_variety!(
                                       maxiter, tol, reg, maxbacktrack))
 end
 
-# --- the codimension of X = V(G) -------------------------------------------------
+# --- the codimension of X ------------------------------------------------------------
 #
-# G may have more equations k than the codimension c of X (X is not a complete
-# intersection). c is the rank of JG at a generic point of X, provided G is reduced
-# there: the pipeline works with G wherever it needs X itself, and squares the routing
-# system up to c equations (see `RoutingCache`).
+# G may have more equations k than the codimension c of X. if G is reduced along X, c
+# is the rank of JG at a generic point of X.
 
-# singular values below this fraction of the largest count as zero
+# the number of singular values above rtol times the largest, and above atol
 const _RANK_RTOL = 1e-8
-
-# the number of singular values above rtol times the largest
-function _numerical_rank(σ::AbstractVector{<:Real}; rtol::Real = _RANK_RTOL)::Int64
+function _numerical_rank(σ::AbstractVector{<:Real}; rtol::Real = _RANK_RTOL, atol::Real = 0)::Int64
     (isempty(σ) || !(σ[1] > 0)) && return 0
-    return count(s -> s > rtol * σ[1], σ)
+    return count(s -> s > max(rtol * σ[1], atol), σ)
 end
 
-# the minimum-norm least-squares solution of J x = b for the best rank-c approximation
-# of J: the Gauss-Newton step, and the least-squares multipliers, where J has rank c
-# on X but more rows than c
+# how many of the singular values S to keep when truncating at rank c: at most c, and
+# none at rounding level (the tolerance of `LA.nullspace`), where J has rank below c
+_truncation_rank(S::AbstractVector, c::Integer, J::AbstractMatrix) =
+    isempty(S) ? 0 : min(c, count(s -> s > minimum(size(J)) * eps(Float64) * S[1], S))
+
+# the minimum-norm least-squares solution of J x = b with J truncated to rank c
 function _truncated_solve(J::AbstractMatrix, b::AbstractVector, c::Integer)
     F = LA.svd(J)
-    c = min(c, length(F.S))
+    c = _truncation_rank(F.S, c, J)
     c == 0 && return zeros(promote_type(eltype(J), eltype(b)), size(J, 2))
     return F.V[:, 1:c] * ((F.U[:, 1:c]' * b) ./ F.S[1:c])
 end
 
-# each gᵢ divided by the norm of its coefficient vector, so that the rows of JG are of
-# comparable size: for the numerical rank, and before G is squared up
+# the coefficient norm of each gᵢ. dividing by it puts the rows of JG on a common
+# scale, for numerical ranks and before squaring up
 function _row_scales(G::Vector{Expression}, vars::Vector{Variable})::Vector{Float64}
     return map(G) do g
         _, coeffs = HC.ModelKit.exponents_coefficients(g, vars)
@@ -183,8 +177,8 @@ function _row_scales(G::Vector{Expression}, vars::Vector{Variable})::Vector{Floa
     end
 end
 
-# a point of V(G) over ℂ: Gauss-Newton steps from x, each the minimum-norm solution of
-# J δ = G for J truncated at relative size rtol. nothing if it does not converge.
+# a point of V(G) over ℂ, by minimum-norm Gauss-Newton steps from x (J truncated at
+# relative size rtol). overwrites x; nothing if it does not converge.
 function _complex_newton_to_variety(G_sys::HC.InterpretedSystem, x::Vector{ComplexF64}, k::Integer;
                                    maxiter::Integer = 100, rtol::Real = 1e-10)
     n = length(x)
@@ -209,19 +203,18 @@ end
 """
     codimension(G, vars; samples = 10) -> Int
 
-The codimension of `X = V(G)` in `ℂⁿ`, estimated numerically: the largest rank of the
-jacobian of `G` at `samples` points of `X` over `ℂ`, each reached by Gauss-Newton
-steps from a random complex point. The points are complex, so that a real part of `X`
-whose points are all singular (the handle of the Whitney umbrella, a sphere touching
-a plane) does not lower the estimate. The random draws come from a fixed seed, so the
-estimate is reproducible and leaves the global random stream alone.
+The codimension of `X = V(G)`, estimated as the largest numerical rank of the jacobian
+of `G` at `samples` complex points of `X`, reached by Gauss-Newton from random starts.
+Complex points, because real parts of `X` made of singular points (the handle of the
+Whitney umbrella, a sphere touching a plane) would lower the estimate. The seed is
+fixed: the result is reproducible and the global random stream is untouched.
 
-The rank is the codimension only where `G` is reduced along `X`. On a repeated factor
-such as `(x² + y² - 1)²` it is too small; `RoutingCache` checks for this when it uses
-the estimate. When `X` has components of different dimensions the largest rank is
-the codimension of the smallest of those the samples reach: pass the dimension
-yourself (`RoutingCache(r, G; dim = ...)`) to choose which components to keep.
-Throws if no sample reaches `X`.
+The rank is the codimension only if `G` is reduced along `X`; a repeated factor such
+as `(x² + y² - 1)²` makes it too small. If the components of `X` differ in dimension,
+the result is the codimension of the smallest one the samples reach; pass `dim` to
+`RoutingCache` to choose instead. Throws if no sample reaches a point of `X` where the
+jacobian is nonzero: Newton can be drawn to an embedded point, as for `[x^2, x*y]`,
+whose samples all converge to the origin.
 """
 function codimension(G, vars::Vector{Variable}; samples::Integer = 10)::Int64
     G = _as_expressions(G)
@@ -235,18 +228,20 @@ function codimension(G, vars::Vector{Variable}; samples::Integer = 10)::Int64
         x = _complex_newton_to_variety(G_sys, randn(rng, ComplexF64, n), k)
         x === nothing && continue
         HC.jacobian!(J, G_sys, x)
-        best = max(best, _numerical_rank(LA.svdvals(J)))
+        # the rows are normalised, so an absolute floor separates a vanishing jacobian
+        # from a small one
+        best = max(best, _numerical_rank(LA.svdvals(J); atol = _RANK_RTOL))
     end
-    best >= 0 || throw(ArgumentError(
-        "codimension: none of the $samples samples reached V(G). Is V(G) empty? " *
-        "Pass the dimension of V(G) yourself."))
+    best >= 1 || throw(ArgumentError(
+        "codimension: " * (best < 0 ? "no sample reached V(G); is it empty?" :
+                           "the jacobian of G vanishes at every sample of V(G); is G " *
+                           "reduced?") * " Pass the dimension of V(G): `dim = ...`."))
     return best
 end
 
-# whether G looks reduced along X at the complex point x of X, where JG has rank c:
-# a short step along the tangent space of the rank-c jacobian must project back to
-# within O(step²). on a repeated factor the "tangent space" contains normal
-# directions, along which the step projects back by its whole length.
+# whether G looks reduced at the complex point x of X: a step of length ε along the
+# kernel of the rank-c jacobian must project back to within O(ε²). on a repeated factor
+# that kernel contains normal directions, and the step projects back by about ε.
 function _reduced_at(G_sys::HC.InterpretedSystem, x::Vector{ComplexF64}, k::Integer, c::Integer,
                      rng)::Bool
     n = length(x)
@@ -258,8 +253,7 @@ function _reduced_at(G_sys::HC.InterpretedSystem, x::Vector{ComplexF64}, k::Inte
     ε = 1e-5 * (1 + LA.norm(x))
     q = x .+ (ε / LA.norm(v)) .* v
     p = _complex_newton_to_variety(G_sys, copy(q), k; maxiter = 60)
-    # a repeated factor converges only linearly, so the projection may give up; it
-    # has moved by about ε by then
+    # Newton converges only linearly on a repeated factor and may give up
     p === nothing && return false
     return LA.norm(p .- q) <= 1e-2 * ε
 end
@@ -267,51 +261,46 @@ end
 """
     jacobian_rank_locus(G, vars; dim = nothing)
 
-A polynomial that vanishes exactly on the points of `ℝⁿ` where the jacobian `J` of `G`
-has rank below the codimension `c` of `X = V(G)`: the sum of the squares of the `c × c`
-minors of `J`, which is the `c`-th elementary symmetric function of `J Jᵀ`. When `G`
-has as many equations as the codimension it is `det(J Jᵀ)`; for a single equation `g`
-it is `‖∇g‖²`. `c` is `n - dim` if the dimension `dim` of `X` is given, and otherwise
-`length(G)` for a single equation and [`codimension`](@ref)`(G, vars)` for several.
+A polynomial vanishing exactly where the jacobian `J` of `G` has rank below the
+codimension `c` of `X = V(G)`: the sum of the squares of the `c × c` minors of `J`,
+i.e. the `c`-th elementary symmetric function of `J Jᵀ`. It is `det(J Jᵀ)` when `G` has
+`c` equations, and `‖∇g‖²` for a single equation `g`. `c` is `n - dim` if `dim` is
+given, else `1` for one equation and [`codimension`](@ref)`(G, vars)` for several.
 
-This describes the equations `G`, not the set `X`. Only its zeros on `X` matter. They
-include every singular point of `X`, but they can include nonsingular points too: a
-nonsingular point `p` of `X` is among them exactly when `X` does not have codimension
-`c` at `p`, or `G` does not generate the ideal of `X` near `p`.
+It depends on the equations, not only on `X`, and only its zeros on `X` matter. They
+contain every singular point of `X`, and a nonsingular point `p` exactly when `X`
+does not have codimension `c` at `p` or `G` does not generate the ideal of `X` near `p`:
 
-| `G` | what goes wrong | nonsingular points that vanish |
+| `G` | why | nonsingular points where it vanishes |
 |---|---|---|
 | `(x² + y² - 1)²` | repeated factor | the whole circle |
-| `x³ - y³` | the real points are the line `x = y`, whose ideal `G` does not generate | the origin |
-| `[x^2, x*y]` | `G` is not reduced at the origin (an embedded point) | the origin of the line `x = 0` |
-| `[x*z, y*z]` with `dim = 2` | the line `x = y = 0` has a larger codimension than the plane `z = 0` | the line, off the plane |
+| `x³ - y³` | `G` does not generate the ideal of the line `x = y` | the origin |
+| `[x^2, x*y]` with `dim = 1` | embedded point at the origin | the origin of the line `x = 0` |
+| `[x*z, y*z]` | `c = 2`, the codimension of the line `x = y = 0`, not of the plane `z = 0` | the whole plane |
 | `x² + y²` in `ℝ³` | real points of too low a dimension | the whole `z`-axis |
 
-More equations than the codimension are fine: on the twisted cubic, cut out by three
-quadrics, it vanishes nowhere. Do not square `G` up first (replace it by `c` random
-combinations of its equations) to get a smaller polynomial: the jacobian of the
-combinations drops rank on a hypersurface of `X` that depends on the combination,
-and those zeros would cut the components of `X` apart.
+More equations than the codimension are fine: for the twisted cubic cut out by three
+quadrics it vanishes nowhere on the curve. Do not square `G` up first to get a
+smaller polynomial: the jacobian of `c` random combinations of `G` drops rank on a
+hypersurface of `X`, and those zeros would cut components apart.
 
-For a single equation it is enough that `g` has no repeated factor and that each of
-its irreducible factors changes sign on `ℝⁿ`.
+For a single equation it suffices that `g` has no repeated factor and each irreducible
+factor changes sign on `ℝⁿ`.
 
 Removing the singular points of `X` is the caller's job: multiply `f` by a polynomial
-whose zeros on `X` are those points and nothing else. It usually has far lower degree
-than this one, which has degree `2c(deg G - 1)` and is dense. On the cone
-`x² + y² = z²`, `z` will do. Vanishing on the singular points is not enough, because
-`x` also cuts the cone along two lines. When nothing better is to hand, this polynomial
-is the fallback:
+whose zeros on `X` are those points and nothing else. That usually has far lower
+degree than this one, which has degree `2c(d - 1)` for equations of degree `d` and is
+dense. On the cone `x² + y² = z²`, `z` will do; `x` would not, since it also cuts the
+cone along two lines. When nothing better is to hand:
 
 ```julia
 r = RoutingFunction(f * jacobian_rank_locus(G, vars), vars)
 ```
 
-Where the rank drops on a whole piece of `X` that should be kept, no choice of `f`
-helps, because the method needs `JG` to have rank `c` there: `G` must be rewritten.
-`flow_to_routing_points` warns when its starts land on such a piece, whether or not
-`V(f)` contains it. It cannot see a rank drop on a thinner set, such as the origin of
-`x³ - y³`, which random starts on `X` do not reach.
+Where the rank drops on a whole piece of `X` that should be kept, no `f` helps: `G`
+must be rewritten. `flow_to_routing_points` warns when its starts land on such a
+piece off `V(f)`. A rank drop on a thinner set, such as the origin of `x³ - y³`, is
+not reached by random starts and goes unreported.
 """
 function jacobian_rank_locus(G, vars::Vector{Variable}; dim::Union{Nothing,Integer} = nothing)::Expression
     G = _as_expressions(G)

@@ -2,17 +2,14 @@
 #
 # two sources, combined in `routing_points`:
 #   1. gradient flows (`flow_to_routing_points`): from starting points on X, follow
-#      the gradient of |r| up (to maxima) and down (to minima of |r|, or into V(f))
-#      and Newton-refine where each flow ends. they find real routing points
-#      directly, but only those some flow happens to reach.
-#   2. monodromy on the routing system: every routing point is an isolated solution
-#      of the polynomial system `routing_system`, and HomotopyContinuation's
-#      `monodromy_solve` collects the complex solutions of the routing system by
-#      walking loops in the parameter space of a family containing it -- by default
-#      the family obtained by moving the centre c and the constant of g.
+#      the gradient of |r| up (to maxima) and down (to minima, or into V(f)) and
+#      Newton-refine where each flow ends. they find only the routing points a flow reaches.
+#   2. monodromy on the routing system (`routing_system`): every routing point is an
+#      isolated solution, and `monodromy_solve` collects the complex solutions by
+#      walking loops in the parameters of a family containing it -- by default the
+#      family that moves the centre c and the constant of g.
 
-# `stop_when` is a predicate on a real point of ℝⁿ; a solution z = (x, μ) of the
-# routing system is cut down to x and checked for realness first.
+# `stop_when` takes a real point of ℝⁿ: z = (x, μ) is cut down to x, after a realness check.
 function _satisfies(stop_when, z::AbstractVector{<:Number}, n::Int64)::Bool
     @inbounds for i = 1:n
         abs(imag(z[i])) < IMAG_TOL || return false
@@ -21,11 +18,10 @@ function _satisfies(stop_when, z::AbstractVector{<:Number}, n::Int64)::Bool
 end
 
 # whether a solution of the routing system (or just its x part) is a routing point:
-# real, off V(f) (distance to V(f) against locus_tol, see `on_zero_locus`), on V(G)
-# when the routing system was squared up (V(H) is larger; Gauss-Newton distance to
-# V(G) against crit_tol), and a critical point of r|V(G) (Newton step to the critical
-# point against crit_tol, see `_criticality`). the last is a safety net: Newton's
-# method and homotopy endgames can report success at a point merely close to a solution.
+# real, off V(f) (see `on_zero_locus`), on V(G) when the system was squared up (V(H) is
+# larger; see `_distance_to_variety`), and a critical point of r|V(G) (see
+# `_criticality`). the last test guards against Newton and homotopy endgames reporting
+# success at a point merely close to a solution.
 function _is_routing_point(
     cache::RoutingCache,
     z::AbstractVector{<:Number};
@@ -44,16 +40,15 @@ function _is_routing_point(
     return _is_critical(cache, x; crit_tol = Float64(crit_tol))
 end
 
-# the callback that ends a seeding flow once it comes within locus_tol·(1 + ‖u‖) of
-# V(f), measured by the Newton distance |f|/‖∇f‖ (a test on |f| alone depends on
-# the scale of f). r changes sign across V(f), so the field is discontinuous there
-# and a flow heading into V(f) can only end on the removed locus.
+# the callback that ends a seeding flow within locus_tol·(1 + ‖u‖) of V(f), by the
+# Newton distance |f|/‖∇f‖ (|f| alone depends on the scale of f). r changes sign
+# across V(f), so a flow heading into V(f) can only end on the removed locus.
 function _near_zero_locus_callback(r::RoutingFunction, n::Int64, locus_tol::Float64)
     f_cb = zeros(Float64, 1)
     ∇f_cb = zeros(Float64, n)
     function near_zero_locus(u, t, integrator)
-        # a path running off to infinity makes f NaN, and `HC.evaluate!` throws an
-        # InexactError writing it to a Float64 buffer: stop the path instead
+        # a path running off to infinity makes f NaN, which `HC.evaluate!` cannot write
+        # to a Float64 buffer (InexactError): stop the path
         all(isfinite, u) || return true
         try
             HC.evaluate!(f_cb, r.f_sys, u)
@@ -71,9 +66,8 @@ end
 # refinement of where it ends. returns the solution (x, μ) of the routing system, or
 # nothing.
 #
-# the ODE parameter is the direction divided by |r(x0)|: this rescales time so that
-# the flow's speed does not depend on the size of r (multiplying f by 1e-8 would
-# otherwise slow it down by the same factor).
+# the ODE parameter dir/|r(x0)| rescales time so that the speed of the flow does not
+# depend on the size of r (scaling f by 1e-8 would slow it by the same factor).
 function _flow_and_refine(cache::RoutingCache, x0::Vector{Float64}, dir::Float64, callback,
                           tspan::Tuple{Float64,Float64}, maxiters::Int64)
     r = cache.r
@@ -102,9 +96,9 @@ function _grad_num(r::RoutingFunction, x::Vector{Float64})::Vector{Float64}
     return _g(r, x) .* ∇f .- (2 * r.d * fx[1]) .* (x .- r.c)
 end
 
-# the points of `pts` with distinct x parts. x determines the multipliers, and these
-# can be many orders of magnitude larger than x, so comparing whole solutions (x, μ)
-# would compare only μ.
+# the points of `pts` with distinct x parts. at a routing point JH has rank c, so x
+# determines μ; and μ can be orders of magnitude larger than x, so comparing whole
+# solutions (x, μ) would compare only μ.
 function _unique_by_x(pts::AbstractVector{<:AbstractVector}, n::Int64)
     isempty(pts) && return pts
     U = HC.UniquePoints(ComplexF64.(pts[1][1:n]), 1)
@@ -126,19 +120,18 @@ Routing points found by gradient flow alone. Starting points are drawn uniformly
 `[-box, box]ⁿ` (or taken from `starts`) and projected onto `V(G)`; from each, the
 gradient flow of `|r|` on `V(G)` is followed up and down, and where it ends is refined
 by Newton's method on the routing system. Returns the routing points found, without
-repeats. Much cheaper than [`routing_points`](@ref), which adds monodromy, but it only
-finds the routing points some flow reaches -- mostly maxima and minima of `|r|`,
-rarely saddles.
+repeats. Cheaper than [`routing_points`](@ref), which adds monodromy, but it only finds
+the routing points a flow reaches -- mostly maxima and minima of `|r|`, rarely saddles.
 
 Keywords:
 * `nstarts = 100`: starting points that must land on `V(G)`;
-* `box = 3.0`: half-width of the sampling box. Too small misses a far-away `V(G)`;
+* `box = 3.0`: half-width of the sampling box; too small misses a far-away `V(G)`;
 * `max_attempts = 20`: sampling budget, as a multiple of `nstarts`;
-* `starts`: your own starting points (vectors of length `n`), each tried once, instead
-  of random ones -- points near `V(f)` find small regions best;
+* `starts`: starting points (vectors of length `n`), each tried once, instead of random
+  ones; points near `V(f)` find small regions best;
 * `proj_tol = 1e-8`: how small `‖G‖` must get for a start to count as on `V(G)`;
 * `tspan = (0.0, 200.0)`, `maxiters = 10_000`: limits of each ODE integration (time is
-  rescaled so that it does not depend on the scale of `r`);
+  rescaled to be independent of the scale of `r`);
 * `locus_tol = 1e-6`, `crit_tol = 1e-6`: see [`routing_points`](@ref);
 * `stop_when`: a predicate on a routing point; the first one satisfying it is
   returned at once;
@@ -151,12 +144,13 @@ function flow_to_routing_points(cache::RoutingCache; all_vars::Bool = false, kwa
     return [all_vars ? real.(z) : real.(z[1:n]) for z in _flow_seeds(cache; kwargs...)]
 end
 
-# the starts on V(G) where JG drops rank and f does not vanish. starts in V(f) are left out, since V(f) removes them anyway.
-# isolated real points attract the projection strongly, so a singular point can collect
-# many starts; how many distinct points there are tells that apart from a whole piece.
-# the projection stalls a little way off a singular point, so both the V(f) test and
-# the distinct-point test use this coarse relative tolerance.
+# the relative tolerance for the V(f) test and the distinct-point test in
+# `_warn_rank_drops`: the projection stalls a little way off a singular point.
 const _RANK_DROP_TOL = 1e-3
+
+# warn about the starts on V(G) off V(f) where JG drops rank. isolated real points
+# attract the projection strongly, so one singular point can collect many starts; the
+# number of distinct points tells that apart from a whole singular piece.
 
 function _warn_rank_drops(points::Vector{Vector{Float64}}, started::Integer, c::Integer)
     isempty(points) && return nothing
@@ -171,9 +165,9 @@ function _warn_rank_drops(points::Vector{Vector{Float64}}, started::Integer, c::
     return nothing
 end
 
-# the flow stage proper. returns the solutions (x, μ) of the routing system as
-# complex vectors, the form monodromy takes its start solutions in. the starts that
-# landed on V(G) are pushed to `landed`, if given.
+# the flow stage proper. returns the solutions (x, μ) of the routing system as complex
+# vectors, as monodromy takes them. the starts that landed on V(G) are pushed to
+# `landed`, if given.
 function _flow_seeds(
     cache::RoutingCache;
     landed::Union{Nothing,Vector{Vector{Float64}}} = nothing,
@@ -200,9 +194,8 @@ function _flow_seeds(
     tspan = (Float64(tspan[1]), Float64(tspan[2]))
     callback = _near_zero_locus_callback(r, n, locus_tol)
 
-    # where the flows begin: uniform samples of [-box, box]^n, or the caller's own
-    # points, each tried once. uniform samples find a component in proportion to
-    # its size, so small components are best found from supplied starts near V(f).
+    # uniform samples find a component in proportion to its size, so small components
+    # are best found from supplied starts near V(f)
     starts = _as_points(starts)
     supplied = starts !== nothing
     if supplied
@@ -238,7 +231,7 @@ function _flow_seeds(
             !on_zero_locus(cache.r, start_pt; locus_tol = _RANK_DROP_TOL) &&
             push!(rank_drops, copy(start_pt))
 
-        # up to the attracting critical points of |r|, down to the repelling ones
+        # up to maxima of |r|, down to minima
         for dir in (1.0, -1.0)
             z = _flow_and_refine(cache, start_pt, dir, callback, tspan, Int64(maxiters))
             # a flow that ended on V(f) refines to a solution that is no routing point
@@ -286,21 +279,21 @@ Two stages. Gradient flows from random (or supplied) starting points find routin
 points directly ([`flow_to_routing_points`](@ref)). They then seed monodromy on the
 routing system ([`routing_system`](@ref)), which collects its complex solutions by
 walking loops in the parameters of a family of such systems. A solution is kept when
-it is real, off `V(f)` and a genuine critical point.
+it is real, off `V(f)`, on `V(G)` and a critical point of `r` there.
 
 Two families are available (`monodromy_family`):
 * `:centre` (default): the routing systems of `f / (‖x − c‖² + a)ᵈ` for all centres `c`
-  and constants `a`. Monodromy runs directly at the actual `(c, 1)`, and only has to
-  find the complex critical points of `r` -- much fewer solutions than the affine
-  family. Its loops are sampled at the scale of `V(G)`, estimated from the starting
-  points that landed on it. It needs one routing point (or one generic complex point
-  of `V(G)`, which it constructs) on each irreducible component of `V(G)`.
+  and constants `a`. Monodromy runs at the actual `(c, 1)` and has to find only the
+  complex critical points of `r`, far fewer solutions than the affine family. Its loops
+  are sampled at the scale of `V(G)`, estimated from the starting points that landed
+  on it. It needs a routing point (or a generic complex point of `V(G)`, which it
+  constructs) on each irreducible component of `V(G)`.
 * `:affine`: the routing system minus generic affine-linear functions of `(x, μ)`.
   Many more solutions to find, but it reaches all of them even when `V(G)` is
-  reducible and the flows found nothing on some of its components.
+  reducible and the flows found nothing on some components.
 
-The monodromy stage stops heuristically (after a few loops without new solutions), so
-the result is as complete as that stage manages to be -- it is not certified.
+Monodromy stops heuristically, after a few loops without new solutions: the result is
+not certified complete.
 
 Keywords (besides those of [`flow_to_routing_points`](@ref): `nstarts`, `box`,
 `starts`, `proj_tol`, `max_attempts`, `stop_when`):
@@ -308,7 +301,7 @@ Keywords (besides those of [`flow_to_routing_points`](@ref): `nstarts`, `box`,
   removed locus and is not a routing point (see [`on_zero_locus`](@ref)). Independent of
   the scale of `f`; regions thinner than about twice this are not resolved;
 * `crit_tol = 1e-6`: a candidate must be within `crit_tol * (1 + ‖P‖)` of a critical
-  point (the length of a Newton step; see [`critical_distance`](@ref));
+  point (the length of a Newton step; see [`critical_distance`](@ref)) and of `V(G)`;
 * `flow_options = (;)`: options for the flows, e.g. `(tspan = (0.0, 500.0), maxiters = 20_000)`;
 * `monodromy_family = :centre`: `:centre` or `:affine`, see above;
 * `monodromy_options = (;)`: passed to HomotopyContinuation's `monodromy_solve`, e.g.
@@ -338,7 +331,7 @@ function routing_points(
     zero_tol::Union{Nothing,Real} = nothing
     )::Vector{Vector{Float64}}
 
-    n = cache.n                     # ambient dimension, i.e. where ∇r lives
+    n = cache.n
     family = _monodromy_family(monodromy_family)
     zero_tol === nothing || _ignored_keyword(:zero_tol,
         "whether a point lies on the removed locus V(f) is now decided by its " *
@@ -387,8 +380,8 @@ function routing_points(
     candidates = [real.(z) for z in vcat(sols, seed_points) if _real_x(z, n)]
     isempty(candidates) && return Vector{Float64}[]
 
-    # the routing system also has real solutions on V(f); they are recognised by
-    # their distance to V(f), not by |r|, which is tiny in thin or far-away regions
+    # the routing system also has real solutions on V(f), recognised by their distance
+    # to V(f) and not by |r|, which is tiny in thin or far-away regions
     pts = [p for p in _unique_by_x(candidates, n) if
            _is_routing_point(cache, p; locus_tol = locus_tol, crit_tol = crit_tol)]
     verbose && println("routing_points: $(length(pts)) routing points")
@@ -411,11 +404,10 @@ function _extent(pts::Vector{Vector{Float64}}, n::Int64)
     return centre, max(1.0, spread)
 end
 
-# loop nodes for the centre family (PIPELINE.md §3.2). HC's default draws every
-# parameter from a standard normal distribution, i.e. loops of size 1 around the
-# origin, which never reach the parts of a large variety far from the origin. here
-# the centre c is drawn around `centre` at a scale σ that is log-uniform in
-# [scale, spread · scale], and a at the scale σ² of ‖x − c‖².
+# loop nodes for the centre family (PIPELINE.md §3.2). HC's default, standard normal
+# parameters, gives loops of size 1 around the origin, which never reach the parts of a
+# large variety far from it. here c is drawn around `centre` at a scale σ log-uniform
+# in [scale, spread · scale], and a at the scale σ² of ‖x − c‖².
 function _centre_sampler(centre::Vector{Float64}, scale::Float64, spread::Float64)
     n = length(centre)
     return function (p)
@@ -424,9 +416,9 @@ function _centre_sampler(centre::Vector{Float64}, scale::Float64, spread::Float6
     end
 end
 
-# loop nodes for the affine family (PIPELINE.md §3.2): its parameters (the coefficients of the
-# shifts) are of size 10-500 on the examples, so loops are sampled at the size of the
-# base point rather than at size 1.
+# loop nodes for the affine family (PIPELINE.md §3.2): its parameters (the coefficients
+# of the shifts) are of size 10-500 on the examples, so loops are sampled at the rms
+# size of the base parameters rather than at size 1.
 _affine_sampler(p) = (LA.norm(p) / sqrt(length(p))) .* randn(ComplexF64, length(p))
 
 # a random complex point of X near `centre`: minimum-norm Gauss-Newton steps
@@ -481,18 +473,18 @@ end
 
 # monodromy over the centre family, at the routing system itself. start solutions:
 # the flow seeds, plus six constructed from random complex points of X and tracked to
-# the routing system -- enough to start when the flows found nothing, and a chance to
+# the routing system. they let monodromy start when the flows found nothing, and may
 # reach components of a reducible X that the seeds miss.
 #
 # the loops are sampled in phases of growing size (`CENTRE_PHASES`): loops at the
-# scale of X first, until they stop finding solutions, then larger ones from all the
-# solutions found so far. large loops find solutions far out (the last Clebsch region,
-# 3RPR), but they rarely find new ones, and mixed in from the start they end the
-# search before the smaller loops have found everything (one region of 14 missed in 3
-# of 40 runs on a sphere; 0 of 40 with phases). a timeout applies to all phases together.
+# scale of X until they stop finding solutions, then larger ones from all solutions
+# found so far. large loops find solutions far out (the last Clebsch region, 3RPR) but
+# rarely find new ones, and mixed in from the start they end the search before the
+# smaller loops finish (one region of 14 missed in 3 of 40 runs on a sphere; 0 of 40
+# with phases). a timeout applies to all phases together.
 #
 # works in the chart coordinates (x, μ₀, μ̂) of `_centre_family`; returns the solutions
-# found as (x, μ), the number of start solutions, and HC's return code.
+# as (x, μ), the number of start solutions, and HC's return code.
 function _monodromy_centre(cache::RoutingCache, seeds, landed, options::NamedTuple)
     n = cache.n
     p0 = ComplexF64.(vcat(cache.r.c, 1.0))
@@ -500,8 +492,7 @@ function _monodromy_centre(cache::RoutingCache, seeds, landed, options::NamedTup
     on_chart(zs) = [w for w in (_to_chart(z, n, cache.chart) for z in zs) if w !== nothing]
 
     starts = on_chart(seeds)
-    # the constructed starts begin at growing distances from the centre, so that they
-    # can land on components of X other than the nearest
+    # growing distances from the centre, to land on components of X other than the nearest
     for spread in (1.0, 2.0, 4.0, 8.0, 16.0, 32.0)
         x0 = _complex_point_on_variety(cache, centre, spread * scale)
         x0 === nothing && continue
@@ -539,9 +530,8 @@ function _monodromy_centre(cache::RoutingCache, seeds, landed, options::NamedTup
     return [z for z in (_from_chart(w, n) for w in sols) if z !== nothing], nstart, code
 end
 
-# the loop sizes of the centre family's monodromy phases, as multiples of the extent
-# of X: in phase i the scale of the loops is log-uniform in [1, CENTRE_PHASES[i]] times
-# the extent (see `_centre_sampler`)
+# the loop sizes of the centre family's monodromy phases: in phase i the scale is
+# log-uniform in [1, CENTRE_PHASES[i]] times the extent of X (see `_centre_sampler`)
 const CENTRE_PHASES = (1.0, 10.0, 100.0)
 
 # monodromy over the affine family: seeds and a random start pair are moved to a
@@ -556,7 +546,7 @@ function _monodromy_affine(cache::RoutingCache, seeds, options::NamedTuple)
     p0 = vec(Q0)
     p_target = zeros(ComplexF64, length(p0))
 
-    # the seeds solve the family at p_target; track them onto the generic fibre
+    # the seeds solve the family at p_target; track them to p0
     starts = Vector{ComplexF64}[S0]
     if !isempty(seeds)
         res_seeds = HC.solve(cache.param_sys, seeds; start_parameters = p_target,
@@ -568,7 +558,7 @@ function _monodromy_affine(cache::RoutingCache, seeds, options::NamedTuple)
     mon = monodromy_solve(cache.param_sys, starts, p0; show_progress = false,
                           merge((parameter_sampler = _affine_sampler,), options)...)
 
-    # and the whole fibre back to the routing system itself
+    # and the whole fibre back to the routing system
     res = HC.solve(cache.param_sys, solutions(mon); start_parameters = p0,
                    target_parameters = p_target, show_progress = false)
     return solutions(res; only_nonsingular = false), length(starts), mon.returncode

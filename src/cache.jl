@@ -1,33 +1,24 @@
-# everything precomputed from (r, G): compiled systems, the routing system and its
-# monodromy family, the gradient fields, scratch buffers. all symbolic work happens
-# here. the buffers make a cache stateful: build one per thread.
 """
     RoutingCache(r, G; dim = nothing, reg = 1e-8)
 
-Everything the pipeline precomputes from a routing function `r` and the equations
-`G` of the variety `X = V(G)`: the compiled systems for `G` and its derivatives, the
-routing system whose solutions are the routing points, the two families monodromy
-can run over, the two gradient fields, and scratch buffers. Build it once and pass it to
-every routine; the `(r, G, ...)` convenience methods build a fresh one on each call.
+Everything the pipeline precomputes from a routing function `r` and the equations `G`
+of `X = V(G)`: compiled systems for `G` and its derivatives, the routing system, the
+two monodromy families, the two gradient fields, and scratch buffers. The `(r, G, ...)`
+convenience methods build a fresh cache on every call.
 
-`G` may be a vector of expressions, a single expression, or a `System`; it must use
-only the variables of `r`. It may have more equations `k` than the codimension `c` of
-`X` (`X` need not be a complete intersection), but it must be reduced along `X`: its
-jacobian must have rank `c` at the points of `X` off the removed locus. `dim` is the
-dimension of `X`, so `c = n - dim`; when it is not given, `c` is `1` for a single
-equation and [`codimension`](@ref)`(G, r.vars)` otherwise.
+`G` (a vector of expressions, an expression, or a `System`) must use only the
+variables of `r`. It may have more equations `k` than the codimension `c` of `X`, but
+its jacobian must have rank `c` on `X` off `V(f)`. `c = n - dim` if `dim` is given,
+else `1` for one equation and [`codimension`](@ref)`(G, r.vars)` for several.
 
-When `c < k` the routing system is built from `H = B G`, `c` random combinations of the
-(row-normalised) equations, because homotopy continuation needs a square system.
-`V(H)` contains `X` and other components besides; the routing points found on those
-are discarded, since they do not lie on `V(G)`. Everything else -- the flows, the
-projection onto `X`, hessians, tangent spaces -- uses `G` itself. `H` is never used
-to define anything on all of `X`: its jacobian drops rank on a hypersurface of `X`
-that depends on `B`.
+If `c < k`, homotopy continuation still needs a square system, so the routing system
+is built from `H = B G`: `c` random combinations of the row-normalised equations.
+Solutions on the extra components of `V(H)` are discarded. Everything defined on all
+of `X` (flows, projection, hessians) uses `G`, since the jacobian of `H` drops rank on
+a hypersurface of `X`.
 
-`reg` damps the normal equations `J Jᵀ` where the jacobian is nearly rank deficient.
-
-A cache holds mutable buffers: do not share one between threads.
+`reg` damps `J Jᵀ` where the jacobian is nearly rank deficient. A cache holds mutable
+buffers: use one per thread.
 """
 struct RoutingCache{F,Fu}
     r::RoutingFunction
@@ -103,10 +94,9 @@ function RoutingCache(
     m = length(expressions(sys))
     N = length(sys_vars)
 
-    # the two families monodromy can run over (PIPELINE.md §3.2). the centre family
-    # is the default; the affine family sys(z) - (Q z + q), z = (x, μ), with the
-    # entries of Q and q as parameters and parameter 0 the routing system itself, is
-    # much larger but transitive even when X is reducible.
+    # the monodromy families (PIPELINE.md §3.2). the affine family sys(z) - (Q z + q),
+    # z = (x, μ), is sys at parameter 0; much larger than the centre family, but
+    # transitive even when X is reducible.
     chart = randn(ComplexF64, c + 1)
     centre_sys = _centre_family(r, H, chart)
     @unique_var q[1:m, 1:(N + 1)]   # unique names: a user variable q must not collide
@@ -135,10 +125,8 @@ function RoutingCache(
     )
 end
 
-# the codimension c of V(G): n - dim if given, 1 for a single equation, and otherwise
-# estimated from the rank of JG at sample points (`codimension`). when the estimate is
-# below k, G is squared up, so a rank too small because G is not reduced (a repeated
-# factor) would go unnoticed: check that G looks reduced at those samples.
+# c from dim, or estimated. an estimate below k leads to squaring up, which would hide
+# a rank that is low because G is not reduced: check for that.
 function _cache_codimension(G::Vector{Expression}, vars::Vector{Variable}, n::Int64, k::Int64,
                             dim::Union{Nothing,Integer})::Int64
     if dim !== nothing
@@ -150,9 +138,6 @@ function _cache_codimension(G::Vector{Expression}, vars::Vector{Variable}, n::In
     end
     k == 1 && return 1
     c = codimension(G, vars)
-    c >= 1 || throw(ArgumentError(
-        "the jacobian of G vanishes at every sample point of V(G), so its dimension " *
-        "cannot be estimated. Is G reduced? Pass the dimension: RoutingCache(r, G; dim = ...)"))
     c < k && !_looks_reduced(G, vars, c) && @warn(
         "RoutingCache: the jacobian of G has rank $c at points of V(G), below the $k " *
         "equations, but G does not look reduced there (a repeated factor?). Then the " *
@@ -161,7 +146,7 @@ function _cache_codimension(G::Vector{Expression}, vars::Vector{Variable}, n::In
     return c
 end
 
-# `_reduced_at` at a few complex points of V(G), from a fixed seed
+# `_reduced_at` at a few complex points of V(G); fixed seed
 function _looks_reduced(G::Vector{Expression}, vars::Vector{Variable}, c::Int64; samples::Int64 = 3)::Bool
     n, k = length(vars), length(G)
     G_sys = HC.InterpretedSystem(System(G ./ _row_scales(G, vars); variables = vars))
@@ -177,12 +162,9 @@ function _looks_reduced(G::Vector{Expression}, vars::Vector{Variable}, c::Int64;
     return true
 end
 
-# the c equations of the routing system: G itself when c = k; otherwise H = B G with B
-# a random c × k matrix applied to the rows of G divided by their coefficient norms
-# (equations of very different sizes would otherwise leave H dominated by one of them).
-# B is returned with the scaling folded in, so that JH = B JG. its rows are orthonormal
-# before the scaling, so that H is well conditioned. B comes from the global random
-# stream, like the centre of r.
+# H and B: G and nothing when c = k; otherwise H = B G with B = Qᵀ D⁻¹, Q a random k × c
+# matrix with orthonormal columns and D the coefficient norms of G (so that no equation
+# dominates). JH = B JG. B uses the global random stream, like the centre of r.
 function _square_up(G::Vector{Expression}, vars::Vector{Variable}, c::Int64)
     k = length(G)
     c == k && return G, nothing
@@ -226,15 +208,12 @@ function jacobian_G!(cache::RoutingCache, point::AbstractVector{Float64})
     return cache.JG_val
 end
 
-# whether JG drops rank below c at the point P of V(G). rather than threshold σ_c(JG),
-# which depends on the scale of G, compare σ_c at P and at a nearby point Q: σ_c grows
-# with distance from the rank-drop locus, so σ_c(P) ≪ σ_c(Q) if P is on it, and
-# σ_c(P) ≈ σ_c(Q) otherwise. (σ_c, not σ_min: with more equations than c the singular
-# values after the c-th vanish on all of V(G).)
-#
-# projection stops slightly short of the locus (reg damps it), so `step` must be well
-# above that gap. stepping along P - c (generic, since c is) rather than a random
-# direction keeps seeded runs reproducible.
+# whether JG has rank below c at the point P of V(G). a threshold on σ_c(JG) would
+# depend on the scale of G, so compare σ_c at P with σ_c a short step away: it grows
+# with the distance from the rank-drop locus. (σ_c rather than σ_min, which vanishes
+# on all of V(G) when k > c.) the projection stops slightly short of the locus, so
+# `step` must be well above that gap. stepping along P - r.c, generic because the
+# centre is, keeps seeded runs reproducible.
 function _rank_drops_at(
     cache::RoutingCache,
     P::AbstractVector{Float64};
@@ -245,7 +224,8 @@ function _rank_drops_at(
     c = cache.c
     σ = LA.svdvals(jacobian_G!(cache, P))
     length(σ) < c && return true
-    # rank below c on all of ℝⁿ: the rank is low on both sides of the step
+    # rank below c at P already; also covers G rank deficient everywhere, where the
+    # ratio below would compare two zeros
     σ[c] <= c * eps(Float64) * σ[1] && return true
 
     u = P .- cache.r.c
@@ -260,9 +240,8 @@ end
     project_to_variety(P, cache)           # returns a new point
     project_to_variety_residual!(P, cache) -> (P, ‖G(P)‖)
 
-Moves `P` onto `V(G)` by damped Newton steps along the normal directions, backtracking
-so that `‖G‖` decreases at every step. The residual version also reports the `‖G‖`
-reached, so a point that never got there can be told apart.
+Moves `P` onto `V(G)` by damped Gauss-Newton steps, halving each until `‖G‖` decreases.
+The residual version also returns the `‖G‖` reached, to tell failures apart.
 """
 project_to_variety!(
     point::AbstractVector{Float64},
@@ -292,10 +271,9 @@ project_to_variety_residual!(
     projected_gradient_field(cache; unit_speed = false) -> (field!, f_sys)
 
 The in-place ODE right-hand side `field!(du, u, p, t)` of the projected gradient flow
-of `r` on `V(G)` (see PIPELINE.md): `p` is the direction, `+1` to
-ascend `|r|`, `-1` to descend, and its size rescales time. With `unit_speed` the
-tangential part is normalised, so that time is arc length. Also returns the compiled
-numerator `f`, for callbacks on the removed locus.
+of `r` on `V(G)` (PIPELINE.md §1.4). The sign of `p` ascends (`+1`) or descends (`-1`)
+`|r|`, and its size rescales time. With `unit_speed` time is arc length. Also returns
+the compiled numerator `f`, for callbacks on `V(f)`.
 """
 projected_gradient_field(cache::RoutingCache; unit_speed::Bool = false) =
     (unit_speed ? cache.flow_unit! : cache.flow!), cache.r.f_sys
