@@ -3,9 +3,8 @@
 
 # component label of every routing point, numbered in order of first appearance.
 #
-# `A` may be the raw adjacency matrix or the reflexive-transitive closure
-# `find_connectivity_matrix` returns -- the traversal only reads which entries are
-# nonzero, and both matrices have the same connected components.
+# `A` may be an adjacency matrix or the closure `find_connectivity_matrix` returns;
+# only which entries are nonzero matters, and both have the same components.
 function component_labels(A::AbstractMatrix)::Vector{Int64}
     size(A, 1) == size(A, 2) || throw(ArgumentError("A must be square"))
     n = size(A, 1)
@@ -22,8 +21,7 @@ function component_labels(A::AbstractMatrix)::Vector{Int64}
 
         while !isempty(stack)
             i = pop!(stack)
-            # the matrix is symmetric as built, but a path recorded in one
-            # direction only should still join the two points
+            # symmetric as built, but an entry in one direction should still join
             @inbounds for j = 1:n
                 if label[j] == 0 && (A[i, j] != 0 || A[j, i] != 0)
                     label[j] = ncomp
@@ -37,9 +35,8 @@ function component_labels(A::AbstractMatrix)::Vector{Int64}
 end
 
 # the reflexive-transitive closure of the graph with adjacency matrix A: S[i,j] is
-# true exactly when i and j lie in the same connected component. read off the
-# component labels, which costs O(n²) -- the closure as a Boolean power sum
-# ⋁ₖ Aᵏ costs O(n⁴).
+# true exactly when i and j lie in the same component. read off the labels in O(n²)
+# instead of forming the Boolean power sum ⋁ₖ Aᵏ.
 function reachability(A::AbstractMatrix)::BitMatrix
     labels = component_labels(A)
     return labels .== transpose(labels)
@@ -49,16 +46,16 @@ end
     find_connectivity_matrix(cache; kwargs...) -> (A, routing_points)
     find_connectivity_matrix(cache, routing_points; kwargs...) -> (A, routing_points)
 
-Finds the routing points (or takes the ones given), and joins each routing point of
+Finds the routing points (or takes the ones given) and joins each routing point of
 positive index to the index 0 routing points that the gradient flow of `|r|` reaches
-from it ([`solve_ivp`](@ref)). Returns the reachability matrix `A` of that graph --
+from it ([`solve_ivp`](@ref)). Returns the reachability matrix `A` of that graph, where
 `A[i, j]` is true exactly when routing points `i` and `j` lie on the same connected
-component of `V(G) ∖ V(f)` -- together with the routing points, in the same order.
+component of `V(G) ∖ V(f)`, together with the routing points in the order of `A`.
 
-Keywords for the paths: `start_step_size = 0.1`, `max_halvings = 30`, `tol = 1e-2`,
-`grad_step_size = 0.05` (see [`solve_ivp`](@ref)), and `path_options = (;)`, e.g.
-`(tspan = (0.0, 1e4),)`, for [`gradient_flow!`](@ref). Any other keyword (`nstarts`,
-`box`, `starts`, `locus_tol`, `monodromy_options`, ...) goes to
+Keywords: `start_step_size = 0.1`, `max_halvings = 30`, `tol = 1e-2`,
+`grad_step_size = 0.05` (see [`solve_ivp`](@ref)); `path_options = (;)`, extra keywords
+for `solve_ivp`, e.g. `(tspan = (0.0, 1e4),)`; `verbose = false`. In the first form any
+other keyword (`nstarts`, `box`, `starts`, `locus_tol`, ...) goes to
 [`routing_points`](@ref).
 """
 function find_connectivity_matrix(
@@ -101,7 +98,7 @@ function find_connectivity_matrix(
         end
     end
 
-    # every path ends at a maximum of |r|, so one that reaches none means a maximum was
+    # every path ends at a maximum of |r|; one that reaches none means a maximum was
     # missed or the flow stopped early
     nlost > 0 && @warn(
         "find_connectivity_matrix: $nlost of $npaths paths reached no index 0 routing point, " *

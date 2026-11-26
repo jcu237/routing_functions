@@ -3,8 +3,8 @@
 
 A connected component of `V(G) ∖ V(f)`, recorded through the routing points on it:
 `points[i]` is a routing point and `indices[i]` its Morse index. `r` restricted to the
-component is a Morse function with exactly these critical points, so its Euler
-characteristic is `euler_characteristic = ∑ (-1)^index`.
+component is a Morse function with exactly these critical points, so
+`euler_characteristic = ∑ (-1)^index`.
 """
 struct Component
     points::Vector{Vector{Float64}}
@@ -78,9 +78,8 @@ function connected_components(
     labels = component_labels(A)
     ncomp = isempty(labels) ? 0 : maximum(labels)
 
-    # every component carries a maximum of |r|, i.e. an index 0 point. a component
-    # made only of higher-index points means a path from one of them never arrived,
-    # and the count is too high.
+    # every component has a maximum of |r|, an index 0 point. one without means a path
+    # never arrived, and the count is too high.
     orphans = [c for c = 1:ncomp if !any(j -> labels[j] == c && indices[j] == 0, eachindex(labels))]
     isempty(orphans) || @warn(
         "connected_components: $(length(orphans)) component(s) contain no index 0 routing " *
@@ -134,13 +133,12 @@ connected_components(r::RoutingFunction, G; kwargs...) =
 """
     component_index(cache, components, z; tol=1e-4, kwargs...)
 
-Numerically identify the component of `z ∈ X_r`. Returns an index into
-`components`, or `nothing` if the flow fails to reach a known routing point
-or the endpoint lies within `tol` of targets from different components.
+Identify numerically the component of `z ∈ V(G) ∖ V(f)`. Returns an index into
+`components`, or `nothing` if the flow fails to reach a known routing point or ends
+within `tol` of routing points from different components.
 
-Assumes `z` lies on the variety and `components` was computed for `cache`.
-Additional keywords, such as `dtmax`, `tspan`, and `maxiters`, go to
-`gradient_flow!`. The input `z` is left unchanged.
+Assumes `z` lies on `V(G)` and `components` was computed for `cache`. Other keywords
+(`dtmax`, `tspan`, `maxiters`, ...) go to [`gradient_flow!`](@ref). `z` is not modified.
 """
 function component_index(
     cache::RoutingCache,
@@ -152,25 +150,24 @@ function component_index(
     length(z) == cache.n || throw(DimensionMismatch("expected $(cache.n) coordinates"))
     isfinite(tol) && tol > 0 || throw(ArgumentError("tol must be finite and positive"))
 
-    # gradient_flow! overwrites its starting point with the final position.
+    # gradient_flow! overwrites its starting point.
     x = collect(Float64, z)
     all(isfinite, x) || throw(ArgumentError("expected finite coordinates"))
 
-    # The denominator of r is positive, so sign(f) = sign(r) throughout X_r.
-    # A path in X_r can only reach routing points with the same sign.
+    # the denominator of r is positive, so sign(f) = sign(r), and a flow stays in
+    # the region of its starting sign.
     side = sign(evaluate_f(cache.r, x))
     iszero(side) && throw(DomainError(z, "z lies on the deleted zero locus"))
 
     targets = Vector{Float64}[]
     owners = Int[]
     for i in eachindex(components), p in components[i].points
-        # A stored routing point already has a known component. This also
-        # handles a query starting exactly at a saddle, where the flow is stationary.
+        # a routing point already has a known component; this covers a query at a
+        # saddle, where the flow is stationary.
         x == p && return i
         sign(evaluate_f(cache.r, p)) == side || continue
 
-        # Any routing index is eligible: reaching a saddle identifies its
-        # component just as well as reaching a maximum.
+        # any index will do: reaching a saddle identifies the component too.
         push!(targets, p)
         push!(owners, i)
     end
@@ -178,8 +175,7 @@ function component_index(
     isempty(targets) && return nothing
     gradient_flow!(cache, x, targets; tol, kwargs...) || return nothing
 
-    # The flow has stopped within tol of a target. Overlapping capture balls
-    # are harmless when their routing points belong to the same component.
+    # overlapping capture balls are harmless within one component.
     j = nearest_index(x, targets)
     for k in eachindex(targets)
         if owners[k] != owners[j] && LA.norm(x - targets[k]) <= tol

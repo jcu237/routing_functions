@@ -8,8 +8,7 @@
 #   ∇r  = (∇f - (d f / g) ∇g) / gᵈ
 #   ∇²r = ∇²f / gᵈ - d (∇f ∇gᵀ + ∇g ∇fᵀ + f ∇²g) / gᵈ⁺¹ + d (d + 1) f ∇g ∇gᵀ / gᵈ⁺²
 #
-# the interpreted systems are compiled once, here. anything that also depends on
-# the variety V(G) lives in `RoutingCache`.
+# anything that also depends on V(G) lives in `RoutingCache`.
 """
     RoutingFunction(f, vars, c)
     RoutingFunction(f, vars)        # c random
@@ -26,7 +25,8 @@ connected components of `V(G) \\ V(f)`. Typical choices:
   coordinate product sorts points by the signs of the coordinates;
 * the singular points of `V(G)` **must** lie in `V(f)`: multiply `f` by a polynomial
   that vanishes on `V(G)` only at those points. [`jacobian_rank_locus`](@ref)`(G, vars)`
-  is a fallback, which can remove more than the singular points.
+  is a fallback, which can remove more than the singular points. It works when `G` has
+  more equations than the codimension of `V(G)`; do not square `G` up to get it.
 
 `vars` are the ambient variables, in the order points are written in; pass them
 whenever `f` does not involve all of them (a constant `f` involves none). `c` is the
@@ -84,8 +84,8 @@ struct RoutingFunction
 end
 
 # ∑ₐ |cₐ| xᵃ for f = ∑ₐ cₐ xᵃ. evaluated at |x| it bounds every partial sum formed
-# while evaluating f(x), so f(x) is indistinguishable from 0 once |f(x)| is below a
-# modest multiple of eps times it.
+# while evaluating f(x), so f(x) cannot be told from 0 once |f(x)| is below a small
+# multiple of eps times it.
 function _abs_coefficients(f::Expression, vars::Vector{Variable})::Expression
     E, C = exponents_coefficients(f, vars)
     isempty(C) && return Expression(0)
@@ -100,12 +100,11 @@ RoutingFunction(f::Expression, vars::Vector{Variable}) =
 
 RoutingFunction(f::Expression) = RoutingFunction(f, variables(f))
 
-# a bare variable (`RoutingFunction(x[1], vars)`) or a constant
-# (`RoutingFunction(1, vars)`, which removes nothing) is a perfectly good numerator.
-# (not `f::Number`: an Expression is a Number, and would land back here forever.)
+# a bare variable or a constant (`RoutingFunction(1, vars)` removes nothing) as numerator.
+# (not `f::Number`: an Expression is a Number and would recurse forever.)
 RoutingFunction(f::Union{Variable,Real}, args...) = RoutingFunction(Expression(f), args...)
 
-# anything else is a mistake in the arguments; say which forms exist
+# any other argument types: list the valid forms
 RoutingFunction(f::Expression, args...) = throw(ArgumentError(
     "RoutingFunction takes (f), (f, c), (f, vars) or (f, vars, c), where vars is a " *
     "Vector{Variable} and c a vector of reals of the same length; got (f, " *
@@ -125,8 +124,8 @@ function _check_length(r::RoutingFunction, point)
     )
 end
 
-# g(P). g is a shifted sum of squares, so evaluating it directly beats going
-# through the interpreter. `_g` skips the length check, for the inner loops.
+# g(P), evaluated directly rather than through the interpreter. `_g` skips the
+# length check, for the inner loops.
 function _g(r::RoutingFunction, point::AbstractVector{<:Real})::Float64
     s = 1.0
     @inbounds for i in eachindex(r.c)
@@ -159,8 +158,7 @@ evaluate_r(r::RoutingFunction, point::AbstractVector{<:Real})::Float64 =
 
 (r::RoutingFunction)(point::AbstractVector{<:Real}) = evaluate_r(r, point)
 
-# out ← ∇r(x), given f(x) and ∇f(x) already evaluated. allocation free, for the
-# flow fields.
+# out ← ∇r(x), given f(x) and ∇f(x). allocation free, for the flow fields.
 @inline function _grad_r!(
     out::AbstractVector{Float64},
     r::RoutingFunction,
@@ -218,18 +216,17 @@ function evaluate_grad_hessian_r(r::RoutingFunction, point::AbstractVector{<:Rea
     return ∇r, ∇²r
 end
 
-# how far P is from the removed locus V(f). this, not |r(P)|, decides whether a
-# point lies on V(f): |r| depends on the scale of f and is tiny far from c or in
-# thin regions, a distance does not.
+# distance from P to V(f). this, not |r(P)|, decides whether a point lies on V(f):
+# |r| depends on the scale of f and is tiny far from c or in thin regions.
 #
-# from the second-order Taylor model of f at P (V(f) is no closer than the
-# positive root of |f| = ‖∇f‖δ + ½‖∇²f‖δ²):
+# from the second-order Taylor model of f at P: V(f) is no closer than the positive
+# root of |f| = ‖∇f‖δ + ½‖∇²f‖δ², i.e.
 #
 #     δ = 2|f| / (‖∇f‖ + sqrt(‖∇f‖² + 2‖∇²f‖·|f|)).
 #
 # where ∇f ≠ 0 this is about the Newton step |f|/‖∇f‖; the ∇²f term matters at
-# singular points of V(f) (crossings, removed nodes), where ∇f vanishes as well.
-# (Frobenius norm of ∇²f: an upper bound, so δ errs towards "close".)
+# singular points of V(f) (crossings, nodes), where ∇f vanishes too. the Frobenius
+# norm of ∇²f is an upper bound, so δ errs towards "close".
 function _distance_to_zero_locus(fx::Float64, ∇f_norm::Float64, ∇²f_norm::Float64)::Float64
     fx == 0 && return 0.0
     a = abs(fx)
@@ -241,8 +238,9 @@ end
     distance_to_zero_locus(r, P)
 
 A lower estimate of the distance from `P` to `V(f)`, the locus `r` removes: the
-positive root `δ` of `|f(P)| = ‖∇f(P)‖ δ + ½‖∇²f(P)‖ δ²`. It is `|f|/‖∇f‖` where `∇f ≠ 0`,
-stays meaningful where `V(f)` is singular, and does not change when `f` is rescaled.
+positive root `δ` of `|f(P)| = ‖∇f(P)‖ δ + ½‖∇²f(P)‖ δ²`. It is about `|f|/‖∇f‖` where
+`∇f ≠ 0`, stays meaningful where `V(f)` is singular, and is unchanged when `f` is
+rescaled.
 """
 function distance_to_zero_locus(r::RoutingFunction, point::AbstractVector{<:Real})::Float64
     _check_length(r, point)
@@ -257,15 +255,15 @@ function distance_to_zero_locus(r::RoutingFunction, point::AbstractVector{<:Real
     return _distance_to_zero_locus(fx[1], LA.norm(∇f), LA.norm(∇²f))
 end
 
-# two tests: the distance above against locus_tol·(1 + ‖P‖), and a rounding floor
-# |f(P)| ≤ 1000·eps·∑ₐ |cₐ| |P|ᵃ, below which f(P) cannot be told apart from 0
-# (needed where ∇²f vanishes too, e.g. three components of V(f) through a point).
+# two tests: the distance above against locus_tol·(1 + ‖P‖), and the rounding floor
+# |f(P)| ≤ 1000·eps·∑ₐ |cₐ| |P|ᵃ (needed where ∇²f vanishes too, e.g. three
+# components of V(f) through a point).
 """
     on_zero_locus(r, P; locus_tol = 1e-6)
 
 Whether `P` lies on the removed locus `V(f)`: its [`distance_to_zero_locus`](@ref)
-is at most `locus_tol * (1 + ‖P‖)`, or `f(P)` is within rounding error of zero. A
-solution of the routing system for which this holds is not a routing point.
+is at most `locus_tol * (1 + ‖P‖)`, or `f(P)` is within rounding error of zero.
+A solution of the routing system on which this holds is not a routing point.
 """
 function on_zero_locus(r::RoutingFunction, point::AbstractVector{<:Real}; locus_tol::Real = 1e-6)::Bool
     δ = distance_to_zero_locus(r, point)
@@ -279,7 +277,7 @@ function on_zero_locus(r::RoutingFunction, point::AbstractVector{<:Real}; locus_
     return abs(fx[1]) <= 1e3 * eps() * fabs[1]
 end
 
-# the cheap first-order version, for the flow callbacks: |f| / ‖∇f‖
+# first-order version for the flow callbacks: |f| / ‖∇f‖
 function _newton_distance(fx::Float64, ∇fx::AbstractVector{Float64})::Float64
     fx == 0 && return 0.0
     nrm = LA.norm(∇fx)

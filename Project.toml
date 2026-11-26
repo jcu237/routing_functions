@@ -7,19 +7,20 @@ authors = ["Joseph Cummings <josephcummings03@gmail.com>"]
 HomotopyContinuation = "f213a82b-91d6-5c5d-acf7-10f1c761b327"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [compat]
 HomotopyContinuation = "2.10"
 OrdinaryDiffEq = "7.2.0"
+Random = "1"
 Reexport = "1.2.2"
 SciMLBase = "3.39.1"
 julia = "1.10"
 
 [extras]
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Random", "Test"]
+test = ["Test"]

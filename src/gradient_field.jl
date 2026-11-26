@@ -1,5 +1,5 @@
-# evaluates what the flow field needs -- G and its jacobian, f, ∇f and ∇r --
-# returning `false` instead of throwing when the state cannot be evaluated.
+# evaluates what the flow field needs (G, its jacobian, f, ∇f, ∇r). returns `false`
+# if u or any value is non-finite, or the evaluation overflows (InexactError).
 function _evaluate_field!(G_val, JG_val, grad_val, f_val, ∇f_val, G_sys, r, u)
     all(isfinite, u) || return false
     try
@@ -15,20 +15,17 @@ function _evaluate_field!(G_val, JG_val, grad_val, f_val, ∇f_val, G_sys, r, u)
     return all(isfinite, grad_val)
 end
 
-# projected gradient field of r on X = V(G):
+# projected gradient field of r on X = V(G), with J = JG:
 #
 #   du = dir · sign(r) · (I - Jᵀ(JJᵀ + reg·I)⁻¹J) ∇r  -  Jᵀ(JJᵀ + reg·I)⁻¹ G
-# where J^T(JJ^T)^⁻¹ is the Moore-Penrose pseudoinverse of J, and reg·I is a small regularisation.
-# so Jᵀ(JJᵀ + reg·I)⁻¹J is the orthogonal onto the row space of J, which is the normal space of X, 
-#and I - Jᵀ(JJᵀ + reg·I)⁻¹J is the orthogonal onto ker J, the tangent space of X.
 #
-# Then (I - Jᵀ(JJᵀ + reg·I)⁻¹J) ∇r is the (regularized) ambient gradient with its normal part removed, 
-#and Jᵀ(JJᵀ + reg·I)⁻¹ G is a Newton correction to keep the path on X.
-#
-# the first term ascends |r| within X, the second is a Newton correction holding
-# the path on X. `dir` is the ODE parameter: its sign picks the direction and its
-# size rescales time. with `unit_speed` the tangential part is normalised, so time
-# is arc length (needed when starting next to a critical point, where ∇r ≈ 0).
+# Jᵀ(JJᵀ + reg·I)⁻¹ is a regularised pseudoinverse of J, so the first term is ∇r with
+# its (approximate) normal component removed: it ascends |r| within X. the second is
+# a Newton step holding the path on X. all k equations of G are used, even when k
+# exceeds the codimension: reg acts as a soft cutoff that drops the vanishing extra
+# singular values of J. `dir` is the ODE parameter: its sign picks the direction and
+# its size rescales time. with `unit_speed` the tangential part is normalised, so
+# time is arc length (needed when starting next to a critical point, where ∇r ≈ 0).
 #
 # the closure owns its buffers, so nothing else touching the cache can disturb an
 # integration in progress.
@@ -52,9 +49,8 @@ function _projected_gradient_field(
     tangential = zeros(Float64, n)
 
     function flow!(du, u, dir, t)
-        # a path running off to infinity (u non-finite, or so large that f
-        # overflows) makes `HC.evaluate!` throw an InexactError. such a path is dead:
-        # return a zero derivative and let the solver or a callback end it; the
+        # a path running off to infinity (u non-finite, or so large that f overflows)
+        # is dead: return a zero derivative and let the solver or a callback end it.
         # callers drop non-finite end points.
         if !_evaluate_field!(G_val, JG_val, grad_val, f_val, ∇f_val, G_sys, r, u)
             fill!(du, 0.0)

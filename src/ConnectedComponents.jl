@@ -1,10 +1,10 @@
 module ConnectedComponents
 
 using HomotopyContinuation, LinearAlgebra
-# imported, not used: SciMLBase and HomotopyContinuation both export `solve`, and
-# bringing both into scope would make the `solve` this module re-exports ambiguous
-# for everyone who loads it. every SciML call below is qualified.
+# imported, not used: SciMLBase and HomotopyContinuation both export `solve`, so
+# `using` both would make the re-exported `solve` ambiguous. SciML calls are qualified.
 import SciMLBase, OrdinaryDiffEq
+import Random                   # a fixed-seed stream for estimating the codimension
 
 const HC = HomotopyContinuation
 const LA = LinearAlgebra
@@ -12,8 +12,8 @@ const LA = LinearAlgebra
 using Reexport: @reexport
 @reexport using HomotopyContinuation
 
-# the files follow the pipeline, and each only uses what the ones before it define
-include("utils.jl")             # logging and old-keyword helpers
+# in pipeline order
+include("utils.jl")             # logging, deprecated keywords, input conversion
 include("routing_functions.jl") # r = f / gᵈ and its derivatives; distance to V(f)
 include("variety.jl")           # X = V(G): normal equations, projection onto X
 include("gradient_field.jl")    # the projected gradient field of r on X
@@ -41,7 +41,7 @@ export evaluate_r, evaluate_f, evaluate_g, evaluate_grad_r, evaluate_grad_hessia
 export distance_to_zero_locus, on_zero_locus, critical_distance
 
 # the variety X = V(G)
-export jacobian_rank_locus, evaluate_G!, jacobian_G!
+export jacobian_rank_locus, codimension, evaluate_G!, jacobian_G!
 export project_to_variety!, project_to_variety, project_to_variety_residual!
 
 # lower-level pieces: hessians on X, gradient fields and single paths
