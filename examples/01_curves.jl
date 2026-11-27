@@ -75,3 +75,44 @@ println(sort([c.euler_characteristic for c in C]))     # [1, 1]
 Q = [x[1]^4 + x[2]^4 - (x[1] - x[2])^2 * (x[1] + x[2])]
 C = connected_components(RoutingFunction(x[1] * x[2], x[1:2]), Q)
 println(sort([c.euler_characteristic for c in C]))     # [1, 1, 1, 1]: four arcs
+
+
+# ---------------------------------------------------------------------------
+# the nodal cubic with the origin removed, plotted by component
+# ---------------------------------------------------------------------------
+# 4y² = x²(x + 4) has a node at the origin. Removing it cuts the curve into three
+# arcs: the loop through (-4, 0) and the two unbounded branches.
+# Plotting needs CairoMakie in a reachable environment (e.g. the global one).
+# `save` is qualified: HomotopyContinuation exports one too.
+using CairoMakie
+
+N = [4 * x[2]^2 - x[1]^2 * (x[1] + 4)]
+r = RoutingFunction(x[1]^2 + x[2]^2, x[1:2])   # f vanishes only at the origin
+# (not f = xy: it also vanishes at (-4, 0), which would cut the loop in two)
+cache = RoutingCache(r, N)
+C = connected_components(cache)
+println(sort([c.euler_characteristic for c in C]))     # [1, 1, 1]: three arcs
+
+# the curve is parametrised by t ↦ (t² - 4, t(t² - 4)/2), with the origin at t = ±2,
+# so the arcs are t < -2, -2 < t < 2 and t > 2. Ask the package which component
+# each arc lies on, from a point a third of the way along it (not the middle of
+# the loop: (-4, 0) is a routing point, where the flow cannot start).
+nodal(t) = [t^2 - 4, t * (t^2 - 4) / 2]
+arcs = [range(-2.9, -2.0, 400), range(-2.0, 2.0, 800), range(2.0, 2.9, 400)]
+labels = [component_index(cache, C, nodal(a[end ÷ 3])) for a in arcs]
+println("component of each arc: ", labels)
+
+colours = [colorant"#0072B2", colorant"#009E73", colorant"#CC79A7"]  # never orange
+linewidth = 9
+
+fig = Figure(size = (900, 1000), backgroundcolor = :white)
+ax = Axis(fig[1, 1], aspect = DataAspect())
+hidedecorations!(ax)
+hidespines!(ax)
+for (a, k) in zip(arcs, labels)
+    P = nodal.(a)
+    lines!(ax, first.(P), last.(P); color = colours[k], linewidth = linewidth)
+end
+scatter!(ax, [0.0], [0.0]; color = colorant"#E69F00", markersize = 4* linewidth,
+         strokewidth = 0)                    # the removed origin
+CairoMakie.save(joinpath(@__DIR__, "nodal_cubic.png"), fig; px_per_unit = 4)
